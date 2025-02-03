@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Size Patterns</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: white;
+            margin: 0;
+            padding: 5px;
+            font-family: 'Verdana', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        }
+
+        #visualization-container {
+            background: rgba(33, 31, 20);
+            padding: 0px;
+            border-radius: 32px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin: 0px;
+            overflow: hidden;
+        }
+
+        .title {
+            position: absolute;
+            left: 50px;
+            top: 50px;
+            text-align: left;
+            max-width: 800px;
+        }
+
+        .title h1 {
+            margin: 0;
+            font-size: 48px;
+            font-weight: 600;
+            color: #eff0f3;
+            line-height: 1.2;
+        }
+
+        .title p {
+            margin: 10px 0 0;
+            color: #eff0f3;
+            font-size: 24px;
+            line-height: 1.4;
+        }
+
+        .guide-label {
+            font-size: 14px;
+            font-weight: 500;
+            fill: #eff0f3;
+        }
+
+        .distribution-dot {
+            transition: transform 0.2s;
+        }
+        
+        .distribution-dot:hover {
+            transform: scale(1.2);
+        }
+
+        .group-label {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .legend-item {
+            font-size: 16px;
+            font-weight: 500;
+            fill: #eff0f3;
+        }
+
+        .symbol-legend {
+            position: absolute;
+            left: 50px;
+            top: 720px;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .symbol-legend h3 {
+            margin: 0 0 15px 0;
+            color: #eff0f3;
+            font-size: 16px;
+        }
+
+        .symbol-item {
+            display: flex;
+            align-items: center;
+            color: #eff0f3;
+            margin-bottom: 10px;
+        }
+
+        .symbol {
+            width: 30px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .symbol-label {
+            margin-left: 10px;
+            color: #eff0f3;
+        }
+        .bottom-text {
+        position: absolute;
+        left: 50px;
+        bottom: 30px;
+        color: #eff0f3;
+        font-size: 14px;
+        max-width: 800px;
+        font-style: italic;
+    }
+    .findings-text {
+        position: absolute;
+        left: 50px;
+        top: 180px;
+        color: #eff0f3;
+        font-size: 18px;
+        max-width: 600px;
+    }
+    </style>
+</head>
+<body>
+    <div id="visualization-container">
+        <div class="title">
+            <h1>Family Expectations </h1>
+            <p>A longitudinal study on the family size in the USA, 1974 - 2020  </p>
+        </div>
+        <div class="bottom-text">
+            Data by Bureau of Labor Statistics, U.S. Department of Labor. National Longitudinal Survey of Youth 1979 cohort, 1979-2020 (rounds 1-29). Vizualisation by Aliaksandra Shymanskaya.
+        
+        </div>
+        <div class="findings-text">
+            The US Bureau of Labor Statistics questioned young adults about how many children they expect to have. During their lifetime, they were revisited and reported on their actual family size. Women were generally better at predicting their future family size, while men overestimated the number of children they would have.  Most people had two children. 
+        </div>
+        <div class="symbol-legend">
+            <h3>Actual Children Symbols</h3>
+            <div class="symbol-item">
+                <span class="symbol">○</span>
+                <span class="symbol-label">No children</span>
+            </div>
+            <div class="symbol-item">
+                <span class="symbol">●</span>
+                <span class="symbol-label">One child</span>
+            </div>
+            <div class="symbol-item">
+                <span class="symbol">V</span>
+                <span class="symbol-label">Two children</span>
+            </div>
+            <div class="symbol-item">
+                <span class="symbol">▲</span>
+                <span class="symbol-label">Three children</span>
+            </div>
+            <div class="symbol-item">
+                <span class="symbol">+</span>
+                <span class="symbol-label">Four or more children</span>
+            </div>
+        </div>
+    </div>
+    <script>
+        const shapes = {
+    '0': '○',
+    '1': '●',
+    '2': 'V',
+    '3': '▲',
+    '4+': '+'
+};
+
+const outcomeData = {
+            "Black Men": {
+                "race": "Black",
+                "gender": "Men",
+                "0": {"distribution": {"0": 23.75,"1": 22.5,"2": 20,"3": 12.5,"4+": 21.25},"n": 80},
+                "1": {"distribution": {"0": 16.6667,"1": 25.641,"2": 23.0769,"3": 20.5128,"4+": 14.1026},"n": 78},
+                "2": {"distribution": {"0": 15.942,"1": 19.1304,"2": 28.9855,"3": 17.6812,"4+": 18.2609},"n": 345},
+                "3": {"distribution": {"0": 17.9487,"1": 25.641,"2": 26.1538,"3": 15.3846,"4+": 14.8718},"n": 195},
+                "4+": {"distribution": {"0": 19.0283,"1": 22.2672,"2": 23.0769,"3": 15.3846,"4+": 20.2429},"n": 247}
+            },
+            "Black Women": {
+                "race": "Black",
+                "gender": "Women",
+                "0": {"distribution": {"0": 13.369,"1": 14.9733,"2": 27.2727,"3": 24.0642,"4+": 20.3209},"n": 187},
+                "1": {"distribution": {"0": 6.1321,"1": 12.7358,"2": 28.3019,"3": 32.5472,"4+": 20.283},"n": 212},
+                "2": {"distribution": {"0": 19.337,"1": 20.9945,"2": 31.4917,"3": 15.7459,"4+": 12.4309},"n": 362},
+                "3": {"distribution": {"0": 13.6986,"1": 21.2329,"2": 32.8767,"3": 22.6027,"4+": 9.589},"n": 146},
+                "4+": {"distribution": {"0": 21.2121,"1": 15.1515,"2": 22.4242,"3": 23.6364,"4+": 17.5758},"n": 165}
+            },
+            "Hispanic Men": {
+                "race": "Hispanic",
+                "gender": "Men",
+                "0": {"distribution": {"0": 28.125,"1": 18.75,"2": 21.875,"3": 9.375,"4+": 21.875},"n": 32},
+                "1": {"distribution": {"0": 17.6471,"1": 11.7647,"2": 23.5294,"3": 32.3529,"4+": 14.7059},"n": 34},
+                "2": {"distribution": {"0": 18.6869,"1": 11.1111,"2": 30.303,"3": 20.7071,"4+": 19.1919},"n": 198},
+                "3": {"distribution": {"0": 22.8758,"1": 17.6471,"2": 26.1438,"3": 16.9935,"4+": 16.3399},"n": 153},
+                "4+": {"distribution": {"0": 17.5325,"1": 8.4416,"2": 27.9221,"3": 20.1299,"4+": 25.974},"n": 154}
+            },
+            "Hispanic Women": {
+                "race": "Hispanic",
+                "gender": "Women",
+                "0": {"distribution": {"0": 6.5574,"1": 14.7541,"2": 34.4262,"3": 24.5902,"4+": 19.6721},"n": 61},
+                "1": {"distribution": {"0": 11.9565,"1": 11.9565,"2": 34.7826,"3": 18.4783,"4+": 22.8261},"n": 92},
+                "2": {"distribution": {"0": 11.7188,"1": 15.2344,"2": 33.2031,"3": 21.875,"4+": 17.9688},"n": 256},
+                "3": {"distribution": {"0": 14.7287,"1": 10.0775,"2": 32.5581,"3": 27.907,"4+": 14.7287},"n": 129},
+                "4+": {"distribution": {"0": 12.5926,"1": 11.8519,"2": 31.1111,"3": 25.1852,"4+": 19.2593},"n": 135}
+            },
+            "White/Other Men": {
+                "race": "White/Other",
+                "gender": "Men",
+                "0": {"distribution": {"0": 27.6119,"1": 17.1642,"2": 33.5821,"3": 17.9104,"4+": 3.7313},"n": 134},
+                "1": {"distribution": {"0": 21.9512,"1": 19.5122,"2": 35.3659,"3": 10.9756,"4+": 12.1951},"n": 82},
+                "2": {"distribution": {"0": 21.8453,"1": 18.3175,"2": 36.7707,"3": 14.5183,"4+": 8.5482},"n": 737},
+                "3": {"distribution": {"0": 23.053,"1": 12.7726,"2": 34.5794,"3": 21.8069,"4+": 7.7882},"n": 321},
+                "4+": {"distribution": {"0": 21.3636,"1": 11.8182,"2": 35,"3": 18.6364,"4+": 13.1818},"n": 220}
+            },
+            "White/Other Women": {
+                "race": "White/Other",
+                "gender": "Women",
+                "0": {"distribution": {"0": 32.3077,"1": 15.3846,"2": 33.0769,"3": 10.7692,"4+": 8.4615},"n": 130},
+                "1": {"distribution": {"0": 7.5949,"1": 18.9873,"2": 39.2405,"3": 20.8861,"4+": 13.2911},"n": 158},
+                "2": {"distribution": {"0": 17.8808,"1": 18.9404,"2": 40,"3": 17.351,"4+": 5.8278},"n": 755},
+                "3": {"distribution": {"0": 15.427,"1": 16.2534,"2": 34.9862,"3": 22.5895,"4+": 10.7438},"n": 363},
+                "4+": {"distribution": {"0": 18.1481,"1": 12.963,"2": 30,"3": 23.3333,"4+": 15.5556},"n": 270}
+            }
+        };
+const getColorForChildCount = (count) => {
+    const colors = {
+        '0': '#FFD700',
+        '1': '#FF69B4',
+        '2': '#87CEEB',
+        '3': '#32CD32',
+        '4+': '#FF4500'
+    };
+    return colors[count] || colors['0'];
+};
+
+
+function calculatePosition(index, total, radius) {
+    const angle = (index / total) * 2 * Math.PI;
+    return {
+        x: radius * Math.cos(angle),
+        y: radius * Math.sin(angle)
+    };
+}
+
+
+
+function processDistributionData(distribution) {
+    const outcomes = Object.entries(distribution)
+        .map(([count, percentage]) => ({
+            count,
+            percentage,
+            numShapes: Math.round(percentage)
+        }))
+        .sort((a, b) => a.percentage - b.percentage);
+    
+    outcomes.forEach(outcome => {
+        outcome.shapes = Array.from({ length: outcome.numShapes }, () => ({ count: outcome.count }));
+    });
+    
+    return outcomes;
+}
+
+function createDistributionRings(container, distribution, size = 80, group, expectedCount, proportion) {
+    // Ensure expectedCount is in the correct format
+    const normalizedExpectedCount = expectedCount === '4' ? '4+' : expectedCount;
+    
+    // Get current n and max n with safe checks
+    const currentData = outcomeData[group][normalizedExpectedCount];
+    
+    const n = currentData.n;
+    // Debug the data access
+    console.log("Group:", group);
+    console.log("Group data:", outcomeData[group]);
+    
+    // Get all the n values for this group
+    const nValues = [];
+    for (let count in outcomeData[group]) {
+        if (outcomeData[group][count] && outcomeData[group][count].n) {
+            nValues.push(outcomeData[group][count].n);
+        }
+    }
+    console.log("n values:", nValues);
+    
+    // Calculate max N
+    const maxN = Math.max(...nValues);
+    console.log("maxN:", maxN);
+    
+    // Calculate proportion with safety check
+    const proportion_ = n / maxN;
+    if (isNaN(proportion_)) {
+        console.error(`Invalid proportion calculation for ${group} ${normalizedExpectedCount}`);
+        return;
+    }
+    
+    // Set minimum and maximum sizes
+    const minSize = size * 0.5;
+    const maxSize = size * 1.2;
+    const adjustedSize = minSize + ((maxSize - minSize) * proportion_);
+    
+    if (isNaN(adjustedSize)) {
+        console.error(`Invalid size calculation for ${group} ${normalizedExpectedCount}`);
+        return;
+    }
+    
+    // Calculate ring dimensions
+    const baseRadius = Math.max(adjustedSize / 4, 10);  // Ensure minimum radius
+    const radiusIncrement = Math.max(adjustedSize / 8, 5);  // Ensure minimum increment
+    const radiusOuterRing = baseRadius + (5.2 * radiusIncrement);
+    
+    // Debug logging
+    console.log(`${group} ${normalizedExpectedCount}: n=${n}, maxN=${maxN}, proportion=${proportion_}, radius=${radiusOuterRing}`);
+    
+    const color = group.includes('Black') ? '#4A90E2' : 
+                 group.includes('Hispanic') ? '#F5A623' : '#7ED321';
+    
+    const ringGroup = container.append('g');
+    
+    // Create base circle with guaranteed numeric radius
+    ringGroup.append('circle')
+        .attr('r', radiusOuterRing)
+        .attr('fill', color)
+        .attr('fill-opacity', proportion_)
+        .attr('stroke', color)
+        .attr('stroke-width', 4)
+        .attr('stroke-dasharray', group.includes('Women') ? '5,8' : 'none')
+        .attr('opacity', 0.5);
+
+    
+    const validProportion = !isNaN(proportion_) ? proportion_ : 1;
+    const ringRadius =adjustedSize/1.4;
+    
+    
+    const sortedOutcomes = processDistributionData(distribution);
+    const centerPoint = 0;
+    
+    
+    // Add a tooltip div if it doesn't exist
+    let tooltip = d3.select('body').select('.tooltip');
+    if (tooltip.empty()) {
+        tooltip = d3.select('body')
+            .append('div')
+            .attr('class', 'tooltip')
+            .style('position', 'absolute')
+            .style('padding', '8px')
+            .style('background', 'rgba(0, 0, 0, 0.8)')
+            .style('color', 'white')
+            .style('border-radius', '4px')
+            .style('font-size', '14px')
+            .style('pointer-events', 'none')
+            .style('opacity', 0)
+            .style('z-index', 1000);
+    }
+
+    sortedOutcomes.forEach((outcome, ringIndex) => {
+        const radius = baseRadius + (ringIndex * radiusIncrement);
+        const totalShapes = outcome.shapes.length;
+
+
+        if (totalShapes > 0) {
+            outcome.shapes.forEach((shape, index) => {
+                const position = calculatePosition(index, totalShapes, radius);
+                const x = position.x + centerPoint;
+                const y = position.y + centerPoint;
+                
+                ringGroup.append('text')
+                    .attr('x', x)
+                    .attr('y', y)
+                    .attr('font-size', adjustedSize/8)
+                    .attr('fill', getColorForChildCount(shape.count))
+                    .attr('text-anchor', 'middle')
+                    .attr('dominant-baseline', 'middle')
+                    .attr('class', 'distribution-dot')
+                    .text(shapes[shape.count])
+                    .style('transition', 'transform 0.2s, font-size 0.2s')
+                    .on('mouseover', function(event) {
+                        // Zoom effect
+                        d3.select(this)
+                            .style('transform', 'scale(1.5)')
+                            .style('cursor', 'pointer');
+                        
+                        // Show tooltip
+                        tooltip.transition()
+                            .duration(300)
+                            .style('opacity', .9);
+                        
+                        const actualChildren = shape.count === '4+' ? '4 or more' : shape.count;
+                        const percentage = distribution[shape.count].toFixed(1);
+                        
+                        tooltip.html(`
+                            <strong>${group}</strong><br/>
+                            Expected: ${expectedCount} children<br/>
+                            Actual: ${actualChildren} children<br/>
+                            Percentage: ${percentage}%<br/>
+                            Sample size: ${outcomeData[group][expectedCount].n} people
+                        `)
+                        .style('left', (event.pageX + 10) + 'px')
+                        .style('top', (event.pageY - 10) + 'px');
+                    })
+                    .on('mouseout', function() {
+                        // Remove zoom effect
+                        d3.select(this)
+                            .style('transform', 'scale(1)')
+                            .style('cursor', 'default');
+                        
+                        // Hide tooltip
+                        tooltip.transition()
+                            .duration(500)
+                            .style('opacity', 0);
+                            
+                    });
+            });
+        }
+    });
+}
+
+
+function createProfessionalSankey() {
+            const container = document.getElementById('visualization-container');
+            
+            const width = 2000;
+            const height = 1020;
+            
+            const svg = d3.select('#visualization-container')
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height)
+                .attr('viewBox', `0 0 ${width} ${height}`)
+                .attr('style', 'max-width: 100%; height: 100%;');
+
+            // Center point adjustments
+            const centerX = width * 0.7;  // Centered horizontally
+            const centerY = height * 0.5; // Centered vertically
+            
+            // Adjust radii for better spacing
+            const baseRadius = 90;  
+            const radiusStep = 95;  
+            
+            // Add legend group on the left
+            const legendGroup = svg.append('g')
+                .attr('transform', `translate( ${50}, ${500})`);
+
+            // Add legend labels
+            const labels = [
+
+            { text: "How to read this vizualisation:", y: -140 },
+                { text: "Each large circle indicates:", y: -100 },
+                { text: "- Radially: Expected number of children (0 to 4+)", y: -80 },
+                { text: "- Angularly: Demographic group", y: -60 },
+                { text: "Small circles reflect:", y: -20 },
+                { text: "- Solid/dashed: Men/Women", y: 0 },
+                { text: "- Color: Race group", y: 20 },
+                { text: "- Size & Opacity: Proportion of people in each group", y: 40 },
+                { text: "Symbols within circles :", y: 80 },
+                { text: "- Radially: Sorted by the frequency of actual outcomes", y: 100 },
+                { text: "Example Reading:", y: 160 },
+                { text: "A black woman was planning to have two children (large blue circle with dashed line).", y: 180 },
+                { text: "Large circle size indicates this was a common expectation in her demographic group.", y: 200 },
+                { text: "Distribution of symbols inside the circle shows actual outcomes:", y: 220 },
+                { text: "most frequent outcome was indeed having two children.", y: 240 },
+        
+
+
+
+            ];
+             
+
+
+
+            legendGroup.selectAll('.legend-label')
+                .data(labels)
+                .enter()
+                .append('text')
+                .attr('x', 0)
+                .attr('y', d => d.y)
+                .attr('text-anchor', 'start')
+                .attr('class', 'legend-item')
+                .text(d => d.text);
+
+    
+    const expectedCounts = ['0', '1', '2', '3', '4+'];
+
+    const demographicGroups = [
+    "Hispanic Women", "Hispanic Men",    
+    "Black Women", "Black Men",
+        "White/Other Women", "White/Other Men"
+    ];
+
+
+    // Calculate base angles for demographic groups
+    const baseAngles = {};
+    demographicGroups.forEach((group, index) => {
+        baseAngles[group] = (index / demographicGroups.length) * 2 * Math.PI;
+    });
+
+    // Add guide circles
+    expectedCounts.forEach((count, index) => {
+                const radius = baseRadius + (index * radiusStep);
+                const arc = d3.arc()
+                    .innerRadius(radius)
+                    .outerRadius(radius)
+                    .startAngle(0)
+                    .endAngle(2 * Math.PI);
+
+                svg.append('path')
+                    .attr('d', arc)
+                    .attr('transform', `translate(${centerX}, ${centerY})`)
+                    .attr('stroke', '#ddd')
+                    .attr('stroke-width', 0.2)
+                    .attr('stroke-dasharray', '3,10')
+                    .attr('fill', 'none');
+
+                // Adjust label position
+                const labelAngle = -Math.PI / 2-0.4+0.28*(index-1);
+                const labelRadius = radius;
+                svg.append('text')
+                    .attr('x', centerX + labelRadius * Math.cos(labelAngle))
+                    .attr('y', centerY + labelRadius * Math.sin(labelAngle))
+                    .attr('text-anchor', 'middle')
+                    .attr('class', 'guide-label')
+                    .text(`${count}`);
+            });
+
+            demographicGroups.forEach((group, groupIndex) => {
+    const baseAngle = (groupIndex / demographicGroups.length) * 2 * Math.PI - Math.PI/2;
+    
+    expectedCounts.forEach((count, levelIndex) => {
+        const radius = baseRadius + (levelIndex * radiusStep);
+        const spiralRotation = (levelIndex / expectedCounts.length) * Math.PI * 0.5;
+        const angle = baseAngle + spiralRotation;
+        
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        
+        const ringGroup = svg.append('g')
+            .attr('transform', `translate(${x}, ${y})`);
+            
+        createDistributionRings(ringGroup, outcomeData[group][count].distribution, 70, group, count);
+    });
+    });
+
+
+    // Add legend
+    const legendY = height - 50;
+    const legendGroups = [
+        {name: "Black Men", color: "#4A90E2", dash: "none"},
+        {name: "Black Women", color: "#4A90E2", dash: "5,5"},
+        {name: "Hispanic Men", color: "#F5A623", dash: "none"},
+        {name: "Hispanic Women", color: "#F5A623", dash: "5,5"},
+        {name: "White/Other Men", color: "#7ED321", dash: "none"},
+        {name: "White/Other Women", color: "#7ED321", dash: "5,5"}
+    ];// Position the legend on the right side
+const legendX = 450; // Move legend group to the right
+const legendStartY = height-250; // Start from upper portion of the visualization
+const legendSpacing = 35; // Vertical spacing between items
+
+legendGroups.forEach((group, index) => {
+    const legendY = legendStartY + (index * legendSpacing); // Stack items vertically
+    
+    // Add the line
+    svg.append('line')
+        .attr('x1', legendX)
+        .attr('x2', legendX + 30)
+        .attr('y1', legendY)
+        .attr('y2', legendY)
+        .attr('stroke', group.color)
+        .attr('stroke-width', 3)
+        .attr('stroke-dasharray', group.dash);
+    
+    // Add the text
+    svg.append('text')
+        .attr('x', legendX + 40)
+        .attr('y', legendY)
+        .attr('dominant-baseline', 'middle')
+        .attr('class', 'legend-item')
+        .text(group.name);
+});
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', createProfessionalSankey);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizations - Aliaksandra Shymanskaya</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green: #3D7B5B;
+            --pink: #E784A9;
+            --black: #232323;
+            --bgColor: #f3f4ef;
+            --darkColor: #7a724c;
+        }
+
+        body {
+            background-color: var(--bgColor);
+            font-family: 'Roboto', sans-serif;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--pink);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .scrolling-wrapper {
+            display: flex;
+            overflow-x: hidden;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            padding: 20px 0;
+            position: relative;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .scrolling-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+
+        .item {
+            flex: 0 0 100%;
+            width: 100%;
+            scroll-snap-align: center;
+            display: flex;
+            justify-content: center;
+            padding: 0 20px;
+        }
+
+        .project-card {
+            background: white;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .project-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(61, 123, 91, 0.05), rgba(231, 132, 169, 0.05));
+            clip-path: polygon(70% 0, 100% 0, 100% 100%, 30% 100%);
+            z-index: 0;
+        }
+
+        .project-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .scroll-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: var(--green);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s ease;
+            opacity: 0.8;
+        }
+
+        .scroll-button:hover {
+            opacity: 1;
+            background: var(--pink);
+        }
+
+        .scroll-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .scroll-left {
+            left: 10px;
+        }
+
+        .scroll-right {
+            right: 10px;
+        }
+
+        .geometric-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(61, 123, 91, 0.05), rgba(231, 132, 169, 0.05));
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 85% 100%);
+            z-index: -1;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            background-color: rgba(61, 123, 91, 0.1);
+            color: var(--green);
+            margin-right: 8px;
+            margin-bottom: 4px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ddd;
+            margin: 0 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .dot.active {
+            background-color: var(--green);
+        }
+
+        .filter-button {
+            transition: all 0.3s ease;
+        }
+
+        .filter-button.active {
+            background-color: var(--green);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="py-6 border-b border-gray-200 bg-white">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <a href="/" class="text-[#3D7B5B] text-2xl font-cormorant">AS</a>
+                <div class="flex space-x-8">
+                    <a href="/portfolio/visualizations/index.html" class="nav-link text-[#232323] relative">Visualizations</a>
+                    <!-- <a href="/portfolio/neuro/index.html" class="nav-link text-[#232323] relative">Neuro Research</a> -->
+                    <!-- <a href="/portfolio/ml/index.html" class="nav-link text-[#232323] relative">ML Models</a>
+                    <a href="/portfolio/blog/index.html" class="nav-link text-[#232323] relative">Blog</a>
+                    <a href="/portfolio/mri_basics/index.html" class="nav-link text-[#232323] relative">AI for MRI</a> -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="geometric-header py-20 bg-white relative">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="max-w-3xl">
+                <h1 class="text-5xl font-bold text-[#3D7B5B] mb-6">Data Visualizations</h1>
+                <p class="text-xl text-[#7a724c]">
+                    Exploring complex datasets through interactive visualizations and data storytelling.
+                    Each project aims to make data more accessible and meaningful.
+                </p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Project Filters -->
+    <section class="py-12">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex flex-wrap gap-4">
+                <button class="filter-button active px-6 py-2 rounded-lg bg-[#3D7B5B] text-white">All</button>
+                <button class="filter-button px-6 py-2 rounded-lg text-[#3D7B5B]">Healthcare</button>
+                <button class="filter-button px-6 py-2 rounded-lg text-[#3D7B5B]">Society</button>
+                <button class="filter-button px-6 py-2 rounded-lg text-[#3D7B5B]">History</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scrolling Projects Section -->
+    <section class="py-12">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="relative">
+                <button class="scroll-button scroll-left" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                
+                <div class="scrolling-wrapper">
+                    <!-- Healthcare Project -->
+                    <div class="item">
+                        <div class="project-card rounded-xl p-8 shadow-lg" data-category="healthcare,society">
+                            <div class="relative mb-6">
+                                <div class="absolute inset-0 bg-[#E784A9] transform translate-x-2 translate-y-2 rounded-lg opacity-10"></div>
+                                <img src="maternal_health/thumbnail.png" 
+                                     alt="Maternal Health Visualization" 
+                                     class="rounded-lg w-full h-64 object-cover relative z-10">
+                            </div>
+                            <div class="relative z-10">
+                                <div class="flex gap-2 mb-4 flex-wrap">
+                                    <span class="tag">Healthcare</span>
+                                    <span class="tag">Society</span>
+                                    <span class="tag">D3.js</span>
+                                </div>
+                                <h3 class="text-2xl font-bold text-[#3D7B5B] mb-2">Maternal Mortality Trends</h3>
+                                <p class="text-[#7a724c] mb-6">
+                                    An interactive exploration of global maternal health outcomes across different regions, 
+                                    highlighting disparities and improvements over time.
+                                </p>
+                                <a href="maternal_health/maternal_health_lines.html" class="text-[#3D7B5B] hover:text-[#E784A9] transition-colors font-medium">
+                                    View Project →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Society Project -->
+                    <div class="item">
+                        <div class="project-card rounded-xl p-8 shadow-lg" data-category="society">
+                            <div class="relative mb-6">
+                                <div class="absolute inset-0 bg-[#E784A9] transform translate-x-2 translate-y-2 rounded-lg opacity-10"></div>
+                                <img src="children_expectation_usa/thumbnail.png" 
+                                     alt="Family Size Patterns" 
+                                     class="rounded-lg w-full h-64 object-cover relative z-10">
+                            </div>
+                            <div class="relative z-10">
+                                <div class="flex gap-2 mb-4 flex-wrap">
+                                    <span class="tag">Society</span>
+                                    <span class="tag">D3.js</span>
+                                </div>
+                                <h3 class="text-2xl font-bold text-[#3D7B5B] mb-2">Family Size Patterns</h3>
+                                <p class="text-[#7a724c] mb-6">
+                                    Analysis of family size expectations versus reality in the USA.
+                                </p>
+                                <a href="children_expectation_usa/children_viz.html" class="text-[#3D7B5B] hover:text-[#E784A9] transition-colors font-medium">
+                                    View Project →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- History Project
+                    <div class="item">
+                        <div class="project-card rounded-xl p-8 shadow-lg" data-category="history">
+                            <div class="relative mb-6">
+                                <div class="absolute inset-0 bg-[#E784A9] transform translate-x-2 translate-y-2 rounded-lg opacity-10"></div>
+                                <img src="british_monarchs/dead_monarchs.png" 
+                                     alt="British Monarchs" 
+                                     class="rounded-lg w-full h-64 object-cover relative z-10">
+                            </div>
+                            <div class="relative z-10">
+                                <div class="flex gap-2 mb-4 flex-wrap">
+                                    <span class="tag">History</span>
+                                    <span class="tag">R</span>
+                                </div>
+                                <h3 class="text-2xl font-bold text-[#3D7B5B] mb-2">How British Monarchs Died</h3>
+                                <p class="text-[#7a724c] mb-6">
+                                    An overview of deaths of the british monarchs across ages.
+                                </p>
+                                <a href="#" class="text-[#3D7B5B] hover:text-[#E784A9] transition-colors font-medium">
+                                    View Project →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+
+                <button class="scroll-button scroll-right">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+
+                <div class="dots flex justify-center mt-6">
+                    <span class="dot active"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-[#3D7B5B] py-12 mt-20">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h3 class="text-[#f3f4ef] text-xl font-cormorant mb-4">About Me</h3>
+                    <p class="text-[#f3f4ef] opacity-80 text-sm">Data scientist with a passion for turning complex data into actionable insights.</p>
+                </div>
+                <div>
+                    <!-- <h3 class="text-[#f3f4ef] text-xl font-cormorant mb-4">Quick Links</h3> -->
+                    <!-- <ul class="space-y-2">
+                        <li><a href="#" class="text-[#f3f4ef] opacity-80 hover:opacity-100 text-sm">ML Models</a></li>
+                        <li><a href="#" class="text-[#f3f4ef] opacity-80 hover:opacity-100 text-sm">Blog</a></li>
+                        <li><a href="#" class="text-[#f3f4ef] opacity-80 hover:opacity-100 text-sm">AI for MRI</a></li>
+                    </ul> -->
+                </div>
+                <div>
+                    <h3 class="text-[#f3f4ef] text-xl font-cormorant mb-4">Contact</h3>
+                    <a href="mailto:aliaksandrashymanskaya@gmail.com" class="text-[#f3f4ef] opacity-80 hover:opacity-100 text-sm block mb-2">
+                        aliaksandrashymanskaya@gmail.com
+                    </a>
+                    <div class="flex space-x-4 mt-4">
+                        <a href="#" class="text-[#f3f4ef] hover:text-[#E784A9] transition-colors">
+                            <i class="fab fa-linkedin text-xl"></i>
+                        </a>
+                        <a href="#" class="text-[#f3f4ef] hover:text-[#E784A9] transition-colors">
+                            <i class="fab fa-github text-xl"></i>
+                        </a>
+                        <a href="#" class="text-[#f3f4ef] hover:text-[#E784A9] transition-colors">
+                            <i class="fab fa-medium text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const wrapper = document.querySelector('.scrolling-wrapper');
+            const dots = document.querySelectorAll('.dot');
+            const items = document.querySelectorAll('.item');
+            const scrollLeftBtn = document.querySelector('.scroll-left');
+            const scrollRightBtn = document.querySelector('.scroll-right');
+            const filterButtons = document.querySelectorAll('.filter-button');
+            
+            let currentIndex = 0;
+            
+            // Disable text selection during scroll
+            wrapper.addEventListener('selectstart', e => e.preventDefault());
+
+            // Arrow button navigation
+            scrollLeftBtn.addEventListener('click', () => {
+                currentIndex = Math.max(currentIndex - 1, 0);
+                scrollToItem(currentIndex);
+            });
+
+            scrollRightBtn.addEventListener('click', () => {
+                currentIndex = Math.min(currentIndex + 1, items.length - 1);
+                scrollToItem(currentIndex);
+            });
+
+            // Dot navigation
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => {
+                    currentIndex = index;
+                    scrollToItem(index);
+                });
+            });
+
+            function scrollToItem(index) {
+                const itemWidth = wrapper.offsetWidth;
+                wrapper.scrollTo({
+                    left: itemWidth * index,
+                    behavior: 'smooth'
+                });
+                updateDots(index);
+                updateButtons(index);
+            }
+
+            function updateDots(index) {
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === index);
+                });
+            }
+
+            function updateButtons(index) {
+                scrollLeftBtn.disabled = index === 0;
+                scrollRightBtn.disabled = index === items.length - 1;
+            }
+
+            // Filter functionality
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    filterButtons.forEach(btn => {
+                        btn.classList.remove('active', 'bg-[#3D7B5B]', 'text-white');
+                        btn.classList.add('text-[#3D7B5B]');
+                    });
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active', 'bg-[#3D7B5B]', 'text-white');
+                    this.classList.remove('text-[#3D7B5B]');
+                    
+                    const category = this.textContent.toLowerCase();
+                    const visibleItems = [];
+                    
+                    items.forEach((item, index) => {
+                        const projectCard = item.querySelector('.project-card');
+                        const categories = projectCard.dataset.category.split(',');
+                        
+                        if (category === 'all' || categories.includes(category)) {
+                            item.style.display = 'flex';
+                            visibleItems.push(index);
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+
+                    // Update dots to match visible items
+                    const dotsContainer = document.querySelector('.dots');
+                    dotsContainer.innerHTML = '';
+                    visibleItems.forEach((_, index) => {
+                        const dot = document.createElement('span');
+                        dot.className = 'dot' + (index === 0 ? ' active' : '');
+                        dot.addEventListener('click', () => scrollToItem(index));
+                        dotsContainer.appendChild(dot);
+                    });
+
+                    // Reset to first visible item
+                    currentIndex = 0;
+                    scrollToItem(0);
+                });
+            });
+
+            // Handle scroll events
+            wrapper.addEventListener('scroll', () => {
+                const itemWidth = wrapper.offsetWidth;
+                currentIndex = Math.round(wrapper.scrollLeft / itemWidth);
+                updateDots(currentIndex);
+                updateButtons(currentIndex);
+            });
+
+            // Initialize state
+            updateButtons(0);
+        });
+    </script>
+</body>
+</html>
