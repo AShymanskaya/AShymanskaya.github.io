@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Decrease in Maternal Mortality </title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Serif+Pro&family=Roboto+Slab:wght@700&family=Inter&family=DM+Serif+Display&family=DM+Sans&family=Libre+Baskerville:wght@700&family=Lato&family=Fraunces:wght@700&family=Public+Sans&display=swap" rel="stylesheet">
+
+    <style>
+        @import url('https://fonts.cdnfonts.com/css/times-new-roman');
+        
+        body {
+            margin: 0;
+            padding: 0px;
+            font-family: 'Libre Baskerville', serif;
+            background-color: rgb(34, 32, 32);
+            color: #f6ebe1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 2000px;
+            height:1000px;
+            padding: 20px;
+            background-color: rgb(34, 32, 32);
+            border-radius: 8px;
+            height: 95vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: left;
+            margin-bottom: 10px;
+        }
+
+        .title {
+            font-size: 50px;
+            margin-bottom: 18px;
+            color: #f6ebe1;
+            letter-spacing: 2px;
+        }
+
+        .description-text {
+    position: absolute;
+    left: 100px;  
+    top: 150px; 
+    text-align: left;
+    font-size: 14px;
+    color: #888;
+    line-height: 1.3;
+    max-width: 600px;  
+}
+
+        .visualization-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* World section styles */
+        .world-section {
+            position: absolute;
+            top: -200px;
+            left: 1000px;
+            transform: translateX(-50%);
+            width: 0
+            ;
+        }
+
+        .world-triangle-pair {
+            display: flex;
+            gap: 50px;
+            justify-content: center;
+            align-items: flex-end;  
+            min-height: 240px;
+            position: relative;
+        }
+        .world-title {
+    font-size: 30px;
+    color: #f6ebe1;
+    font-weight: normal;
+    transform: rotate(0deg);
+    position: relative;
+    left: 250px;
+    top: 130px;
+    writing-mode: vertical-rl;
+    margin-top: -50px;
+    text-align: right;
+}
+
+.income-countries {
+    font-size: 18px;
+    color: #f6ebe1;
+    font-weight: normal;
+    transform: rotate(180deg);
+    position: relative;
+    left: 0px;
+    top: 400px;
+    writing-mode: vertical-rl;
+    text-align: center;
+}
+        .world-triangle-frame {
+            width: 240px;
+        }
+
+        .world-triangle-info {
+            text-align: center;
+            color: #aaa;
+            font-size: 16px;
+            line-height: 1.2;
+            margin-top: 10px;
+            position: absolute;
+            bottom: -100px;
+            width: 240px;
+        }
+
+        /* Groups section styles */
+        .groups-section {
+            position: absolute;
+            top: 230px;
+            left: 100px;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 60px;
+            width: 100px;
+        }
+
+        .group-container {
+            width: 250px;
+        }
+
+
+
+.group-title {  /* Modified style for group titles */
+    font-size: 18px;
+    margin-bottom: -20px;  /* Reduced margin for groups */
+    text-align: center;
+    color: #f6ebe1;
+    font-weight: normal;
+}
+
+        .group-triangle-pair {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            align-items: center;
+            min-height: 100px;
+            position: relative;
+        }
+
+        .group-triangle-frame {
+            width: 100px;
+        }
+
+        .group-triangle-info {
+            text-align: center;
+            color: #aaa;
+            font-size: 14px;
+            line-height: 1.2;
+            margin-top: 10px;
+            position: absolute;
+            bottom: -25px;
+            width: 140px;
+        }
+
+        .triangle-svg {
+            overflow: visible;
+        }
+
+        .trajectory {
+            fill: none;
+            stroke-width: 1px;
+            opacity: 0.5;
+            transition: opacity 0.2s, stroke-width 0.2s;
+        }
+
+        .trajectory:hover {
+            stroke-width: 2px;
+            opacity: 1;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgb(34, 32, 32,0.95);
+            color: white;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            white-space: pre;
+            border: 1px solid #555;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 1200px) {
+            .groups-section {
+                width: 90%;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .group-container {
+                width: 45%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .groups-section {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .group-container {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">Maternal Mortality Decreases</div>
+            <div class="income-countries">
+              Countries Grouped <br> by Income </div>      
+            <div class="description-text">
+                Between 2000 and 2020, maternal mortality rates declined significantly across most of the world, with 161 countries showing improvement while only 19 nations recorded increases. The global trend shows an impressive 44% reduction in maternal deaths.
+                Low- and lower-middle-income countries led the improvement, with 46% reductions. Upper-middle-income and high-income nations achieved a 43% and a 42% decrease, respectively. However, the data reveals concerning counter-trends: nine high-income countries actually experienced increases in maternal deaths.<br><br>
+              Each line represents a country's trajectory. Triangles pointing down show decreasing mortality rates (improvement),<br>
+              while triangles pointing up show increasing rates. Triangle sizes are proportional to the number of countries for each trend.
+                    </div>
+                        
+        <div class="visualization-container">
+            <div class="world-section">
+                <div id="world-group"></div>
+            </div>
+            <div class="groups-section">
+                <div id="high-income"></div>
+                <div id="upper-middle-income"></div>
+                <div id="lower-middle-income"></div>
+                <div id="low-income"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const colors = {
+            'World': '#DAF7A6',
+            'High income': '#FF6F61',
+            'Upper middle income': '#FFD700',
+            'Lower middle income': '#3FABF5',
+            'Low income': '#00E0B0'
+        };
+        const lineColors = {
+    'World': 'rgba(180, 213, 69,0.5)',        // #B4D545 with 0.2 opacity
+    'High income': 'rgba(255, 111, 97, 0.5)',   // #FFAA33 with 0.2 opacity
+    'Upper middle income': 'rgba(255, 215, 0, 0.5)',  // #8854D0 with 0.2 opacity
+    'Lower middle income': 'rgba(63, 171, 245, 0.5)',  // #3FABF5 with 0.2 opacity
+    'Low income': 'rgba(0, 224, 176, 0.5)'      // #00E0B0 with 0.2 opacity
+};
+
+        let globalMaxCountries = 0;
+        let processedData = null;
+
+        function processData(csvData) {
+    const groupedData = d3.group(csvData, d => d.income_level);
+    const processedData = {};
+    let maxCountriesInAnyGroup = 0;
+
+    // Process each income group
+    groupedData.forEach((countries, incomeLevel) => {
+        if (!incomeLevel) return;
+
+        const decreased = [];
+        const increased = [];
+        let maxDecrease = 0;
+        let maxIncrease = 0;
+
+        countries.forEach(country => {
+            const trajectoryPoints = [];
+            const start = parseFloat(country['2000']);
+            const end = parseFloat(country['2020']);
+            
+            if (!isNaN(start) && !isNaN(end)) {
+                for (let year = 2000; year <= 2020; year++) {
+                    const value = parseFloat(country[year]);
+                    if (!isNaN(value)) {
+                        trajectoryPoints.push({
+                            year,
+                            value,
+                            country: country['Country Name']
+                        });
+                    }
+                }
+
+                const countryData = {
+                    name: country['Country Name'],
+                    change: parseFloat(country['percent_change']),
+                    trajectoryPoints,
+                    start,
+                    end
+                };
+
+                if (country['trend'] === 'decreasing') {
+                    decreased.push(countryData);
+                    maxDecrease = Math.max(maxDecrease, Math.abs(countryData.change));
+                } else {
+                    increased.push(countryData);
+                    maxIncrease = Math.max(maxIncrease, countryData.change);
+                }
+            }
+        });
+
+        // Calculate average change for each group
+        const avgDecreaseChange = decreased.length > 0 
+            ? d3.mean(decreased, d => d.change)
+            : 0;
+        const avgIncreaseChange = increased.length > 0 
+            ? d3.mean(increased, d => d.change)
+            : 0;
+
+        processedData[incomeLevel] = {
+            decreased: {
+                countries: decreased.sort((a, b) => Math.abs(b.change) - Math.abs(a.change)),
+                maxChange: maxDecrease,
+                avgChange: avgDecreaseChange
+            },
+            increased: {
+                countries: increased.sort((a, b) => b.change - a.change),
+                maxChange: maxIncrease,
+                avgChange: avgIncreaseChange
+            }
+        };
+
+        // Update max countries
+        globalMaxCountries = Math.max(
+            globalMaxCountries,
+            decreased.length,
+            increased.length
+        );
+    });
+
+    // Create world data with all country trajectories
+    const allTrajectories = [];
+    csvData.forEach(country => {
+        const trajectoryPoints = [];
+        const start = parseFloat(country['2000']);
+        const end = parseFloat(country['2020']);
+        
+        if (!isNaN(start) && !isNaN(end)) {
+            for (let year = 2000; year <= 2020; year++) {
+                const value = parseFloat(country[year]);
+                if (!isNaN(value)) {
+                    trajectoryPoints.push({
+                        year,
+                        value,
+                        country: country['Country Name']
+                    });
+                }
+            }
+            
+            allTrajectories.push({
+                name: country['Country Name'],
+                change: parseFloat(country['percent_change']),
+                trajectoryPoints,
+                start,
+                end,
+                trend: country['trend']
+            });
+        }
+    });
+
+    const worldDecreased = allTrajectories.filter(t => t.trend === 'decreasing');
+    const worldIncreased = allTrajectories.filter(t => t.trend === 'increasing');
+
+    // Calculate world averages
+    const worldAvgDecrease = worldDecreased.length > 0 
+        ? d3.mean(worldDecreased, d => d.change)
+        : 0;
+    const worldAvgIncrease = worldIncreased.length > 0 
+        ? d3.mean(worldIncreased, d => d.change)
+        : 0;
+
+    processedData['World'] = {
+        decreased: {
+            countries: worldDecreased,
+            maxChange: d3.max(worldDecreased, d => Math.abs(d.change)),
+            avgChange: worldAvgDecrease
+        },
+        increased: {
+            countries: worldIncreased,
+            maxChange: d3.max(worldIncreased, d => d.change),
+            avgChange: worldAvgIncrease
+        }
+    };
+
+    // Update max countries with world data
+    globalMaxCountries = Math.max(
+        globalMaxCountries,
+        worldDecreased.length,
+        worldIncreased.length
+    );
+
+    return processedData;
+}
+
+function createWorldVisualization(containerId, groupData) {
+    const container = d3.select(containerId)
+        .append("div")
+        .attr("class", "group-container");
+
+    container.append("div")
+        .attr("class", "world-title")
+        .text("World");
+
+    const trianglePair = container.append("div")
+        .attr("class", "world-triangle-pair");
+
+    const types = ['decreased', 'increased'];
+    
+    types.forEach((type, index) => {
+        if (groupData[type].countries.length === 0) return;
+
+        const frame = trianglePair.append("div")
+            .attr("class", "world-triangle-frame");
+
+        const svgSize = 240;  // World SVG size
+        const svg = frame.append("svg")
+            .attr("class", "triangle-svg")
+            .attr("width", svgSize)
+            .attr("height", svgSize)
+            .attr("viewBox", `0 0 ${svgSize} ${svgSize}`);
+
+        // Calculate triangle sizes
+        const maxSize = 150;
+        const minSize = 1;
+        const baseSize = Math.max(minSize, 
+            (groupData[type].countries.length / globalMaxCountries) * maxSize);
+
+        const height = baseSize * 2;
+        const width = baseSize * 2;
+
+        const centerX = svgSize/2;
+        const topBase = -40;
+        const bottomBase = svgSize + 30;
+
+        // Generate triangle paths with absolute positions
+        const trianglePath = type === 'decreased'
+            ? `M${centerX-width/2},${topBase} L${centerX+width/2},${topBase} L${centerX},${topBase+height}Z`
+            : `M${centerX-width/2},${bottomBase} L${centerX+width/2},${bottomBase} L${centerX},${bottomBase-height}Z`;
+
+        svg.append("path")
+            .attr("d", trianglePath)
+            .attr("fill", "none")
+            .attr("stroke", colors['World'])
+            .attr("stroke-width", "3");  // Thicker border for World triangles
+        // Add text inside triangle
+        if (type === 'decreased') {
+    const textY = topBase + height/3;
+    svg.append("text")
+        .attr("x", centerX)
+        .attr("y", textY + 20)
+        .attr("text-anchor", "middle")
+        .attr("fill", '#DAF7A6')
+        .style("font-size", "50px")
+        .text(`- ${Math.abs(groupData[type].avgChange).toFixed(0)}%`);
+}
+if (type === 'increased') {
+    const textY = topBase + height+200;
+    svg.append("text")
+        .attr("x", centerX)
+        .attr("y", textY + 20)
+        .attr("text-anchor", "middle")
+        .attr("fill", '#DAF7A6')
+        .style("font-size", "20px")
+        .text(`+ ${Math.abs(groupData[type].avgChange).toFixed(0)}%`);
+}
+        const xScale = d3.scaleLinear()
+            .domain([2000, 2020])
+            .range([centerX-width/2, centerX+width/2]);
+
+        const yScale = d3.scaleLog()
+            .domain([1, 1500])
+            .range(type === 'decreased' 
+                ? [topBase+height, topBase]
+                : [bottomBase-height, bottomBase]);
+
+        const line = d3.line()
+            .x(d => xScale(d.year))
+            .y(d => yScale(d.value))
+            .curve(d3.curveMonotoneX);
+
+        // Add trajectories
+        groupData[type].countries.forEach(country => {
+            svg.append("path")
+                .datum(country.trajectoryPoints)
+                .attr("class", "trajectory")
+                .attr("d", line)
+                .attr("stroke", lineColors['World'])
+                .on("mouseover", function(event) {
+                    const startValue = country.trajectoryPoints[0].value;
+                    const endValue = country.trajectoryPoints[country.trajectoryPoints.length - 1].value;
+                    const changePercent = ((endValue - startValue) / startValue * 100).toFixed(1);
+                    
+                    d3.select(this)
+                        .style("stroke-width", "2px")
+                        .style("opacity", "1");
+
+                    d3.select("body").append("div")
+                        .attr("class", "tooltip")
+                        .style("opacity", 1)
+                        .html(`Country: ${country.name}\n` +
+                             `2000: ${startValue.toFixed(1)}\n` +
+                             `2020: ${endValue.toFixed(1)}\n` +
+                             `Change: ${changePercent}%`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 10) + "px");
+                })
+                .on("mouseout", function() {
+                    d3.select(this)
+                        .style("stroke-width", null)
+                        .style("opacity", null);
+                    d3.selectAll(".tooltip").remove();
+                });
+        });
+        
+
+        frame.append("div")
+    .attr("class", "world-triangle-info")
+    .html(`${type === 'decreased' ? 'Less deaths: ' : 'More deaths: '} <br>` +
+          `${groupData[type].countries.length} ${groupData[type].countries.length === 1 ? 'country' : 'countries'}` );
+         // `${type === 'decreased' ? '' : `<br>average increase: ${Math.abs(groupData[type].avgChange).toFixed(0)}%`}`);
+    });
+}
+
+function createGroupVisualization(containerId, groupData, groupName) {
+    const container = d3.select(containerId)
+        .append("div")
+        .attr("class", "group-container");
+
+    container.append("div")
+        .attr("class", "group-title")
+        .text(groupName);
+
+    const trianglePair = container.append("div")
+        .attr("class", "group-triangle-pair");
+
+    const types = ['decreased', 'increased'];
+    
+    types.forEach((type, index) => {
+        if (groupData[type].countries.length === 0) return;
+
+        const frame = trianglePair.append("div")
+            .attr("class", "group-triangle-frame");
+
+        const svgSize = 140;  // Group SVG size
+        const svg = frame.append("svg")
+            .attr("class", "triangle-svg")
+            .attr("width", svgSize)
+            .attr("height", svgSize)
+            .attr("viewBox", `0 0 ${svgSize} ${svgSize}`);
+
+        // Calculate triangle sizes
+        const maxSize = 120;
+        const minSize = 1;
+        const baseSize = Math.max(minSize, 
+            (groupData[type].countries.length / globalMaxCountries) * maxSize);
+
+        const height = baseSize * 2;
+        const width = baseSize * 2;
+
+        const centerX = svgSize/2;
+        const topBase = 40;
+        const bottomBase = svgSize - 40;
+
+        // Generate triangle paths with absolute positions
+        const trianglePath = type === 'decreased'
+            ? `M${centerX-width/2},${topBase} L${centerX+width/2},${topBase} L${centerX},${topBase+height}Z`
+            : `M${centerX-width/2},${bottomBase} L${centerX+width/2},${bottomBase} L${centerX},${bottomBase-height}Z`;
+
+        svg.append("path")
+            .attr("d", trianglePath)
+            .attr("fill", "none")
+            .attr("stroke", colors[groupName])
+            .attr("stroke-width", "2");  // Thinner border for group triangles
+// Add text inside triangle
+if (type === 'decreased') {
+    const textY = topBase + height-65;
+    svg.append("text")
+        .attr("x", centerX)
+        .attr("y", textY + 20)
+        .attr("text-anchor", "middle")
+        .attr("fill", colors[groupName])
+        .style("font-size", "15px")
+        .text(`- ${Math.abs(groupData[type].avgChange).toFixed(0)}%`);
+}
+// Add text inside triangle
+if (type === 'increased') {
+    const textY = topBase + height-20;
+    svg.append("text")
+        .attr("x", centerX)
+        .attr("y", textY + 20)
+        .attr("text-anchor", "middle")
+        .attr("fill", colors[groupName])
+        .style("font-size", "15px")
+        .text(`+ ${Math.abs(groupData[type].avgChange).toFixed(0)}%`);
+}
+       
+       
+
+
+                const xScale = d3.scaleLinear()
+                    .domain([2000, 2020])
+                    .range([centerX-width/2, centerX+width/2]);
+
+        const yScale = d3.scaleLog()
+            .domain([1, 1500])
+            .range(type === 'decreased' 
+                ? [topBase+height, topBase]
+                : [bottomBase-height, bottomBase]);
+
+        const line = d3.line()
+            .x(d => xScale(d.year))
+            .y(d => yScale(d.value))
+            .curve(d3.curveMonotoneX);
+
+        groupData[type].countries.forEach(country => {
+            svg.append("path")
+                .datum(country.trajectoryPoints)
+                .attr("class", "trajectory")
+                .attr("d", line)
+                .attr("stroke", lineColors[groupName])
+                .on("mouseover", function(event) {
+                    const startValue = country.trajectoryPoints[0].value;
+                    const endValue = country.trajectoryPoints[country.trajectoryPoints.length - 1].value;
+                    const changePercent = ((endValue - startValue) / startValue * 100).toFixed(1);
+                    
+                    d3.select(this)
+                        .style("stroke-width", "2px")
+                        .style("opacity", "1");
+
+                    d3.select("body").append("div")
+                        .attr("class", "tooltip")
+                        .style("opacity", 1)
+                        .html(`Country: ${country.name}\n` +
+                             `2000: ${startValue.toFixed(1)}\n` +
+                             `2020: ${endValue.toFixed(1)}\n` +
+                             `Change: ${changePercent}%`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 10) + "px");
+                })
+                .on("mouseout", function() {
+                    d3.select(this)
+                        .style("stroke-width", null)
+                        .style("opacity", null);
+                    d3.selectAll(".tooltip").remove();
+                });
+        });
+
+      frame.append("div")
+    .attr("class", "group-triangle-info")
+    .html(`${type === 'decreased' ? 'Less deaths: ' : 'More deaths: '} <br>` +
+          `${groupData[type].countries.length} ${groupData[type].countries.length === 1 ? 'country' : 'countries'}` 
+         // `${type === 'decreased' ? '' : `<br>average increase: ${Math.abs(groupData[type].avgChange).toFixed(0)}%`}`)
+    );
+    });
+}
+
+
+        // Load and process data
+d3.csv("maternal_health_countries.csv").then(csvData => {
+    processedData = processData(csvData);
+    
+    // Create World visualization using dedicated function
+    createWorldVisualization("#world-group", processedData["World"]);
+
+    // Create income group visualizations using dedicated function
+    createGroupVisualization("#high-income", processedData["High income"], "High income");
+    createGroupVisualization("#upper-middle-income", processedData["Upper middle income"], "Upper middle income");
+    createGroupVisualization("#lower-middle-income", processedData["Lower middle income"], "Lower middle income");
+    createGroupVisualization("#low-income", processedData["Low income"], "Low income");
+}).catch(error => {
+    console.error("Error loading data:", error);
+    document.body.innerHTML = `
+        <div style="color: red; text-align: center; padding: 20px;">
+            Error loading data. Please check the console for details.
+        </div>
+    `;
+});
+
+    </script>
+</body>
+</html>
+
+
