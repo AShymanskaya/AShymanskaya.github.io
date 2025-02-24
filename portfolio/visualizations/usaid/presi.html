@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>USAID Distribution Analysis</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Spectral:wght@300;400;500;600&display=swap');
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333333;
+            font-family: 'Spectral', serif;
+            margin: 0;
+            padding: 10px;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        
+        .visualization-container {
+            display: flex;
+            gap: 10px;
+            margin-top: -20px;
+        }
+
+        .main-chart {
+            flex: 0 0 65%;
+            background-color: #f5f5f5;
+            padding: 10px;
+            position: absolute;
+            top: 100px;
+            left: -30px;
+        }
+
+        .country-charts {
+            flex: 0 0 35%;
+            display: flex;
+            flex-direction: column;
+            gap: -50px;
+            position: absolute;
+            top: 0px;
+            left: 1130px;
+        }
+
+        .stream { 
+            opacity: 0.8;
+            transition: opacity 0.2s;
+            mix-blend-mode: multiply;
+        }
+        
+        .stream:hover {
+            opacity: 0.9;
+        }
+
+        .stream-label {
+            font-size: 12px;
+            fill: #333333;
+            font-family: 'Spectral', serif;
+            text-shadow: 0 1px 3px rgba(0,0,0,0);
+            pointer-events: none;
+        }
+
+        .stream-label-total {
+            font-size: 10px;
+            fill: #333333;
+            font-family: 'Spectral', serif;
+            text-shadow: 0 1px 3px rgba(0,0,0,0);
+            pointer-events: none;
+        }
+
+        .label-line {
+            stroke-opacity: 0.6;
+        }
+
+        .tooltip {
+            position: absolute;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.98);
+            color: #333333;
+            border: 1px solid #e0e0e0;
+            border-radius: 2px;
+            pointer-events: none;
+            opacity: 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+            line-height: 1.5;
+            font-family: 'Spectral', serif;
+        }
+
+        .tooltip-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #333333;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 4px;
+        }
+
+        .country-panel {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .axis text {
+            fill: #666666;
+            font-size: 12px;
+            font-family: 'Spectral', serif;
+        }
+
+        .axis line, .axis path {
+            stroke: #cccccc;
+        }
+
+        .axis .domain {
+            stroke: #cccccc;
+        }
+
+        .axis .tick line {
+            stroke: none;
+        }
+
+        .president-label {
+            font-size: 12px;
+            fill: #666666;
+            text-anchor: middle;
+            font-family: 'Spectral', serif;
+        }
+        .explanations-label {
+            font-size: 8px;
+            fill: #666666;
+            text-anchor: middle;
+            font-family: 'Spectral', serif;
+            top: 300;
+        }
+        .focus-label {
+            font-size: 10px;
+            fill: #666666;
+            font-family: 'Spectral', serif;
+            font-style: italic;
+            opacity: 0.8;
+        }
+
+        .presidential-period {
+            stroke: #e0e0e0;
+            stroke-dasharray: 2,2;
+        }
+
+        .chart-title {
+            font-size: 28px;
+            font-weight: 500;
+            color: #333333;
+            margin-bottom: 3px;
+            font-family: 'Spectral', serif;
+        }
+
+        .chart-subtitle {
+            font-size: 16px;
+            color: #666666;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+
+        .sparkline {
+            fill: none;
+            stroke-width: 1.5;
+            opacity: 0.8;
+        }
+
+        .country-title {
+            font-size: 16px;
+            font-weight: 500;
+            fill: #333333;
+            font-family: 'Spectral', serif;
+        }
+
+        .country-stat {
+            font-size: 12px;
+            fill: #666666;
+            font-family: 'Spectral', serif;
+        }
+
+        .peak-marker {
+            fill: #d32f2f;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="chart-title">U.S. Foreign Aid Distribution</div>
+        <div class="chart-subtitle">Analysis of aid categories and recipient countries, 1946-2022</div>
+        <div class="visualization-container">
+            <div class="main-chart" id="main-viz"></div>
+            <div class="country-charts" id="country-viz"></div>
+        </div>
+    </div>
+
+    <script>
+        const mainWidth = 1110;
+        const mainHeight = 550;
+        const mainMargin = {top: 0, right: 0, bottom: 60, left: 40};
+
+        const countryWidth = 300;
+        const countryHeight = 150;
+        const countryMargin = {top: 30, right: 20, bottom: 40, left: 0};
+
+        const colors = [
+            '#2f4858', '#33658a', '#86bbd8', '#758e4f', 
+            '#f6ae2d', '#86a59c', '#9b6a6c', '#5b616a',
+            '#4a4e69'
+        ].map(color => d3.color(color).darker(0.1));
+
+        const mainSvg = d3.select("#main-viz")
+            .append("svg")
+            .attr("width", mainWidth + mainMargin.left + mainMargin.right)
+            .attr("height", mainHeight + mainMargin.top + mainMargin.bottom)
+            .append("g")
+            .attr("transform", `translate(${mainMargin.left},${mainMargin.top})`);
+
+        const tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip");
+
+        const presidents = [
+            {name: "Truman", start: 1946, end: 1953, focus: "Marshall Plan"},
+            {name: "Eisenhower", start: 1953, end: 1961, focus: "Development Loan Fund"},
+            {name: "Kennedy", start: 1961, end: 1963, focus: "Alliance for Progress"},
+            {name: "Johnson", start: 1963, end: 1969, focus: "War on Poverty"},
+            {name: "Nixon", start: 1969, end: 1974, focus: "New Directions"},
+            {name: "Ford", start: 1974, end: 1977, focus: "Food Security"},
+            {name: "Carter", start: 1977, end: 1981, focus: "Human Rights"},
+            {name: "Reagan", start: 1981, end: 1989, focus: "Private Enterprise"},
+            {name: "H.W. Bush", start: 1989, end: 1993, focus: "Freedom Support"},
+            {name: "Clinton", start: 1993, end: 2001, focus: "Partnership"},
+            {name: "W. Bush", start: 2001, end: 2009, focus: "PEPFAR"},
+            {name: "Obama", start: 2009, end: 2017, focus: "Feed the Future"},
+            {name: "Trump", start: 2017, end: 2021, focus: "Prosper Africa"},
+            {name: "Biden", start: 2021, end: 2024, focus: "Build Back Better"}
+        ];
+
+        function getPresidentForYear(year) {
+            const president = presidents.find(p => year >= p.start && year <= p.end);
+            return president ? president.name : '';
+        }
+
+        Promise.all([
+            d3.csv("yearly_summary.csv"),
+            d3.csv("country_sector_summary.csv")
+        ]).then(function([yearlyData, countryData]) {
+            const data = yearlyData.map(d => ({
+                year: +d['Fiscal Year'],
+                category: d['US Category Name'],
+                value: +d['Constant Dollar Amount'] / 1e9
+            })).filter(d => !isNaN(d.year) && !isNaN(d.value));
+
+            // Calculate total spending per category
+            const categoryTotals = {};
+            data.forEach(d => {
+                if (!categoryTotals[d.category]) {
+                    categoryTotals[d.category] = 0;
+                }
+                categoryTotals[d.category] += d.value;
+            });
+
+            const countryTotals = {};
+            countryData.forEach(d => {
+                if (!d['Country Name'] || !d['Constant Dollar Amount'] || !d['US Category Name']) return;
+                const country = d['Country Name'];
+                const year = +d['Fiscal Year'];
+                const amount = +d['Constant Dollar Amount'];
+                
+                if (!countryTotals[country]) {
+                    countryTotals[country] = { 
+                        total: 0,
+                        yearlyData: {}
+                    };
+                }
+                
+                countryTotals[country].total += amount;
+                
+                if (!countryTotals[country].yearlyData[year]) {
+                    countryTotals[country].yearlyData[year] = 0;
+                }
+                
+                countryTotals[country].yearlyData[year] += amount;
+            });
+
+            const topCountries = Object.entries(countryTotals)
+                .filter(([country]) => country.toLowerCase() !== 'world')
+                .sort((a, b) => b[1].total - a[1].total)
+                .slice(0, 4)
+                .map(([country, data]) => ({
+                    country,
+                    ...data
+                }));
+
+            const categories = [...new Set(data.map(d => d.category))];
+            const years = [...new Set(data.map(d => d.year))].sort();
+
+            const processedData = years.map(year => {
+                const yearData = { year };
+                categories.forEach(cat => {
+                    const match = data.find(d => d.year === year && d.category === cat);
+                    yearData[cat] = match ? match.value : 0;
+                });
+                return yearData;
+            });
+
+            const stack = d3.stack()
+                .keys(categories)
+                .order(d3.stackOrderDescending)
+                .offset(d3.stackOffsetSilhouette);
+
+            const stackedData = stack(processedData);
+
+            const x = d3.scaleLinear()
+                .domain(d3.extent(years))
+                .range([0, mainWidth]);
+
+            const y = d3.scaleLinear()
+                .domain([
+                    d3.min(stackedData, layer => d3.min(layer, d => d[0])),
+                    d3.max(stackedData, layer => d3.max(layer, d => d[1]))
+                ])
+                .range([mainHeight, 0]);
+
+            const area = d3.area()
+                .x(d => x(d.data.year))
+                .y0(d => y(d[0]))
+                .y1(d => y(d[1]))
+                .curve(d3.curveBasis);
+
+                const labelPositions = {
+    "Economic Development": {x: 1965, y: 20,length:20},  // Example positions
+    "Peace and Security": {x: 1976, y: 15,length:13},
+    "Multi-sector": {x: 1987, y: 10,length:10},
+    "Humanitarian Assistance": {x: 1994, y: 15,length:13.5},
+    "Health": {x: 2002, y: 20,length:25},
+    "Education and Social Services": {x: 2011, y: 30,length:9},
+    "Democracy, Human Rights, and Governance": {x: 2005, y: 42,length:28},
+    "Program Support": {x: 2019, y: 43,length:27},
+    "Environment": {x: 2016, y: 36,length:9},
+
+};
+const explanations_1={'Economic Development': ['Agriculture',
+'Macroeconomic Foundation for Growth',
+'Infrastructure',  
+  ],
+    
+    'Peace and Security': [  'Stabilization Operations and Security Sector Reform',
+    'Counter-Narcotics',
+    'Combating Weapons of Mass Destruction (WMD)',
+]}
+const explanations_2={
+  'Multi-sector': [  'International Contributions','Debt Relief',
+],
+  'Humanitarian Assistance': ['Protection, Assistance and Solutions',
+  'Disaster Readiness',
+  'Migration Management'],
+  'Health': ['HIV/AIDS',
+  'Maternal and Child Health',
+  'Malaria',
+],
+ 'Democracy, Human Rights, and Governance': ['Rule of Law and Human Rights',
+  'Good Governance',
+  'Political Competition and Consensus-Building',
+ ],
+ 
+ 'Education and Social Services': ['Basic Education',
+ 'Social Assistance',
+ 'Social Services',
+
+ ],
+ 
+ 'Environment': ['Natural Resources and Biodiversity',
+  'Clean Productive Environment',
+  'Environment'],
+
+ 'Program Support': ['Direct Administrative Costs',
+  'Monitoring and Evaluation'],
+ }
+
+            // Add streamgraph paths with labels
+            const streams = mainSvg.selectAll("path.stream")
+                .data(stackedData)
+                .join("path")
+                .attr("class", "stream")
+                .style("fill", (d, i) => colors[i % colors.length])
+                .attr("d", area)
+                .on("mouseover", function(event, d) {
+                    tooltip.style("opacity", 1);
+                    d3.select(this).style("opacity", 0.9);
+                })
+                .on("mouseout", function() {
+                    tooltip.style("opacity", 0);
+                    d3.select(this).style("opacity", 0.8);
+                })
+                .on("mousemove", function(event, d) {
+                    const [mouseX] = d3.pointer(event);
+                    const year = Math.round(x.invert(mouseX));
+                    const value = d.find(p => p.data.year === year);
+                    
+                    if (value) {
+                        const amount = value[1] - value[0];
+                        tooltip
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY + 10) + "px")
+                            .html(`
+                                <div class="tooltip-title">${d.key}</div>
+                                <div>Year: ${year}</div>
+                                <div>Amount: $${amount.toFixed(2)}B</div>
+                                <div>President: ${getPresidentForYear(year)}</div>
+                            `);
+                    }
+                });
+
+            // Add enhanced labels with totals
+            stackedData.forEach((layer, i) => {
+                const categoryTotal = categoryTotals[layer.key].toFixed(1);
+                const position = labelPositions[layer.key];
+    if (position) {
+        // Add connecting line - need to use x() and y() scale functions
+        mainSvg.append("line")
+            .attr("class", "label-line")
+            .attr("x1", x(position.x))  // Apply x scale
+            .attr("y1", y(position.y-3))  // Apply y scale
+            .attr("x2", x(position.x))  // Apply x scale
+            .attr("y2", y(position.y -position.length))  // Apply y scale
+            .attr("stroke", '#333333')
+            .attr("stroke-width", 1)
+            .attr("stroke-dasharray", "2,2");
+
+        // Add category name
+        mainSvg.append("text")
+            .attr("class", "stream-label")
+            .attr("x", x(position.x))
+            .attr("y", y(position.y))
+            .attr("text-anchor", "middle")
+            .attr("dy", "0em")
+            .text(layer.key);
+
+        // Add total spending below category name
+        const categoryTotal = categoryTotals[layer.key].toFixed(1);  // Calculate total
+        mainSvg.append("text")
+            .attr("class", "stream-label-total")
+            .attr("x", x(position.x))  // Apply x scale
+            .attr("y", y(position.y))  // Apply y scale
+            .attr("text-anchor", "middle")
+            .attr("dy", "1.2em")
+            .text(`Total: $${categoryTotal}B`);
+    }
+});
+const explanationsDiv = d3.select("body")
+    .append("div")
+    .style("position", "absolute")
+    .style("top", "130px")
+    .style("left", "10px")
+    .style("font-size", "10px")
+    .style("font-family", "Spectral, serif")
+    .style("color", "#666666")
+    .style("max-height", "90px")  // Maximum height before expanding horizontally
+    .style("column-width", "250px") // Base width for each column
+    .style("column-gap", "20px")    // Space between columns
+    .style("column-fill", "auto") ;
+// Add the explanations
+Object.entries(explanations_1).forEach(([category, sectorList]) => {
+    // Add category header
+    explanationsDiv.append("div")
+        .style("font-weight", "bold")
+        .style("margin-top", "10px")
+        .text(category);
+    
+    // Add bullet points for each sector
+    sectorList.forEach(sector => {
+        explanationsDiv.append("div")
+            .style("margin-left", "10px")
+            .text(`• ${sector}`);
+    });
+});
+const explanationsDiv_2 = d3.select("body")
+    .append("div")
+    .style("position", "absolute")
+    .style("top", "470px")
+    .style("left", "10px")
+    .style("font-size", "10px")
+    .style("font-family", "Spectral, serif")
+    .style("color", "#666666")
+    .style("max-height", "170px")  // Maximum height before expanding horizontally
+    .style("column-width", "250px") // Base width for each column
+    .style("column-gap", "20px")    // Space between columns
+    .style("column-fill", "auto")   // Fill columns sequentially
+;
+// Add the explanations
+Object.entries(explanations_2).forEach(([category, sectorList]) => {
+    // Add category header
+    explanationsDiv_2.append("div")
+        .style("font-weight", "bold")
+        .style("margin-top", "10px")
+        .text(category);
+    
+    // Add bullet points for each sector
+    sectorList.forEach(sector => {
+        explanationsDiv_2.append("div")
+            .style("margin-left", "10px")
+            .text(`• ${sector}`);
+    });
+});
+d3.select("body")
+    .append("div")
+    .style("position", "absolute")
+    .style("top", "700px")  // Position it above your explanations div
+    .style("left", "10px")
+    .style("font-size", "12px")
+    .style("font-family", "Spectral, serif")
+    .style("color", "#333333")
+    .style("font-weight", "bold")
+    .text("Source: foreignassistance.gov/data"); // Your independent text here
+
+            // Add axes (without grid)
+            mainSvg.append("g")
+                .attr("class", "axis")
+                .attr("transform", `translate(0,${mainHeight})`)
+                .call(d3.axisBottom(x)
+                    .tickFormat(d3.format("d")));
+
+            // Add presidential periods
+            presidents.forEach(president => {
+                mainSvg.append("line")
+                    .attr("class", "presidential-period")
+                    .attr("x1", x(president.start))
+                    .attr("x2", x(president.start))
+                    .attr("y1", -20)
+                    .attr("y2", mainHeight);
+
+                mainSvg.append("text")
+                    .attr("class", "president-label")
+                    .attr("x", x((president.start + president.end) / 2))
+                    .attr("y", mainHeight + 35)
+                    .text(president.name);
+
+                //mainSvg.append("text")
+                //    .attr("class", "focus-label")
+                //    .attr("transform", `translate(${x(president.start) + 15},${mainHeight - 110}) rotate(-90)`)
+                //    .style("text-anchor", "end")
+                //    .style("dominant-baseline", "hanging")
+                //    .text(president.focus);
+            });
+
+            // Create country panels vertically
+            const countryContainer = d3.select("#country-viz");
+            
+            topCountries.forEach((country, i) => {
+                const countryPanel = countryContainer.append("div")
+                    .attr("class", "country-panel")
+                    .style("position", "absolute")
+                    .style("top", `${i * 175}px`);
+
+                const countrySvg = countryPanel.append("svg")
+                    .attr("width", countryWidth)
+                    .attr("height", countryHeight);
+
+                const countryG = countrySvg.append("g")
+                    .attr("transform", `translate(${countryMargin.left},${countryMargin.top})`);
+
+                // Convert yearly data to array format
+                const yearlyData = years.map(year => ({
+                    year,
+                    value: (country.yearlyData[year] || 0) / 1e9
+                }));
+
+                // Create scales for sparkline
+                const sparklineX = d3.scaleLinear()
+                    .domain(d3.extent(years))
+                    .range([0, countryWidth - countryMargin.left - countryMargin.right]);
+
+                const sparklineY = d3.scaleLinear()
+                    .domain([0, d3.max(yearlyData, d => d.value)])
+                    .range([countryHeight - countryMargin.top - countryMargin.bottom, 0]);
+
+                // Create sparkline
+                const line = d3.line()
+                    .x(d => sparklineX(d.year))
+                    .y(d => sparklineY(d.value))
+                    .curve(d3.curveBasis);
+
+                // Add sparkline
+                countryG.append("path")
+                    .datum(yearlyData)
+                    .attr("class", "sparkline")
+                    .attr("stroke", colors[i % colors.length])
+                    .attr("d", line);
+
+                // Add country name and total
+                countryG.append("text")
+                    .attr("class", "country-title")
+                    .attr("x", 0)
+                    .attr("y", -15)
+                    .text(`${country.country} (${(country.total / 1e9).toFixed(1)}B)`);
+
+                // Find peak year and value
+                const peak = yearlyData.reduce((max, current) => 
+                    current.value > max.value ? current : max
+                , yearlyData[0]);
+
+                // Add peak marker
+                countryG.append("circle")
+                    .attr("class", "peak-marker")
+                    .attr("cx", sparklineX(peak.year))
+                    .attr("cy", sparklineY(peak.value))
+                    .attr("r", 3);
+
+                // Add peak label
+                countryG.append("text")
+                    .attr("class", "country-stat")
+                    .attr("x", 0)
+                    .attr("y", countryHeight - countryMargin.top - countryMargin.bottom + 35)
+                    .text(`Peak: ${peak.year} under ${getPresidentForYear(peak.year)}`);
+
+                // Add axes (without grid)
+                const xAxis = d3.axisBottom(sparklineX)
+                    .tickFormat(d3.format("d"))
+                    .ticks(5);
+
+                const yAxis = d3.axisLeft(sparklineY)
+                    .tickFormat(d => `${d.toFixed(1)}B`)
+                    .ticks(4);
+
+                countryG.append("g")
+                    .attr("class", "axis")
+                    .attr("transform", `translate(0,${countryHeight - countryMargin.top - countryMargin.bottom})`)
+                    .call(xAxis);
+
+                countryG.append("g")
+                    .attr("class", "axis")
+                    .call(yAxis);
+
+                // Add hover interaction
+                countryG.append("rect")
+                    .attr("width", countryWidth - countryMargin.left - countryMargin.right)
+                    .attr("height", countryHeight - countryMargin.top - countryMargin.bottom)
+                    .attr("fill", "transparent")
+                    .on("mousemove", function(event) {
+                        const [mouseX] = d3.pointer(event);
+                        const year = Math.round(sparklineX.invert(mouseX));
+                        const yearData = yearlyData.find(d => d.year === year);
+                        
+                        if (yearData) {
+                            tooltip
+                                .style("opacity", 1)
+                                .style("left", (event.pageX + 10) + "px")
+                                .style("top", (event.pageY + 20) + "px")
+                                .html(`
+                                    <div class="tooltip-title">${country.country}</div>
+                                    <div>Year: ${year}</div>
+                                    <div>Amount: ${yearData.value.toFixed(2)}B</div>
+                                    <div>President: ${getPresidentForYear(year)}</div>
+                                `);
+                        }
+                    })
+                    .on("mouseout", () => tooltip.style("opacity", 0));
+            });
+        });
+    </script>
+</body>
+</html>

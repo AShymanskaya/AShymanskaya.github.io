@@ -1,0 +1,720 @@
+,Fiscal Year,US Category Name,Constant Dollar Amount
+0,1946,Economic Development,3545424666
+1,1947,Economic Development,5201833736
+2,1948,Economic Development,8797102200
+3,1949,Economic Development,16187021868
+4,1950,Economic Development,12407087328
+5,1951,Economic Development,16386632553
+6,1952,Economic Development,7065892483
+7,1953,Economic Development,5264241504
+8,1954,Economic Development,4656835867
+9,1955,Economic Development,5622526379
+10,1956,Economic Development,5065774675
+11,1957,Economic Development,7005578878
+12,1958,Economic Development,3797677346
+13,1959,Economic Development,3609005551
+14,1960,Economic Development,3953733599
+15,1961,Economic Development,4090178535
+16,1962,Economic Development,4787866091
+17,1963,Economic Development,4733496657
+18,1964,Economic Development,5102940179
+19,1965,Economic Development,6282370671
+20,1966,Economic Development,11909337556
+21,1967,Economic Development,10113724513
+22,1968,Economic Development,13353405089
+23,1969,Economic Development,14256918455
+24,1970,Economic Development,13963173408
+25,1970,Peace and Security,52387091
+26,1971,Economic Development,16814684738
+27,1971,Peace and Security,1024519425
+28,1972,Economic Development,19338621826
+29,1972,Peace and Security,968336101
+30,1973,Economic Development,22953418752
+31,1973,Peace and Security,798159502
+32,1974,Economic Development,9379071735
+33,1974,Peace and Security,1855844998
+34,1975,Economic Development,5652799569
+35,1975,Peace and Security,1104127011
+36,1976,Economic Development,801482568
+37,1977,Economic Development,397278042
+38,1977,Peace and Security,174273
+39,1978,Economic Development,482634866
+40,1978,Peace and Security,783119
+41,1979,Economic Development,356859885
+42,1979,Peace and Security,830969
+43,1980,Economic Development,517990543
+44,1980,Peace and Security,581135
+45,1981,Economic Development,361466987
+46,1981,Peace and Security,601146
+47,1982,Economic Development,495710699
+48,1982,Peace and Security,1137599
+49,1983,Economic Development,549454155
+50,1983,Peace and Security,1296204
+51,1984,Economic Development,442521785
+52,1984,Peace and Security,1340854
+53,1985,Economic Development,488857734
+54,1985,Peace and Security,1764490
+55,1986,Economic Development,392839388
+56,1986,Peace and Security,1895204
+57,1987,Economic Development,513394043
+58,1987,Education and Social Services,23027730
+59,1987,Multi-sector,577447979
+60,1987,Peace and Security,2376461
+61,1988,"Democracy, Human Rights, and Governance",48946211
+62,1988,Economic Development,393322788
+63,1988,Education and Social Services,22304038
+64,1988,Multi-sector,261557224
+65,1988,Peace and Security,2203639
+66,1989,"Democracy, Human Rights, and Governance",37950178
+67,1989,Economic Development,630431310
+68,1989,Education and Social Services,21438356
+69,1989,Multi-sector,218604775
+70,1989,Peace and Security,1464241
+71,1990,"Democracy, Human Rights, and Governance",46916608
+72,1990,Economic Development,831678879
+73,1990,Education and Social Services,20682820
+74,1990,Multi-sector,265710113
+75,1990,Peace and Security,4672249
+76,1991,"Democracy, Human Rights, and Governance",53249773
+77,1991,Economic Development,1239694507
+78,1991,Education and Social Services,19968919
+79,1991,Multi-sector,230567126
+80,1991,Peace and Security,19836305
+81,1992,"Democracy, Human Rights, and Governance",51817914
+82,1992,Economic Development,1700548844
+83,1992,Education and Social Services,19481327
+84,1992,Humanitarian Assistance,409220067
+85,1992,Multi-sector,203459090
+86,1992,Peace and Security,28720950
+87,1992,Program Support,292220
+88,1993,"Democracy, Human Rights, and Governance",22227202
+89,1993,Economic Development,2192827738
+90,1993,Education and Social Services,19034773
+91,1993,Environment,11420703
+92,1993,Humanitarian Assistance,1246221707
+93,1993,Multi-sector,199490133
+94,1993,Peace and Security,441536813
+95,1993,Program Support,2174852
+96,1994,"Democracy, Human Rights, and Governance",26791603
+97,1994,Economic Development,5336810916
+98,1994,Education and Social Services,18628109
+99,1994,Environment,10110982
+100,1994,Humanitarian Assistance,864864210
+101,1994,Multi-sector,156109144
+102,1994,Peace and Security,986977405
+103,1994,Program Support,81218554
+104,1995,"Democracy, Human Rights, and Governance",21515082
+105,1995,Economic Development,2682121854
+106,1995,Education and Social Services,18241183
+107,1995,Environment,23736797
+108,1995,Humanitarian Assistance,686243753
+109,1995,Multi-sector,393161350
+110,1995,Peace and Security,630243270
+111,1995,Program Support,45100398
+112,1996,"Democracy, Human Rights, and Governance",27527036
+113,1996,Economic Development,2140080194
+114,1996,Education and Social Services,17904077
+115,1996,Humanitarian Assistance,780804280
+116,1996,Multi-sector,177234253
+117,1996,Peace and Security,611446703
+118,1997,"Democracy, Human Rights, and Governance",34531064
+119,1997,Economic Development,1716889175
+120,1997,Education and Social Services,17591872
+121,1997,Humanitarian Assistance,806859990
+122,1997,Multi-sector,196344643
+123,1997,Peace and Security,731761840
+124,1997,Program Support,10313983
+125,1998,"Democracy, Human Rights, and Governance",32308910
+126,1998,Economic Development,2271337910
+127,1998,Education and Social Services,17378383
+128,1998,Environment,407585
+129,1998,Health,1635749
+130,1998,Humanitarian Assistance,835422339
+131,1998,Multi-sector,160459936
+132,1998,Peace and Security,857540995
+133,1998,Program Support,8672481
+134,1999,"Democracy, Human Rights, and Governance",72767789
+135,1999,Economic Development,3442420376
+136,1999,Education and Social Services,17161536
+137,1999,Environment,463356
+138,1999,Health,21450253
+139,1999,Humanitarian Assistance,2174951926
+140,1999,Multi-sector,370416577
+141,1999,Peace and Security,1100030070
+142,2000,"Democracy, Human Rights, and Governance",59058039
+143,2000,Economic Development,2999451048
+144,2000,Education and Social Services,16896400
+145,2000,Environment,5475075
+146,2000,Health,17375120
+147,2000,Humanitarian Assistance,1405634121
+148,2000,Multi-sector,274108859
+149,2000,Peace and Security,923160425
+150,2001,"Democracy, Human Rights, and Governance",1307403245
+151,2001,Economic Development,2819509102
+152,2001,Education and Social Services,2397591166
+153,2001,Environment,436920890
+154,2001,Health,3110606392
+155,2001,Humanitarian Assistance,3213908836
+156,2001,Multi-sector,508532324
+157,2001,Peace and Security,2502599169
+158,2001,Program Support,1817807882
+159,2002,"Democracy, Human Rights, and Governance",2024200150
+160,2002,Economic Development,5675267669
+161,2002,Education and Social Services,2632424552
+162,2002,Environment,623933262
+163,2002,Health,4297394316
+164,2002,Humanitarian Assistance,5780160042
+165,2002,Multi-sector,539937084
+166,2002,Peace and Security,2821242139
+167,2002,Program Support,1864998943
+168,2003,"Democracy, Human Rights, and Governance",2104020963
+169,2003,Economic Development,6046944644
+170,2003,Education and Social Services,3230507324
+171,2003,Environment,566643660
+172,2003,Health,4644991461
+173,2003,Humanitarian Assistance,6407691729
+174,2003,Multi-sector,579355016
+175,2003,Peace and Security,2980917363
+176,2003,Program Support,2125403177
+177,2004,"Democracy, Human Rights, and Governance",4210507610
+178,2004,Economic Development,7095404847
+179,2004,Education and Social Services,3584314732
+180,2004,Environment,777918019
+181,2004,Health,5363642938
+182,2004,Humanitarian Assistance,4167045613
+183,2004,Multi-sector,355894196
+184,2004,Peace and Security,3324843155
+185,2004,Program Support,2305597015
+186,2005,"Democracy, Human Rights, and Governance",6693990813
+187,2005,Economic Development,11879367446
+188,2005,Education and Social Services,3269886219
+189,2005,Environment,561366727
+190,2005,Health,7520888969
+191,2005,Humanitarian Assistance,6588137797
+192,2005,Multi-sector,683848972
+193,2005,Peace and Security,6236154778
+194,2005,Program Support,2233163989
+195,2006,"Democracy, Human Rights, and Governance",3664142803
+196,2006,Economic Development,10491044582
+197,2006,Education and Social Services,3667828406
+198,2006,Environment,504019289
+199,2006,Health,8369907456
+200,2006,Humanitarian Assistance,5715514788
+201,2006,Multi-sector,328533656
+202,2006,Peace and Security,3424278105
+203,2006,Program Support,2306814642
+204,2007,"Democracy, Human Rights, and Governance",3304096424
+205,2007,Economic Development,9785035972
+206,2007,Education and Social Services,3582852237
+207,2007,Environment,434153377
+208,2007,Health,8897748375
+209,2007,Humanitarian Assistance,5038034758
+210,2007,Multi-sector,381989157
+211,2007,Peace and Security,3357241596
+212,2007,Program Support,2344469925
+213,2008,"Democracy, Human Rights, and Governance",3080462568
+214,2008,Economic Development,10491348274
+215,2008,Education and Social Services,2673210993
+216,2008,Environment,459563661
+217,2008,Health,10808249355
+218,2008,Humanitarian Assistance,6991768354
+219,2008,Multi-sector,396379230
+220,2008,Peace and Security,4698844190
+221,2008,Program Support,2595146513
+222,2009,"Democracy, Human Rights, and Governance",5394471051
+223,2009,Economic Development,7712370965
+224,2009,Education and Social Services,2906119600
+225,2009,Environment,474693093
+226,2009,Health,14117643975
+227,2009,Humanitarian Assistance,7605019278
+228,2009,Multi-sector,447861365
+229,2009,Peace and Security,6051412495
+230,2009,Program Support,3067962561
+231,2010,"Democracy, Human Rights, and Governance",5549431274
+232,2010,Economic Development,6464512965
+233,2010,Education and Social Services,3539671844
+234,2010,Environment,750757490
+235,2010,Health,12731499866
+236,2010,Humanitarian Assistance,6435850124
+237,2010,Multi-sector,1228891193
+238,2010,Peace and Security,6285822470
+239,2010,Program Support,4526998443
+240,2011,"Democracy, Human Rights, and Governance",6074452533
+241,2011,Economic Development,6535741446
+242,2011,Education and Social Services,3147953885
+243,2011,Environment,896578180
+244,2011,Health,13763968770
+245,2011,Humanitarian Assistance,6843271221
+246,2011,Multi-sector,1016943892
+247,2011,Peace and Security,5950259476
+248,2011,Program Support,4161503237
+249,2012,"Democracy, Human Rights, and Governance",5814522650
+250,2012,Economic Development,6014273612
+251,2012,Education and Social Services,2281638209
+252,2012,Environment,998207217
+253,2012,Health,17552085745
+254,2012,Humanitarian Assistance,5603860364
+255,2012,Multi-sector,683322223
+256,2012,Peace and Security,5844015908
+257,2012,Program Support,4985127479
+258,2013,"Democracy, Human Rights, and Governance",4070992876
+259,2013,Economic Development,7131149227
+260,2013,Education and Social Services,1810851058
+261,2013,Environment,1081579085
+262,2013,Health,16501721914
+263,2013,Humanitarian Assistance,5838259342
+264,2013,Multi-sector,1159962927
+265,2013,Peace and Security,4820487615
+266,2013,Program Support,5107723014
+267,2014,"Democracy, Human Rights, and Governance",3189109456
+268,2014,Economic Development,5670023040
+269,2014,Education and Social Services,2229001816
+270,2014,Environment,1301283599
+271,2014,Health,17203427248
+272,2014,Humanitarian Assistance,7089743900
+273,2014,Multi-sector,806617490
+274,2014,Peace and Security,4178772129
+275,2014,Program Support,5005248996
+276,2015,"Democracy, Human Rights, and Governance",4051149752
+277,2015,Economic Development,7349454046
+278,2015,Education and Social Services,2156305087
+279,2015,Environment,1358610048
+280,2015,Health,15535878403
+281,2015,Humanitarian Assistance,8086192781
+282,2015,Multi-sector,912802954
+283,2015,Peace and Security,6582534292
+284,2015,Program Support,5212704948
+285,2016,"Democracy, Human Rights, and Governance",2871560749
+286,2016,Economic Development,5395341532
+287,2016,Education and Social Services,2510852044
+288,2016,Environment,2585318290
+289,2016,Health,18738127052
+290,2016,Humanitarian Assistance,7560337732
+291,2016,Multi-sector,1111575354
+292,2016,Peace and Security,12958430264
+293,2016,Program Support,5463815765
+294,2017,"Democracy, Human Rights, and Governance",4497429513
+295,2017,Economic Development,4459688284
+296,2017,Education and Social Services,2589121710
+297,2017,Environment,2432059577
+298,2017,Health,16477795744
+299,2017,Humanitarian Assistance,8031287907
+300,2017,Multi-sector,787626079
+301,2017,Peace and Security,7438313461
+302,2017,Program Support,5982218686
+303,2018,"Democracy, Human Rights, and Governance",3725726768
+304,2018,Economic Development,5193977308
+305,2018,Education and Social Services,2542538197
+306,2018,Environment,709849427
+307,2018,Health,16086488131
+308,2018,Humanitarian Assistance,9894415607
+309,2018,Multi-sector,890831071
+310,2018,Peace and Security,9960642138
+311,2018,Program Support,5428327027
+312,2019,"Democracy, Human Rights, and Governance",3570000204
+313,2019,Economic Development,5850743344
+314,2019,Education and Social Services,2147693501
+315,2019,Environment,353705343
+316,2019,Health,15502205872
+317,2019,Humanitarian Assistance,11053998056
+318,2019,Multi-sector,810594548
+319,2019,Peace and Security,7695932995
+320,2019,Program Support,5627735415
+321,2020,"Democracy, Human Rights, and Governance",3623162945
+322,2020,Economic Development,7707123149
+323,2020,Education and Social Services,1984860432
+324,2020,Environment,176788751
+325,2020,Health,20064675485
+326,2020,Humanitarian Assistance,11994480563
+327,2020,Multi-sector,1187113191
+328,2020,Peace and Security,6672536046
+329,2020,Program Support,5811504940
+330,2021,"Democracy, Human Rights, and Governance",2481692059
+331,2021,Economic Development,5490478500
+332,2021,Education and Social Services,1824359796
+333,2021,Environment,105521533
+334,2021,Health,27382750782
+335,2021,Humanitarian Assistance,10587789802
+336,2021,Multi-sector,613010036
+337,2021,Peace and Security,3127618086
+338,2021,Program Support,6261622526
+339,2022,"Democracy, Human Rights, and Governance",2202751909
+340,2022,Economic Development,22718859747
+341,2022,Education and Social Services,1599159192
+342,2022,Environment,135649070
+343,2022,Health,24623721809
+344,2022,Humanitarian Assistance,13121692467
+345,2022,Multi-sector,1490924525
+346,2022,Peace and Security,19816273222
+347,2022,Program Support,5933416009
+348,2023,"Democracy, Human Rights, and Governance",2558727883
+349,2023,Economic Development,36177651621
+350,2023,Education and Social Services,1690391992
+351,2023,Environment,2247865831
+352,2023,Health,14224293430
+353,2023,Humanitarian Assistance,11976594151
+354,2023,Multi-sector,876808184
+355,2023,Peace and Security,6241796766
+356,2023,Program Support,6620080245
+357,2024,"Democracy, Human Rights, and Governance",2393143073
+358,2024,Economic Development,14895173199
+359,2024,Education and Social Services,1532244126
+360,2024,Environment,60209497
+361,2024,Health,15066153319
+362,2024,Humanitarian Assistance,6965880816
+363,2024,Multi-sector,136068330
+364,2024,Peace and Security,599067755
+365,2024,Program Support,6170617749
+366,1946,Economic Development,35041517068
+367,1947,Economic Development,70687478783
+368,1948,Economic Development,24066746514
+369,1949,Economic Development,66799623281
+370,1950,Economic Development,48134117213
+371,1951,Economic Development,56841515540
+372,1952,Economic Development,55947686516
+373,1953,Economic Development,39965872412
+374,1954,Economic Development,38137477421
+375,1955,Economic Development,30886044481
+376,1956,Economic Development,37052206843
+377,1957,Economic Development,33779992387
+378,1958,Economic Development,28830130123
+379,1959,Economic Development,37008214041
+380,1960,Economic Development,37249028830
+381,1961,Economic Development,38606362973
+382,1962,Economic Development,45584670267
+383,1963,Economic Development,43917136071
+384,1964,Economic Development,34546450113
+385,1965,Economic Development,33845125246
+386,1966,Economic Development,38109355684
+387,1967,Economic Development,34461246989
+388,1968,Economic Development,32548515183
+389,1969,Economic Development,28875278444
+390,1970,Economic Development,23440795532
+391,1970,Peace and Security,2718885649
+392,1971,Economic Development,20160963830
+393,1971,Peace and Security,7734273048
+394,1972,Economic Development,24898661021
+395,1972,Peace and Security,5140037734
+396,1973,Economic Development,21697418898
+397,1973,Peace and Security,5187147954
+398,1974,Economic Development,14974474780
+399,1974,Peace and Security,16298049465
+400,1975,Economic Development,19369606007
+401,1975,Peace and Security,5160035644
+402,1976,Economic Development,15937181393
+403,1976,Peace and Security,13019971757
+404,1976tq,Economic Development,10735400803
+405,1977,Economic Development,21765754329
+406,1977,Peace and Security,8556691119
+407,1978,Economic Development,24237798322
+408,1978,Peace and Security,8679770831
+409,1979,Economic Development,26838217486
+410,1979,Peace and Security,20318055324
+411,1980,Economic Development,23396950036
+412,1980,Peace and Security,6662871166
+413,1981,Economic Development,20618552052
+414,1981,Peace and Security,9270566460
+415,1982,Economic Development,21345968623
+416,1982,Peace and Security,10877711759
+417,1983,Economic Development,21618241389
+418,1983,Peace and Security,13486825483
+419,1984,Economic Development,22041809483
+420,1984,Peace and Security,14492281255
+421,1985,Economic Development,31122722626
+422,1985,Peace and Security,11973844137
+423,1986,Economic Development,25087743993
+424,1986,Peace and Security,11752322805
+425,1987,Economic Development,21263143248
+426,1987,Multi-sector,43176995
+427,1987,Peace and Security,9523569336
+428,1988,"Democracy, Human Rights, and Governance",165393364
+429,1988,Economic Development,21073372563
+430,1988,Multi-sector,38630594
+431,1988,Peace and Security,9137739099
+432,1989,"Democracy, Human Rights, and Governance",176969343
+433,1989,Economic Development,20449295465
+434,1989,Multi-sector,27355342
+435,1989,Peace and Security,9400796358
+436,1990,"Democracy, Human Rights, and Governance",252324602
+437,1990,Economic Development,21461135800
+438,1990,Multi-sector,21013744
+439,1990,Peace and Security,10194359247
+440,1991,"Democracy, Human Rights, and Governance",259409354
+441,1991,Economic Development,22393720605
+442,1991,Multi-sector,15296192
+443,1991,Peace and Security,9635019252
+444,1992,"Democracy, Human Rights, and Governance",262268600
+445,1992,Economic Development,17950408046
+446,1992,Education and Social Services,19481328
+447,1992,Humanitarian Assistance,1327798606
+448,1992,Multi-sector,15214917
+449,1992,Peace and Security,8647562704
+450,1993,"Democracy, Human Rights, and Governance",279246970
+451,1993,Economic Development,16947754921
+452,1993,Humanitarian Assistance,1359900275
+453,1993,Multi-sector,13883964
+454,1993,Peace and Security,8765904245
+455,1994,"Democracy, Human Rights, and Governance",194710410
+456,1994,Economic Development,13473530387
+457,1994,Humanitarian Assistance,1453091311
+458,1994,Multi-sector,14023241
+459,1994,Peace and Security,7565667503
+460,1995,"Democracy, Human Rights, and Governance",190602965
+461,1995,Economic Development,15139484586
+462,1995,Education and Social Services,9120592
+463,1995,Humanitarian Assistance,1308959007
+464,1995,Multi-sector,11882307
+465,1995,Peace and Security,7207421864
+466,1995,Program Support,7233614
+467,1996,"Democracy, Human Rights, and Governance",201033371
+468,1996,Economic Development,12104339142
+469,1996,Humanitarian Assistance,1715291403
+470,1996,Multi-sector,12468400
+471,1996,Peace and Security,8095387715
+472,1996,Program Support,478409
+473,1997,"Democracy, Human Rights, and Governance",349342639
+474,1997,Economic Development,11907999551
+475,1997,Humanitarian Assistance,1834533763
+476,1997,Multi-sector,12250980
+477,1997,Peace and Security,6850757450
+478,1997,Program Support,261030
+479,1998,"Democracy, Human Rights, and Governance",392630325
+480,1998,Economic Development,12664674721
+481,1998,Environment,588537
+482,1998,Health,3417298
+483,1998,Humanitarian Assistance,2075332489
+484,1998,Multi-sector,37780751
+485,1998,Peace and Security,6567427598
+486,1999,"Democracy, Human Rights, and Governance",808841054
+487,1999,Economic Development,10712555278
+488,1999,Environment,153421
+489,1999,Health,102183395
+490,1999,Humanitarian Assistance,3328436481
+491,1999,Multi-sector,2304273254
+492,1999,Peace and Security,6797494760
+493,1999,Program Support,182751472
+494,2000,"Democracy, Human Rights, and Governance",2193048199
+495,2000,Economic Development,7403703622
+496,2000,Education and Social Services,124545
+497,2000,Environment,1395991
+498,2000,Health,150279572
+499,2000,Humanitarian Assistance,3177083410
+500,2000,Multi-sector,1772663038
+501,2000,Peace and Security,8176949953
+502,2000,Program Support,181970208
+503,2001,"Democracy, Human Rights, and Governance",4801170877
+504,2001,Economic Development,3201470961
+505,2001,Education and Social Services,1499942470
+506,2001,Environment,324431023
+507,2001,Health,1315462624
+508,2001,Humanitarian Assistance,4021850446
+509,2001,Multi-sector,3596635050
+510,2001,Peace and Security,13269283699
+511,2001,Program Support,745816303
+512,2002,"Democracy, Human Rights, and Governance",1957791797
+513,2002,Economic Development,5355319820
+514,2002,Education and Social Services,1858836190
+515,2002,Environment,237042326
+516,2002,Health,1976439311
+517,2002,Humanitarian Assistance,2342967936
+518,2002,Multi-sector,3657491372
+519,2002,Peace and Security,16540316758
+520,2002,Program Support,746746992
+521,2003,"Democracy, Human Rights, and Governance",10371901207
+522,2003,Economic Development,7467469665
+523,2003,Education and Social Services,2063918048
+524,2003,Environment,352714305
+525,2003,Health,2847957401
+526,2003,Humanitarian Assistance,6317192676
+527,2003,Multi-sector,2044390753
+528,2003,Peace and Security,23297770805
+529,2003,Program Support,772197766
+530,2004,"Democracy, Human Rights, and Governance",5597508676
+531,2004,Economic Development,12655053769
+532,2004,Education and Social Services,1522234395
+533,2004,Environment,365816598
+534,2004,Health,5659601713
+535,2004,Humanitarian Assistance,3509827949
+536,2004,Multi-sector,8885857923
+537,2004,Peace and Security,20468801781
+538,2004,Program Support,947440858
+539,2005,"Democracy, Human Rights, and Governance",6487918863
+540,2005,Economic Development,7826956719
+541,2005,Education and Social Services,1539513956
+542,2005,Environment,365963818
+543,2005,Health,7384916704
+544,2005,Humanitarian Assistance,4297049372
+545,2005,Multi-sector,4592347551
+546,2005,Peace and Security,23147002321
+547,2005,Program Support,1184502758
+548,2006,"Democracy, Human Rights, and Governance",2661509587
+549,2006,Economic Development,7442315058
+550,2006,Education and Social Services,1496157114
+551,2006,Environment,310849933
+552,2006,Health,5620818190
+553,2006,Humanitarian Assistance,3531942032
+554,2006,Multi-sector,4045758994
+555,2006,Peace and Security,36859439039
+556,2006,Program Support,1221036130
+557,2007,"Democracy, Human Rights, and Governance",3828388070
+558,2007,Economic Development,6895378332
+559,2007,Education and Social Services,1807856621
+560,2007,Environment,293417663
+561,2007,Health,5944904273
+562,2007,Humanitarian Assistance,3876847948
+563,2007,Multi-sector,5043315640
+564,2007,Peace and Security,39120406008
+565,2007,Program Support,1537499669
+566,2008,"Democracy, Human Rights, and Governance",5133972313
+567,2008,Economic Development,6439418906
+568,2008,Education and Social Services,3327914796
+569,2008,Environment,366664096
+570,2008,Health,8429556782
+571,2008,Humanitarian Assistance,4955413687
+572,2008,Multi-sector,4108041167
+573,2008,Peace and Security,46609221462
+574,2008,Program Support,1764610490
+575,2009,"Democracy, Human Rights, and Governance",4759407677
+576,2009,Economic Development,5395432392
+577,2009,Education and Social Services,2332401604
+578,2009,Environment,384039878
+579,2009,Health,7289173140
+580,2009,Humanitarian Assistance,5183782241
+581,2009,Multi-sector,5367182375
+582,2009,Peace and Security,45400855659
+583,2009,Program Support,1517498215
+584,2010,"Democracy, Human Rights, and Governance",5272861705
+585,2010,Economic Development,5249378043
+586,2010,Education and Social Services,2338876477
+587,2010,Environment,1480095719
+588,2010,Health,7288395551
+589,2010,Humanitarian Assistance,7420920827
+590,2010,Multi-sector,5290220862
+591,2010,Peace and Security,39370118222
+592,2010,Program Support,1729439021
+593,2011,"Democracy, Human Rights, and Governance",4375027752
+594,2011,Economic Development,5316531943
+595,2011,Education and Social Services,1965920960
+596,2011,Environment,1253395493
+597,2011,Health,7619388276
+598,2011,Humanitarian Assistance,5442896648
+599,2011,Multi-sector,5338244225
+600,2011,Peace and Security,47457492202
+601,2011,Program Support,1697843899
+602,2012,"Democracy, Human Rights, and Governance",5465259378
+603,2012,Economic Development,4451744458
+604,2012,Education and Social Services,1384656631
+605,2012,Environment,1091029077
+606,2012,Health,7503782652
+607,2012,Humanitarian Assistance,5413101854
+608,2012,Multi-sector,6901232240
+609,2012,Peace and Security,42357860205
+610,2012,Program Support,1813748175
+611,2013,"Democracy, Human Rights, and Governance",3515439146
+612,2013,Economic Development,4330006356
+613,2013,Education and Social Services,1946730079
+614,2013,Environment,1104312462
+615,2013,Health,8651483507
+616,2013,Humanitarian Assistance,6024803942
+617,2013,Multi-sector,6528062126
+618,2013,Peace and Security,36817144253
+619,2013,Program Support,1877549148
+620,2014,"Democracy, Human Rights, and Governance",4558767529
+621,2014,Economic Development,2283307604
+622,2014,Education and Social Services,1166485287
+623,2014,Environment,498132965
+624,2014,Health,7341407168
+625,2014,Humanitarian Assistance,8130694557
+626,2014,Multi-sector,7978036879
+627,2014,Peace and Security,27585173243
+628,2014,Program Support,1841216788
+629,2015,"Democracy, Human Rights, and Governance",4557365810
+630,2015,Economic Development,2926885065
+631,2015,Education and Social Services,1483807384
+632,2015,Environment,588782181
+633,2015,Health,7314035604
+634,2015,Humanitarian Assistance,9458566697
+635,2015,Multi-sector,7749685668
+636,2015,Peace and Security,36039334758
+637,2015,Program Support,2119664883
+638,2016,"Democracy, Human Rights, and Governance",1870308792
+639,2016,Economic Development,3727846099
+640,2016,Education and Social Services,1194355052
+641,2016,Environment,1632660307
+642,2016,Health,10174396697
+643,2016,Humanitarian Assistance,9020175524
+644,2016,Multi-sector,5291996205
+645,2016,Peace and Security,25637718533
+646,2016,Program Support,2124934844
+647,2017,"Democracy, Human Rights, and Governance",3018674613
+648,2017,Economic Development,3016828932
+649,2017,Education and Social Services,1372753321
+650,2017,Environment,888526426
+651,2017,Health,8927572524
+652,2017,Humanitarian Assistance,10773635955
+653,2017,Multi-sector,5149904848
+654,2017,Peace and Security,26000872187
+655,2017,Program Support,2484347589
+656,2018,"Democracy, Human Rights, and Governance",3187565463
+657,2018,Economic Development,2450282320
+658,2018,Education and Social Services,908230232
+659,2018,Environment,685428759
+660,2018,Health,7513063752
+661,2018,Humanitarian Assistance,8965104248
+662,2018,Multi-sector,4323418924
+663,2018,Peace and Security,28102892994
+664,2018,Program Support,1993302415
+665,2019,"Democracy, Human Rights, and Governance",3079382219
+666,2019,Economic Development,2539486420
+667,2019,Education and Social Services,984704243
+668,2019,Environment,646774401
+669,2019,Health,6205853605
+670,2019,Humanitarian Assistance,9930848586
+671,2019,Multi-sector,4011765206
+672,2019,Peace and Security,29175180982
+673,2019,Program Support,2485523383
+674,2020,"Democracy, Human Rights, and Governance",3031612221
+675,2020,Economic Development,1750871507
+676,2020,Education and Social Services,762777630
+677,2020,Environment,512232689
+678,2020,Health,6335445864
+679,2020,Humanitarian Assistance,11359302850
+680,2020,Multi-sector,4791214766
+681,2020,Peace and Security,24786982398
+682,2020,Program Support,2140920455
+683,2021,"Democracy, Human Rights, and Governance",1581232663
+684,2021,Economic Development,2909204620
+685,2021,Education and Social Services,686185017
+686,2021,Environment,469628660
+687,2021,Health,7386732912
+688,2021,Humanitarian Assistance,18912773589
+689,2021,Multi-sector,4492373872
+690,2021,Peace and Security,15604357728
+691,2021,Program Support,3556331548
+692,2022,"Democracy, Human Rights, and Governance",1976309057
+693,2022,Economic Development,2872450655
+694,2022,Education and Social Services,1069391071
+695,2022,Environment,1514597989
+696,2022,Health,9305069967
+697,2022,Humanitarian Assistance,22109251665
+698,2022,Multi-sector,5649082262
+699,2022,Peace and Security,17277122483
+700,2022,Program Support,3560864800
+701,2023,"Democracy, Human Rights, and Governance",2367926770
+702,2023,Economic Development,3286039901
+703,2023,Education and Social Services,1230714204
+704,2023,Environment,645820746
+705,2023,Health,11698876617
+706,2023,Humanitarian Assistance,18084602207
+707,2023,Multi-sector,4860285660
+708,2023,Peace and Security,14722950124
+709,2023,Program Support,617259369
+710,2024,"Democracy, Human Rights, and Governance",1408158697
+711,2024,Economic Development,3375150953
+712,2024,Education and Social Services,911170819
+713,2024,Environment,205201980
+714,2024,Health,6724190837
+715,2024,Humanitarian Assistance,12064533019
+716,2024,Multi-sector,597978925
+717,2024,Peace and Security,950037839
+718,2024,Program Support,3191254037
