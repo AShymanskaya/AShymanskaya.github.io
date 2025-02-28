@@ -40,38 +40,37 @@
             width: 100%;
         }
 
-        .scrolling-wrapper {
-            display: flex;
-            overflow-x: hidden;
-            scroll-snap-type: x mandatory;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-            padding: 20px 0;
-            position: relative;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-
-        .scrolling-wrapper::-webkit-scrollbar {
-            display: none;
-        }
-
-        .item {
-            flex: 0 0 100%;
+        /* New carousel styles */
+        .project-container {
             width: 100%;
-            scroll-snap-align: center;
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .projects-wrapper {
+            display: flex;
+            flex-wrap: nowrap;
+            transition: transform 0.5s ease;
+        }
+        
+        .project-item {
+            width: 100%;
+            flex: 0 0 100%;
+            padding: 0 20px;
             display: flex;
             justify-content: center;
-            padding: 0 20px;
         }
 
         .project-card {
             background: white;
-            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             position: relative;
             overflow: hidden;
             max-width: 600px;
             width: 100%;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            transition: box-shadow 0.3s ease;
         }
 
         .project-card::before {
@@ -87,8 +86,7 @@
         }
 
         .project-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
         .scroll-button {
@@ -107,6 +105,7 @@
             z-index: 10;
             transition: all 0.3s ease;
             opacity: 0.8;
+            border: none;
         }
 
         .scroll-button:hover {
@@ -174,6 +173,10 @@
             background-color: var(--green);
             color: white;
         }
+
+        .hidden-project {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -210,26 +213,26 @@
     <section class="py-12">
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex flex-wrap gap-4">
-                <button class="filter-button active px-6 py-2 rounded-lg bg-[#3D7B5B] text-white">All</button>
-                <button class="filter-button px-6 py-2 rounded-lg text-[#3D7B5B]">Healthcare</button>
-                <button class="filter-button px-6 py-2 rounded-lg text-[#3D7B5B]">Society</button>
-                <button class="filter-button px-6 py-2 rounded-lg text-[#3D7B5B]">History</button>
+                <button class="filter-button active px-6 py-2 rounded-lg bg-[#3D7B5B] text-white" data-filter="all">All</button>
+                <button class="filter-button px-6 py-2 rounded-lg text-[#3D7B5B]" data-filter="healthcare">Healthcare</button>
+                <button class="filter-button px-6 py-2 rounded-lg text-[#3D7B5B]" data-filter="society">Society</button>
+                <button class="filter-button px-6 py-2 rounded-lg text-[#3D7B5B]" data-filter="history">History</button>
             </div>
         </div>
     </section>
 
-    <!-- Scrolling Projects Section -->
+    <!-- New Project Container -->
     <section class="py-12">
         <div class="max-w-6xl mx-auto px-4">
-            <div class="relative">
-                <button class="scroll-button scroll-left" disabled>
+            <div class="relative project-container">
+                <button class="scroll-button scroll-left" id="scrollLeft" disabled>
                     <i class="fas fa-chevron-left"></i>
                 </button>
                 
-                <div class="scrolling-wrapper">
+                <div class="projects-wrapper" id="projectsWrapper">
                     <!-- Healthcare Project -->
-                    <div class="item">
-                        <div class="project-card rounded-xl p-8 shadow-lg" data-category="healthcare,society">
+                    <div class="project-item" data-category="healthcare society">
+                        <div class="project-card">
                             <div class="relative mb-6">
                                 <div class="absolute inset-0 bg-[#E784A9] transform translate-x-2 translate-y-2 rounded-lg opacity-10"></div>
                                 <img src="maternal_health/thumbnail.png" 
@@ -255,8 +258,8 @@
                     </div>
 
                     <!-- Society Project -->
-                    <div class="item">
-                        <div class="project-card rounded-xl p-8 shadow-lg" data-category="society">
+                    <div class="project-item" data-category="society">
+                        <div class="project-card">
                             <div class="relative mb-6">
                                 <div class="absolute inset-0 bg-[#E784A9] transform translate-x-2 translate-y-2 rounded-lg opacity-10"></div>
                                 <img src="children_expectation_usa/thumbnail.png" 
@@ -279,40 +282,38 @@
                         </div>
                     </div>
 
-                    <!-- History Project
-                    <div class="item">
-                        <div class="project-card rounded-xl p-8 shadow-lg" data-category="history">
+                    <!-- US Aid Project -->
+                    <div class="project-item" data-category="society">
+                        <div class="project-card">
                             <div class="relative mb-6">
                                 <div class="absolute inset-0 bg-[#E784A9] transform translate-x-2 translate-y-2 rounded-lg opacity-10"></div>
-                                <img src="british_monarchs/dead_monarchs.png" 
-                                     alt="British Monarchs" 
+                                <img src="usaid/thumbnail.png" 
+                                     alt="U.S. Foreign Aid" 
                                      class="rounded-lg w-full h-64 object-cover relative z-10">
                             </div>
                             <div class="relative z-10">
                                 <div class="flex gap-2 mb-4 flex-wrap">
-                                    <span class="tag">History</span>
-                                    <span class="tag">R</span>
+                                    <span class="tag">Society</span>
+                                    <span class="tag">D3.js</span>
                                 </div>
-                                <h3 class="text-2xl font-bold text-[#3D7B5B] mb-2">How British Monarchs Died</h3>
+                                <h3 class="text-2xl font-bold text-[#3D7B5B] mb-2">U.S. Foreign Aid</h3>
                                 <p class="text-[#7a724c] mb-6">
-                                    An overview of deaths of the british monarchs across ages.
+                                    Analysis of USAID distribution patterns and impact.
                                 </p>
-                                <a href="#" class="text-[#3D7B5B] hover:text-[#E784A9] transition-colors font-medium">
+                                <a href="usaid/presi.html" class="text-[#3D7B5B] hover:text-[#E784A9] transition-colors font-medium">
                                     View Project →
                                 </a>
                             </div>
                         </div>
                     </div>
-                </div> -->
+                </div>
 
-                <button class="scroll-button scroll-right">
+                <button class="scroll-button scroll-right" id="scrollRight">
                     <i class="fas fa-chevron-right"></i>
                 </button>
 
-                <div class="dots flex justify-center mt-6">
-                    <span class="dot active"></span>
-                    <span class="dot"></span>
-                    <span class="dot"></span>
+                <div class="dots flex justify-center mt-6" id="dots-container">
+                    <!-- Dots will be generated by JavaScript -->
                 </div>
             </div>
         </div>
@@ -356,114 +357,134 @@
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const wrapper = document.querySelector('.scrolling-wrapper');
-            const dots = document.querySelectorAll('.dot');
-            const items = document.querySelectorAll('.item');
-            const scrollLeftBtn = document.querySelector('.scroll-left');
-            const scrollRightBtn = document.querySelector('.scroll-right');
-            const filterButtons = document.querySelectorAll('.filter-button');
+    document.addEventListener('DOMContentLoaded', function() {
+        const projectsWrapper = document.getElementById('projectsWrapper');
+        const dotsContainer = document.getElementById('dots-container');
+        const scrollLeftBtn = document.getElementById('scrollLeft');
+        const scrollRightBtn = document.getElementById('scrollRight');
+        const filterButtons = document.querySelectorAll('.filter-button');
+        
+        let allProjects = Array.from(document.querySelectorAll('.project-item'));
+        let visibleProjects = [...allProjects];
+        let currentIndex = 0;
+        
+        // Initialize the dots
+        function initializeDots() {
+            // Clear existing dots
+            dotsContainer.innerHTML = '';
             
-            let currentIndex = 0;
-            
-            // Disable text selection during scroll
-            wrapper.addEventListener('selectstart', e => e.preventDefault());
-
-            // Arrow button navigation
-            scrollLeftBtn.addEventListener('click', () => {
-                currentIndex = Math.max(currentIndex - 1, 0);
-                scrollToItem(currentIndex);
-            });
-
-            scrollRightBtn.addEventListener('click', () => {
-                currentIndex = Math.min(currentIndex + 1, items.length - 1);
-                scrollToItem(currentIndex);
-            });
-
-            // Dot navigation
-            dots.forEach((dot, index) => {
+            // Create dots for visible projects
+            visibleProjects.forEach((_, index) => {
+                const dot = document.createElement('span');
+                dot.className = 'dot' + (index === currentIndex ? ' active' : '');
                 dot.addEventListener('click', () => {
-                    currentIndex = index;
-                    scrollToItem(index);
+                    navigateTo(index);
                 });
+                dotsContainer.appendChild(dot);
             });
-
-            function scrollToItem(index) {
-                const itemWidth = wrapper.offsetWidth;
-                wrapper.scrollTo({
-                    left: itemWidth * index,
-                    behavior: 'smooth'
-                });
-                updateDots(index);
-                updateButtons(index);
-            }
-
-            function updateDots(index) {
-                dots.forEach((dot, i) => {
-                    dot.classList.toggle('active', i === index);
-                });
-            }
-
-            function updateButtons(index) {
-                scrollLeftBtn.disabled = index === 0;
-                scrollRightBtn.disabled = index === items.length - 1;
-            }
-
-            // Filter functionality
-            filterButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // Remove active class from all buttons
-                    filterButtons.forEach(btn => {
-                        btn.classList.remove('active', 'bg-[#3D7B5B]', 'text-white');
-                        btn.classList.add('text-[#3D7B5B]');
-                    });
-                    
-                    // Add active class to clicked button
-                    this.classList.add('active', 'bg-[#3D7B5B]', 'text-white');
-                    this.classList.remove('text-[#3D7B5B]');
-                    
-                    const category = this.textContent.toLowerCase();
-                    const visibleItems = [];
-                    
-                    items.forEach((item, index) => {
-                        const projectCard = item.querySelector('.project-card');
-                        const categories = projectCard.dataset.category.split(',');
-                        
-                        if (category === 'all' || categories.includes(category)) {
-                            item.style.display = 'flex';
-                            visibleItems.push(index);
-                        } else {
-                            item.style.display = 'none';
-                        }
-                    });
-
-                    // Update dots to match visible items
-                    const dotsContainer = document.querySelector('.dots');
-                    dotsContainer.innerHTML = '';
-                    visibleItems.forEach((_, index) => {
-                        const dot = document.createElement('span');
-                        dot.className = 'dot' + (index === 0 ? ' active' : '');
-                        dot.addEventListener('click', () => scrollToItem(index));
-                        dotsContainer.appendChild(dot);
-                    });
-
-                    // Reset to first visible item
-                    currentIndex = 0;
-                    scrollToItem(0);
-                });
+        }
+        
+        // Navigate to a specific slide
+        function navigateTo(index) {
+            if (visibleProjects.length === 0) return;
+            
+            // Ensure index is within bounds
+            index = Math.max(0, Math.min(index, visibleProjects.length - 1));
+            currentIndex = index;
+            
+            // Use transform to move the wrapper
+            projectsWrapper.style.transform = `translateX(-${index * 100}%)`;
+            
+            // Update UI
+            updateDots(index);
+            updateButtons(index);
+        }
+        
+        // Update dots
+        function updateDots(index) {
+            const dots = dotsContainer.querySelectorAll('.dot');
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
             });
-
-            // Handle scroll events
-            wrapper.addEventListener('scroll', () => {
-                const itemWidth = wrapper.offsetWidth;
-                currentIndex = Math.round(wrapper.scrollLeft / itemWidth);
-                updateDots(currentIndex);
-                updateButtons(currentIndex);
+        }
+        
+        // Update buttons
+        function updateButtons(index) {
+            scrollLeftBtn.disabled = index === 0;
+            scrollRightBtn.disabled = index === visibleProjects.length - 1;
+        }
+        
+        // Navigate to the previous slide
+        function navigatePrev() {
+            if (currentIndex > 0) {
+                navigateTo(currentIndex - 1);
+            }
+        }
+        
+        // Navigate to the next slide
+        function navigateNext() {
+            if (currentIndex < visibleProjects.length - 1) {
+                navigateTo(currentIndex + 1);
+            }
+        }
+        
+        // Button handlers
+        scrollLeftBtn.addEventListener('click', navigatePrev);
+        scrollRightBtn.addEventListener('click', navigateNext);
+        
+        // Filter functionality
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Update button styles
+                filterButtons.forEach(btn => {
+                    btn.classList.remove('active', 'bg-[#3D7B5B]', 'text-white');
+                    btn.classList.add('text-[#3D7B5B]');
+                });
+                
+                this.classList.add('active', 'bg-[#3D7B5B]', 'text-white');
+                this.classList.remove('text-[#3D7B5B]');
+                
+                const filterValue = this.getAttribute('data-filter');
+                
+                // Filter the projects
+                visibleProjects = allProjects.filter(project => {
+                    if (filterValue === 'all') {
+                        return true;
+                    } else {
+                        const categories = project.getAttribute('data-category');
+                        return categories && categories.includes(filterValue);
+                    }
+                });
+                
+                // Show/hide projects based on filter
+                allProjects.forEach(project => {
+                    if (visibleProjects.includes(project)) {
+                        project.classList.remove('hidden-project');
+                    } else {
+                        project.classList.add('hidden-project');
+                    }
+                });
+                
+                // Reset navigation
+                currentIndex = 0;
+                initializeDots();
+                navigateTo(0);
             });
-
-            // Initialize state
-            updateButtons(0);
         });
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                navigatePrev();
+            } else if (e.key === 'ArrowRight') {
+                navigateNext();
+            }
+        });
+        
+        // Initialize
+        initializeDots();
+        updateButtons(0);
+    });
     </script>
 </body>
 </html>
