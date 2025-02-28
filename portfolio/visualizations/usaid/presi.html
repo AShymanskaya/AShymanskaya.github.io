@@ -191,7 +191,7 @@
 <body>
     <div class="dashboard">
         <div class="chart-title">U.S. Foreign Aid Distribution</div>
-        <div class="chart-subtitle">Analysis of aid categories and recipient countries, 1946-2022</div>
+        <div class="chart-subtitle">Analysis of aid categories and recipient countries, 1946-2024</div>
         <div class="visualization-container">
             <div class="main-chart" id="main-viz"></div>
             <div class="country-charts" id="country-viz"></div>
@@ -333,7 +333,7 @@
                 .curve(d3.curveBasis);
 
                 const labelPositions = {
-    "Economic Development": {x: 1965, y: 20,length:20},  // Example positions
+    "Economic Development": {x: 1965, y: 20,length:20},  
     "Peace and Security": {x: 1976, y: 15,length:13},
     "Multi-sector": {x: 1987, y: 10,length:10},
     "Humanitarian Assistance": {x: 1994, y: 15,length:13.5},
@@ -510,13 +510,13 @@ Object.entries(explanations_2).forEach(([category, sectorList]) => {
 d3.select("body")
     .append("div")
     .style("position", "absolute")
-    .style("top", "700px")  // Position it above your explanations div
+    .style("top", "700px")  
     .style("left", "10px")
     .style("font-size", "12px")
     .style("font-family", "Spectral, serif")
     .style("color", "#333333")
     .style("font-weight", "bold")
-    .text("Source: foreignassistance.gov/data"); // Your independent text here
+    .text("Source: foreignassistance.gov/data"); 
 
             // Add axes (without grid)
             mainSvg.append("g")
