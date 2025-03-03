@@ -2,10 +2,13 @@
 <html>
 <head>
     <title>USAID Distribution Analysis</title>
+    <!-- D3.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <style>
+        /* TYPOGRAPHY */
         @import url('https://fonts.googleapis.com/css2?family=Spectral:wght@300;400;500;600&display=swap');
         
+        /* BASE STYLES */
         body {
             background-color: #f5f5f5;
             color: #333333;
@@ -20,7 +23,7 @@
             padding: 10px;
         }
 
-        
+        /* LAYOUT */
         .visualization-container {
             display: flex;
             gap: 10px;
@@ -46,6 +49,7 @@
             left: 1130px;
         }
 
+        /* STREAMGRAPH STYLES */
         .stream { 
             opacity: 0.8;
             transition: opacity 0.2s;
@@ -76,6 +80,7 @@
             stroke-opacity: 0.6;
         }
 
+        /* TOOLTIP STYLES */
         .tooltip {
             position: absolute;
             padding: 12px 16px;
@@ -99,11 +104,13 @@
             padding-bottom: 4px;
         }
 
+        /* COUNTRY PANEL STYLES */
         .country-panel {
             background-color: #f5f5f5;
             padding: 20px;
         }
 
+        /* AXIS STYLES */
         .axis text {
             fill: #666666;
             font-size: 12px;
@@ -122,12 +129,14 @@
             stroke: none;
         }
 
+        /* LABEL STYLES */
         .president-label {
             font-size: 12px;
             fill: #666666;
             text-anchor: middle;
             font-family: 'Spectral', serif;
         }
+
         .explanations-label {
             font-size: 8px;
             fill: #666666;
@@ -135,19 +144,13 @@
             font-family: 'Spectral', serif;
             top: 300;
         }
-        .focus-label {
-            font-size: 10px;
-            fill: #666666;
-            font-family: 'Spectral', serif;
-            font-style: italic;
-            opacity: 0.8;
-        }
 
         .presidential-period {
             stroke: #e0e0e0;
             stroke-dasharray: 2,2;
         }
 
+        /* TITLE STYLES */
         .chart-title {
             font-size: 28px;
             font-weight: 500;
@@ -163,6 +166,7 @@
             font-style: italic;
         }
 
+        /* COUNTRY CHART STYLES */
         .sparkline {
             fill: none;
             stroke-width: 1.5;
@@ -199,20 +203,39 @@
     </div>
 
     <script>
+        /**
+         * USAID Distribution Analysis Visualization
+         * 
+         * This script creates a streamgraph visualization of U.S. foreign aid distribution
+         * by category over time, along with detailed country-specific information.
+         */
+
+        // =====================================================================
+        // CONSTANTS AND CONFIGURATION
+        // =====================================================================
+        
+        // Main visualization dimensions
         const mainWidth = 1110;
         const mainHeight = 550;
         const mainMargin = {top: 0, right: 0, bottom: 60, left: 40};
 
+        // Country panel dimensions
         const countryWidth = 300;
         const countryHeight = 150;
         const countryMargin = {top: 30, right: 20, bottom: 40, left: 0};
 
+        // Color palette for categories
         const colors = [
             '#2f4858', '#33658a', '#86bbd8', '#758e4f', 
             '#f6ae2d', '#86a59c', '#9b6a6c', '#5b616a',
             '#4a4e69'
         ].map(color => d3.color(color).darker(0.1));
 
+        // =====================================================================
+        // CREATE SVG CONTAINERS AND TOOLTIPS
+        // =====================================================================
+        
+        // Create main SVG container
         const mainSvg = d3.select("#main-viz")
             .append("svg")
             .attr("width", mainWidth + mainMargin.left + mainMargin.right)
@@ -220,42 +243,63 @@
             .append("g")
             .attr("transform", `translate(${mainMargin.left},${mainMargin.top})`);
 
+        // Create tooltip container
         const tooltip = d3.select("body").append("div")
             .attr("class", "tooltip");
 
+        // =====================================================================
+        // PRESIDENTIAL DATA
+        // =====================================================================
+        
+        // U.S. Presidents
         const presidents = [
-            {name: "Truman", start: 1946, end: 1953, focus: "Marshall Plan"},
-            {name: "Eisenhower", start: 1953, end: 1961, focus: "Development Loan Fund"},
-            {name: "Kennedy", start: 1961, end: 1963, focus: "Alliance for Progress"},
-            {name: "Johnson", start: 1963, end: 1969, focus: "War on Poverty"},
-            {name: "Nixon", start: 1969, end: 1974, focus: "New Directions"},
-            {name: "Ford", start: 1974, end: 1977, focus: "Food Security"},
-            {name: "Carter", start: 1977, end: 1981, focus: "Human Rights"},
-            {name: "Reagan", start: 1981, end: 1989, focus: "Private Enterprise"},
-            {name: "H.W. Bush", start: 1989, end: 1993, focus: "Freedom Support"},
-            {name: "Clinton", start: 1993, end: 2001, focus: "Partnership"},
-            {name: "W. Bush", start: 2001, end: 2009, focus: "PEPFAR"},
-            {name: "Obama", start: 2009, end: 2017, focus: "Feed the Future"},
-            {name: "Trump", start: 2017, end: 2021, focus: "Prosper Africa"},
-            {name: "Biden", start: 2021, end: 2024, focus: "Build Back Better"}
+            {name: "Truman", start: 1946, end: 1953},
+            {name: "Eisenhower", start: 1953, end: 1961},
+            {name: "Kennedy", start: 1961, end: 1963},
+            {name: "Johnson", start: 1963, end: 1969},
+            {name: "Nixon", start: 1969, end: 1974},
+            {name: "Ford", start: 1974, end: 1977},
+            {name: "Carter", start: 1977, end: 1981},
+            {name: "Reagan", start: 1981, end: 1989},
+            {name: "H.W. Bush", start: 1989, end: 1993},
+            {name: "Clinton", start: 1993, end: 2001},
+            {name: "W. Bush", start: 2001, end: 2009},
+            {name: "Obama", start: 2009, end: 2017},
+            {name: "Trump", start: 2017, end: 2021},
+            {name: "Biden", start: 2021, end: 2024}
         ];
 
+        /**
+         * Helper function to get the president for a specific time range
+         * @param {number} year - The year to check
+         * @returns {string} - The president's name
+         */
         function getPresidentForYear(year) {
             const president = presidents.find(p => year >= p.start && year <= p.end);
             return president ? president.name : '';
         }
 
+        // =====================================================================
+        // DATA LOADING AND PROCESSING
+        // =====================================================================
+        
+        // Load the CSV data files
         Promise.all([
             d3.csv("yearly_summary.csv"),
             d3.csv("country_sector_summary.csv")
         ]).then(function([yearlyData, countryData]) {
+            // Process yearly summary data for each aid cathegory and year (sum)
             const data = yearlyData.map(d => ({
                 year: +d['Fiscal Year'],
                 category: d['US Category Name'],
-                value: +d['Constant Dollar Amount'] / 1e9
+                value: +d['Constant Dollar Amount'] / 1e9  // Convert to billions
             })).filter(d => !isNaN(d.year) && !isNaN(d.value));
 
-            // Calculate total spending per category
+            // =========================================================
+            // CALCULATE CATEGORY TOTALS
+            // =========================================================
+            
+            // Calculate total spending per category over all years
             const categoryTotals = {};
             data.forEach(d => {
                 if (!categoryTotals[d.category]) {
@@ -264,13 +308,20 @@
                 categoryTotals[d.category] += d.value;
             });
 
+            // =========================================================
+            // PROCESS COUNTRY DATA
+            // =========================================================
+            
+            // Calculate country totals and yearly data; Constant Dollar Amount - inflation adjusted amount of money 
             const countryTotals = {};
             countryData.forEach(d => {
                 if (!d['Country Name'] || !d['Constant Dollar Amount'] || !d['US Category Name']) return;
+                
                 const country = d['Country Name'];
                 const year = +d['Fiscal Year'];
                 const amount = +d['Constant Dollar Amount'];
                 
+                // Initialize country data structure if needed
                 if (!countryTotals[country]) {
                     countryTotals[country] = { 
                         total: 0,
@@ -278,6 +329,7 @@
                     };
                 }
                 
+                // Add to total and yearly data
                 countryTotals[country].total += amount;
                 
                 if (!countryTotals[country].yearlyData[year]) {
@@ -287,6 +339,7 @@
                 countryTotals[country].yearlyData[year] += amount;
             });
 
+            // Select top countries by total aid amount
             const topCountries = Object.entries(countryTotals)
                 .filter(([country]) => country.toLowerCase() !== 'world')
                 .sort((a, b) => b[1].total - a[1].total)
@@ -296,9 +349,21 @@
                     ...data
                 }));
 
+            // =========================================================
+            // PREPARE DATA FOR STREAMGRAPH
+            // =========================================================
+            
+            // Extract unique categories and years
             const categories = [...new Set(data.map(d => d.category))];
             const years = [...new Set(data.map(d => d.year))].sort();
 
+            // Format data for the streamgraph
+            // It loops through each year in the years array using map().
+            //For each year, it creates an object yearData with a year property.
+            //Then it loops through each aid category (like "Health", "Education", etc.).
+            //For each category, it searches the raw data to find a matching record for that year and category.
+            //If a match is found, it adds the financial value to the yearData object with the category name as the key.
+            //If no match is found, it defaults to 0 (ensuring no missing data points).
             const processedData = years.map(year => {
                 const yearData = { year };
                 categories.forEach(cat => {
@@ -308,17 +373,28 @@
                 return yearData;
             });
 
+            // Create the stack layout
+            //d3.stack() creates a new stack generator function.
+            //.keys(categories) tells it which properties in the data objects to stack (in this case, all the aid categories).
+            //.order(d3.stackOrderDescending) determines the order of the stacks - larger categories will appear closer to the center.
+            //.offset(d3.stackOffsetSilhouette) produces a streamgraph with the center line at y=0, creating the symmetrical, flowing appearance.
             const stack = d3.stack()
                 .keys(categories)
                 .order(d3.stackOrderDescending)
                 .offset(d3.stackOffsetSilhouette);
-
+            //stack(processedData) applies this configuration to the processed data, returning a nested array structure that contains the y0 and y1 coordinates for each data point.
             const stackedData = stack(processedData);
 
+            // =========================================================
+            // SCALES FOR MAIN VISUALIZATION
+            // =========================================================
+            
+            // X scale - years
             const x = d3.scaleLinear()
                 .domain(d3.extent(years))
                 .range([0, mainWidth]);
 
+            // Y scale - values
             const y = d3.scaleLinear()
                 .domain([
                     d3.min(stackedData, layer => d3.min(layer, d => d[0])),
@@ -326,63 +402,86 @@
                 ])
                 .range([mainHeight, 0]);
 
+            // Area generator for streamgraph
             const area = d3.area()
                 .x(d => x(d.data.year))
                 .y0(d => y(d[0]))
                 .y1(d => y(d[1]))
                 .curve(d3.curveBasis);
 
-                const labelPositions = {
-    "Economic Development": {x: 1965, y: 20,length:20},  
-    "Peace and Security": {x: 1976, y: 15,length:13},
-    "Multi-sector": {x: 1987, y: 10,length:10},
-    "Humanitarian Assistance": {x: 1994, y: 15,length:13.5},
-    "Health": {x: 2002, y: 20,length:25},
-    "Education and Social Services": {x: 2011, y: 30,length:9},
-    "Democracy, Human Rights, and Governance": {x: 2005, y: 42,length:28},
-    "Program Support": {x: 2019, y: 43,length:27},
-    "Environment": {x: 2016, y: 36,length:9},
+            // =========================================================
+            // CATEGORY LABEL POSITIONS AND SECTOR EXPLANATIONS
+            // =========================================================
+            
+            // Custom position for each category label
+            const labelPositions = {
+                "Economic Development": {x: 1965, y: 20, length: 20},  
+                "Peace and Security": {x: 1976, y: 15, length: 13},
+                "Multi-sector": {x: 1987, y: 10, length: 10},
+                "Humanitarian Assistance": {x: 1994, y: 15, length: 13.5},
+                "Health": {x: 2002, y: 20, length: 25},
+                "Education and Social Services": {x: 2011, y: 30, length: 9},
+                "Democracy, Human Rights, and Governance": {x: 2005, y: 42, length: 28},
+                "Program Support": {x: 2019, y: 43, length: 27},
+                "Environment": {x: 2016, y: 36, length: 9},
+            };
 
-};
-const explanations_1={'Economic Development': ['Agriculture',
-'Macroeconomic Foundation for Growth',
-'Infrastructure',  
-  ],
-    
-    'Peace and Security': [  'Stabilization Operations and Security Sector Reform',
-    'Counter-Narcotics',
-    'Combating Weapons of Mass Destruction (WMD)',
-]}
-const explanations_2={
-  'Multi-sector': [  'International Contributions','Debt Relief',
-],
-  'Humanitarian Assistance': ['Protection, Assistance and Solutions',
-  'Disaster Readiness',
-  'Migration Management'],
-  'Health': ['HIV/AIDS',
-  'Maternal and Child Health',
-  'Malaria',
-],
- 'Democracy, Human Rights, and Governance': ['Rule of Law and Human Rights',
-  'Good Governance',
-  'Political Competition and Consensus-Building',
- ],
- 
- 'Education and Social Services': ['Basic Education',
- 'Social Assistance',
- 'Social Services',
+            // Sector explanations for categories (first group)
+            const explanations_1 = {
+                'Economic Development': [
+                    'Agriculture',
+                    'Macroeconomic Foundation for Growth',
+                    'Infrastructure',  
+                ],
+                'Peace and Security': [
+                    'Stabilization Operations and Security Sector Reform',
+                    'Counter-Narcotics',
+                    'Combating Weapons of Mass Destruction (WMD)',
+                ]
+            };
 
- ],
- 
- 'Environment': ['Natural Resources and Biodiversity',
-  'Clean Productive Environment',
-  'Environment'],
+            // Sector explanations for categories (second group)
+            const explanations_2 = {
+                'Multi-sector': [
+                    'International Contributions',
+                    'Debt Relief',
+                ],
+                'Humanitarian Assistance': [
+                    'Protection, Assistance and Solutions',
+                    'Disaster Readiness',
+                    'Migration Management'
+                ],
+                'Health': [
+                    'HIV/AIDS',
+                    'Maternal and Child Health',
+                    'Malaria',
+                ],
+                'Democracy, Human Rights, and Governance': [
+                    'Rule of Law and Human Rights',
+                    'Good Governance',
+                    'Political Competition and Consensus-Building',
+                ],
+                'Education and Social Services': [
+                    'Basic Education',
+                    'Social Assistance',
+                    'Social Services',
+                ],
+                'Environment': [
+                    'Natural Resources and Biodiversity',
+                    'Clean Productive Environment',
+                    'Environment'
+                ],
+                'Program Support': [
+                    'Direct Administrative Costs',
+                    'Monitoring and Evaluation'
+                ],
+            };
 
- 'Program Support': ['Direct Administrative Costs',
-  'Monitoring and Evaluation'],
- }
-
-            // Add streamgraph paths with labels
+            // =========================================================
+            // RENDER MAIN STREAMGRAPH
+            // =========================================================
+            
+            // Add streamgraph paths with interactive behavior
             const streams = mainSvg.selectAll("path.stream")
                 .data(stackedData)
                 .join("path")
@@ -416,117 +515,137 @@ const explanations_2={
                     }
                 });
 
-            // Add enhanced labels with totals
+            // =========================================================
+            // ADD CATEGORY LABELS
+            // =========================================================
+            
+            // Add labels with connecting lines and totals
             stackedData.forEach((layer, i) => {
                 const categoryTotal = categoryTotals[layer.key].toFixed(1);
                 const position = labelPositions[layer.key];
-    if (position) {
-        // Add connecting line - need to use x() and y() scale functions
-        mainSvg.append("line")
-            .attr("class", "label-line")
-            .attr("x1", x(position.x))  // Apply x scale
-            .attr("y1", y(position.y-3))  // Apply y scale
-            .attr("x2", x(position.x))  // Apply x scale
-            .attr("y2", y(position.y -position.length))  // Apply y scale
-            .attr("stroke", '#333333')
-            .attr("stroke-width", 1)
-            .attr("stroke-dasharray", "2,2");
+                
+                if (position) {
+                    // Add connecting line
+                    mainSvg.append("line")
+                        .attr("class", "label-line")
+                        .attr("x1", x(position.x))
+                        .attr("y1", y(position.y-3))
+                        .attr("x2", x(position.x))
+                        .attr("y2", y(position.y - position.length))
+                        .attr("stroke", '#333333')
+                        .attr("stroke-width", 1)
+                        .attr("stroke-dasharray", "2,2");
 
-        // Add category name
-        mainSvg.append("text")
-            .attr("class", "stream-label")
-            .attr("x", x(position.x))
-            .attr("y", y(position.y))
-            .attr("text-anchor", "middle")
-            .attr("dy", "0em")
-            .text(layer.key);
+                    // Add category name
+                    mainSvg.append("text")
+                        .attr("class", "stream-label")
+                        .attr("x", x(position.x))
+                        .attr("y", y(position.y))
+                        .attr("text-anchor", "middle")
+                        .attr("dy", "0em")
+                        .text(layer.key);
 
-        // Add total spending below category name
-        const categoryTotal = categoryTotals[layer.key].toFixed(1);  // Calculate total
-        mainSvg.append("text")
-            .attr("class", "stream-label-total")
-            .attr("x", x(position.x))  // Apply x scale
-            .attr("y", y(position.y))  // Apply y scale
-            .attr("text-anchor", "middle")
-            .attr("dy", "1.2em")
-            .text(`Total: $${categoryTotal}B`);
-    }
-});
-const explanationsDiv = d3.select("body")
-    .append("div")
-    .style("position", "absolute")
-    .style("top", "130px")
-    .style("left", "10px")
-    .style("font-size", "10px")
-    .style("font-family", "Spectral, serif")
-    .style("color", "#666666")
-    .style("max-height", "90px")  // Maximum height before expanding horizontally
-    .style("column-width", "250px") // Base width for each column
-    .style("column-gap", "20px")    // Space between columns
-    .style("column-fill", "auto") ;
-// Add the explanations
-Object.entries(explanations_1).forEach(([category, sectorList]) => {
-    // Add category header
-    explanationsDiv.append("div")
-        .style("font-weight", "bold")
-        .style("margin-top", "10px")
-        .text(category);
-    
-    // Add bullet points for each sector
-    sectorList.forEach(sector => {
-        explanationsDiv.append("div")
-            .style("margin-left", "10px")
-            .text(`• ${sector}`);
-    });
-});
-const explanationsDiv_2 = d3.select("body")
-    .append("div")
-    .style("position", "absolute")
-    .style("top", "470px")
-    .style("left", "10px")
-    .style("font-size", "10px")
-    .style("font-family", "Spectral, serif")
-    .style("color", "#666666")
-    .style("max-height", "170px")  // Maximum height before expanding horizontally
-    .style("column-width", "250px") // Base width for each column
-    .style("column-gap", "20px")    // Space between columns
-    .style("column-fill", "auto")   // Fill columns sequentially
-;
-// Add the explanations
-Object.entries(explanations_2).forEach(([category, sectorList]) => {
-    // Add category header
-    explanationsDiv_2.append("div")
-        .style("font-weight", "bold")
-        .style("margin-top", "10px")
-        .text(category);
-    
-    // Add bullet points for each sector
-    sectorList.forEach(sector => {
-        explanationsDiv_2.append("div")
-            .style("margin-left", "10px")
-            .text(`• ${sector}`);
-    });
-});
-d3.select("body")
-    .append("div")
-    .style("position", "absolute")
-    .style("top", "700px")  
-    .style("left", "10px")
-    .style("font-size", "12px")
-    .style("font-family", "Spectral, serif")
-    .style("color", "#333333")
-    .style("font-weight", "bold")
-    .text("Source: foreignassistance.gov/data"); 
+                    // Add total spending below category name
+                    mainSvg.append("text")
+                        .attr("class", "stream-label-total")
+                        .attr("x", x(position.x))
+                        .attr("y", y(position.y))
+                        .attr("text-anchor", "middle")
+                        .attr("dy", "1.2em")
+                        .text(`Total: $${categoryTotal}B`);
+                }
+            });
 
-            // Add axes (without grid)
+            // =========================================================
+            // ADD SECTOR EXPLANATIONS
+            // =========================================================
+            
+            // First explanation block (top)
+            const explanationsDiv = d3.select("body")
+                .append("div")
+                .style("position", "absolute")
+                .style("top", "130px")
+                .style("left", "10px")
+                .style("font-size", "10px")
+                .style("font-family", "Spectral, serif")
+                .style("color", "#666666")
+                .style("max-height", "90px")
+                .style("column-width", "250px")
+                .style("column-gap", "20px")
+                .style("column-fill", "auto");
+
+            // Add first group of explanations
+            Object.entries(explanations_1).forEach(([category, sectorList]) => {
+                // Add category header
+                explanationsDiv.append("div")
+                    .style("font-weight", "bold")
+                    .style("margin-top", "10px")
+                    .text(category);
+                
+                // Add bullet points for each sector
+                sectorList.forEach(sector => {
+                    explanationsDiv.append("div")
+                        .style("margin-left", "10px")
+                        .text(`• ${sector}`);
+                });
+            });
+
+            // Second explanation block (bottom)
+            const explanationsDiv_2 = d3.select("body")
+                .append("div")
+                .style("position", "absolute")
+                .style("top", "470px")
+                .style("left", "10px")
+                .style("font-size", "10px")
+                .style("font-family", "Spectral, serif")
+                .style("color", "#666666")
+                .style("max-height", "170px")
+                .style("column-width", "250px")
+                .style("column-gap", "20px")
+                .style("column-fill", "auto");
+
+            // Add second group of explanations
+            Object.entries(explanations_2).forEach(([category, sectorList]) => {
+                // Add category header
+                explanationsDiv_2.append("div")
+                    .style("font-weight", "bold")
+                    .style("margin-top", "10px")
+                    .text(category);
+                
+                // Add bullet points for each sector
+                sectorList.forEach(sector => {
+                    explanationsDiv_2.append("div")
+                        .style("margin-left", "10px")
+                        .text(`• ${sector}`);
+                });
+            });
+
+            // Add data source citation
+            d3.select("body")
+                .append("div")
+                .style("position", "absolute")
+                .style("top", "700px")  
+                .style("left", "10px")
+                .style("font-size", "12px")
+                .style("font-family", "Spectral, serif")
+                .style("color", "#333333")
+                .style("font-weight", "bold")
+                .text("Source: foreignassistance.gov/data"); 
+
+            // =========================================================
+            // ADD AXIS AND PRESIDENTIAL PERIODS
+            // =========================================================
+            
+            // Add x-axis
             mainSvg.append("g")
                 .attr("class", "axis")
                 .attr("transform", `translate(0,${mainHeight})`)
                 .call(d3.axisBottom(x)
                     .tickFormat(d3.format("d")));
 
-            // Add presidential periods
+            // Add presidential period markers and labels
             presidents.forEach(president => {
+                // Add vertical line for period start
                 mainSvg.append("line")
                     .attr("class", "presidential-period")
                     .attr("x1", x(president.start))
@@ -534,29 +653,31 @@ d3.select("body")
                     .attr("y1", -20)
                     .attr("y2", mainHeight);
 
+                // Add president name
                 mainSvg.append("text")
                     .attr("class", "president-label")
                     .attr("x", x((president.start + president.end) / 2))
                     .attr("y", mainHeight + 35)
                     .text(president.name);
 
-                //mainSvg.append("text")
-                //    .attr("class", "focus-label")
-                //    .attr("transform", `translate(${x(president.start) + 15},${mainHeight - 110}) rotate(-90)`)
-                //    .style("text-anchor", "end")
-                //    .style("dominant-baseline", "hanging")
-                //    .text(president.focus);
             });
 
-            // Create country panels vertically
+            // =========================================================
+            // CREATE COUNTRY PANELS
+            // =========================================================
+            
+            // Create container for country panels
             const countryContainer = d3.select("#country-viz");
             
+            // Create a panel for each top country
             topCountries.forEach((country, i) => {
+                // Create country panel container
                 const countryPanel = countryContainer.append("div")
                     .attr("class", "country-panel")
                     .style("position", "absolute")
                     .style("top", `${i * 175}px`);
 
+                // Create SVG for country chart
                 const countrySvg = countryPanel.append("svg")
                     .attr("width", countryWidth)
                     .attr("height", countryHeight);
@@ -564,10 +685,10 @@ d3.select("body")
                 const countryG = countrySvg.append("g")
                     .attr("transform", `translate(${countryMargin.left},${countryMargin.top})`);
 
-                // Convert yearly data to array format
+                // Convert yearly data to array format for visualization
                 const yearlyData = years.map(year => ({
                     year,
-                    value: (country.yearlyData[year] || 0) / 1e9
+                    value: (country.yearlyData[year] || 0) / 1e9  // Convert to billions
                 }));
 
                 // Create scales for sparkline
@@ -579,13 +700,13 @@ d3.select("body")
                     .domain([0, d3.max(yearlyData, d => d.value)])
                     .range([countryHeight - countryMargin.top - countryMargin.bottom, 0]);
 
-                // Create sparkline
+                // Create line generator for sparkline
                 const line = d3.line()
                     .x(d => sparklineX(d.year))
                     .y(d => sparklineY(d.value))
                     .curve(d3.curveBasis);
 
-                // Add sparkline
+                // Add sparkline path
                 countryG.append("path")
                     .datum(yearlyData)
                     .attr("class", "sparkline")
@@ -618,7 +739,7 @@ d3.select("body")
                     .attr("y", countryHeight - countryMargin.top - countryMargin.bottom + 35)
                     .text(`Peak: ${peak.year} under ${getPresidentForYear(peak.year)}`);
 
-                // Add axes (without grid)
+                // Add axes
                 const xAxis = d3.axisBottom(sparklineX)
                     .tickFormat(d3.format("d"))
                     .ticks(5);
