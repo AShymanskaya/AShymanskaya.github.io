@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maternal Depression & Attachment Half-Circle Radar Charts</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+  body {
+    font-family: 'Fira Sans', 'Roboto Condensed', 'Source Sans Pro', sans-serif;
+    margin: 0;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #F9DEC9;
+    color: #685044;
+  }
+  
+  h1 {
+    text-align: center;
+    margin-bottom: 15px;
+    font-weight: 500;
+    color: #685044;
+    letter-spacing: 0.5px;
+    font-size: 24px;
+  }
+  
+  .description-box {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: white;
+    border-radius: 8px;
+    padding: 10px 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .description {
+    text-align: center;
+    color: #685044;
+    line-height: 1.4;
+    font-size: 13px;
+    margin: 0 0 8px 0;
+  }
+  
+  .reference {
+    font-size: 12px;
+    color: #685044;
+    line-height: 1.4;
+    margin: 0;
+    text-align: center;
+    border-top: 1px solid #e0e0e0;
+    padding-top: 8px;
+  }
+  
+  .reference a {
+    color: #3A405A;
+    text-decoration: none;
+  }
+  
+  .reference a:hover {
+    text-decoration: underline;
+  }
+  
+  .charts-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+    max-width: 1500px;
+    width: 100%;
+    margin: 5px 0;
+  }
+  
+  .chart-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 10px 15px;
+    margin-bottom: 10px;
+  }
+  
+  .chart-title {
+    text-align: center;
+    margin-bottom: 5px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #685044;
+    letter-spacing: 0.3px;
+  }
+  
+  .measure-title {
+    text-align: center;
+    margin: 3px 0;
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 0.3px;
+    color: #685044;
+  }
+  
+  .chart-container {
+    width: 100%;
+    height: 200px;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  /* Styles for timepoints bar */
+  .timepoints-bar {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 0 5px 0;
+    background-color: white;
+    border-radius: 8px;
+    padding: 6px 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    text-align: center;
+  }
+  
+  .timepoint-list {
+    font-size: 13px;
+    color: #685044;
+    line-height: 1.5;
+    margin: 0;
+  }
+  
+  @media (max-width: 768px) {
+    .timepoint-list {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 5px;
+    }
+  }
+  
+  @media (max-width: 1200px) {
+    .charts-container {
+      flex-direction: column;
+      align-items: center;
+    }
+    .chart-group {
+      max-width: 450px;
+    }
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500&family=Roboto+Condensed:wght@400;700&family=Source+Sans+Pro:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>After Becoming a Mother: When Joy Meets Darkness</h1>
+
+<div class="charts-container">
+  <div class="chart-group">
+    <div class="chart-title">Healthy</div>
+    <div class="measure-title" style="color: #685044;">Depressive Symptoms</div>
+    <div class="chart-container" id="chart-healthy-epds"></div>
+    <div class="measure-title" style="color: #685044;">Attachment</div>
+    <div class="chart-container" id="chart-healthy-mpas"></div>
+  </div>
+  
+  <div class="chart-group">
+    <div class="chart-title">Anxiety Disorder</div>
+    <div class="measure-title" style="color: #685044;">Depressive Symptoms</div>
+    <div class="chart-container" id="chart-anxiety-epds"></div>
+    <div class="measure-title" style="color: #685044;">Attachment</div>
+    <div class="chart-container" id="chart-anxiety-mpas"></div>
+  </div>
+  
+  <div class="chart-group">
+    <div class="chart-title">Postpartum Depression</div>
+    <div class="measure-title" style="color: #685044;">Depressive Symptoms</div>
+    <div class="chart-container" id="chart-depression-epds"></div>
+    <div class="measure-title" style="color: #685044;">Attachment</div>
+    <div class="chart-container" id="chart-depression-mpas"></div>
+  </div>
+</div>
+
+<!-- Timepoints bar with reduced margins -->
+<div class="timepoints-bar">
+  <div class="timepoint-list">
+    <strong>T0</strong> After childbirth &nbsp;&nbsp;|&nbsp;&nbsp;
+    <strong>T1</strong> 3 weeks &nbsp;&nbsp;|&nbsp;&nbsp;
+    <strong>T2</strong> 6 weeks &nbsp;&nbsp;|&nbsp;&nbsp;
+    <strong>T3</strong> 9 weeks &nbsp;&nbsp;|&nbsp;&nbsp;
+    <strong>T4</strong> 12 weeks
+  </div>
+</div>
+
+<!-- Combined description and reference box -->
+<div class="description-box">
+  <p class="description">
+    Depressive symptoms and attachment problems can develop in women after childbirth. This chart shows the development of these symptoms in three groups: healthy mothers, those with anxiety disorder, and those with postpartum depression. Depression scores are measured using the Edinburgh Postnatal Depression Scale (EPDS, 0-30, higher scores indicate more severe symptoms). Attachment is measured using the Maternal Postnatal Attachment Scale (MPAS, 19-95, higher scores indicate stronger mother-infant bonds).
+    Reference: Chechko, N.; Stickel, S.; Losse, E.; Shymanskaya, A.; Habel, U. Characterization of Depressive Symptom Trajectories in Women between Childbirth and Diagnosis. <em>J. Pers. Med.</em> <strong>2022</strong>, <em>12</em>, 538. <a href="https://doi.org/10.3390/jpm12040538" target="_blank">https://doi.org/10.3390/jpm12040538</a>
+
+  </p>
+  
+  
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Data structure
+    const groups = [
+      {
+        name: 'Healthy',
+        color: '#AEC5EB', 
+        epdsColor: '#AEC5EB', 
+        mpasColor: '#AEC5EB', 
+        groupId: 'healthy',
+        data: [
+          { timePoint: 'T0', attachment: null, depression: 4.3 },
+          { timePoint: 'T1', attachment: 85.9, depression: 4.5 },
+          { timePoint: 'T2', attachment: 86.1, depression: 3.3 },
+          { timePoint: 'T3', attachment: 86.5, depression: 2.9 },
+          { timePoint: 'T4', attachment: 86.9, depression: 2.5 }
+        ]
+      },
+      {
+        name: 'Anxiety Disorder',
+        color: '#7483A3',
+        epdsColor: '#7483A3',
+        mpasColor: '#7483A3',
+        groupId: 'anxiety',
+        data: [
+          { timePoint: 'T0', attachment: null, depression: 9.6 },
+          { timePoint: 'T1', attachment: 81.2, depression: 10.4 },
+          { timePoint: 'T2', attachment: 82.9, depression: 7.8 },
+          { timePoint: 'T3', attachment: 84.1, depression: 5.8 },
+          { timePoint: 'T4', attachment: 84.8, depression: 5.2 }
+        ]
+      },
+      {
+        name: 'Postpartum Depression',
+        color: '#3A405A',
+        epdsColor: '#3A405A',
+        mpasColor: '#3A405A',
+        groupId: 'depression',
+        data: [
+          { timePoint: 'T0', attachment: null, depression: 8.5 },
+          { timePoint: 'T1', attachment: 80.9, depression: 12.0 },
+          { timePoint: 'T2', attachment: 78.6, depression: 12.5 },
+          { timePoint: 'T3', attachment: 79.0, depression: 12.4 },
+          { timePoint: 'T4', attachment: 79.5, depression: 13.0 }
+        ]
+      }
+    ];
+
+    // Define the features for EPDS (depression) half-circle
+    const epdsFeatures = [
+      { name: "T0", key: d => d.data[0].depression, max: 13, min: 0, formatter: v => v.toFixed(1) },
+      { name: "T1", key: d => d.data[1].depression, max: 13, min: 0, formatter: v => v.toFixed(1) },
+      { name: "T2", key: d => d.data[2].depression, max: 13, min: 0, formatter: v => v.toFixed(1) },
+      { name: "T3", key: d => d.data[3].depression, max: 13, min: 0, formatter: v => v.toFixed(1) },
+      { name: "T4", key: d => d.data[4].depression, max: 13, min: 0, formatter: v => v.toFixed(1) }
+    ];
+    
+    // Define the features for MPAS (attachment) half-circle
+    const mpasFeatures = [
+      { name: "T1", key: d => d.data[1].attachment, max: 87, min: 60, formatter: v => v.toFixed(1) },
+      { name: "T2", key: d => d.data[2].attachment, max: 87, min: 60, formatter: v => v.toFixed(1) },
+      { name: "T3", key: d => d.data[3].attachment, max: 87, min: 60, formatter: v => v.toFixed(1) },
+      { name: "T4", key: d => d.data[4].attachment, max: 87, min: 60, formatter: v => v.toFixed(1) }
+    ];
+    
+    // Function to create a half-circle radar chart
+    function createHalfRadarChart(groupId, containerId, features, dataType, isTopHalf) {
+      const group = groups.find(g => g.groupId === groupId);
+      if (!group) return;
+      
+      // Set up dimensions
+      const width = 400;
+      const height = 200;
+      const margin = { top: 5, right: 15, bottom: 10, left: 15 };
+      const innerWidth = width - margin.left - margin.right;
+      const innerHeight = height - margin.top - margin.bottom;
+      const radius = Math.min(innerWidth, innerHeight) * 0.80;
+      
+      // Create SVG
+      const svg = d3.select(containerId)
+        .append("svg")
+        .attr("width", "100%")
+        .attr("height", "100%")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .append("g")
+        .attr("transform", `translate(${width / 2}, ${isTopHalf ? height - 10 : 10})`);
+      
+      // Scale values
+      const scaleRadial = (index, value) => {
+        const feature = features[index];
+        // Normalize value
+        const normalizedValue = (value - feature.min) / (feature.max - feature.min);
+        return radius * normalizedValue;
+      };
+      
+      // Number of axes
+      const numAxes = features.length;
+      const startAngle = isTopHalf ? Math.PI : 0;
+      const endAngle = isTopHalf ? 0 : Math.PI;
+      const angleRange = Math.abs(endAngle - startAngle);
+      const angleSlice = angleRange / (numAxes - 1);  // Divide by numAxes-1 for endpoints
+      
+      // Create the straight lines radiating outward
+      features.forEach((feature, i) => {
+        const angle = startAngle + (i * angleSlice);
+        
+        svg.append("line")
+          .attr("x1", 0)
+          .attr("y1", 0)
+          .attr("x2", radius * Math.cos(angle))
+          .attr("y2", radius * Math.sin(angle))
+          .style("stroke", "#e0e0e0")
+          .style("stroke-width", "1px");
+        
+        // Add labels at the end of each axis
+        const labelDistance = radius + 35;
+        svg.append("text")
+          .attr("x", labelDistance * Math.cos(angle))
+          .attr("y", labelDistance * Math.sin(angle))
+          .attr("dy", "0.35em")
+          .attr("text-anchor", () => {
+            if (Math.abs(angle - Math.PI/2) < 0.1) return "middle";
+            if (angle < Math.PI/2) return "start";
+            return "end";
+          })
+          .text(feature.name)
+          .style("font-size", "10px")
+          .style("font-family", "'Fira Sans', sans-serif")
+          .style("fill", "#685044");
+      });
+      
+      // Prepare data for the radar chart
+      const pathData = features.map((feature, i) => {
+        const angle = startAngle + (i * angleSlice);
+        const value = feature.key(group);
+        return {
+          x: scaleRadial(i, value) * Math.cos(angle),
+          y: scaleRadial(i, value) * Math.sin(angle),
+          value: value
+        };
+      });
+      
+      // Create a line generator for the data path
+      const lineGenerator = d3.line()
+        .x(d => d.x)
+        .y(d => d.y)
+        .curve(d3.curveCatmullRom);
+      
+      // Draw the path
+      svg.append("path")
+        .datum(pathData)
+        .attr("d", lineGenerator)
+        .style("fill", "none")
+        .style("stroke", dataType === "epds" ? group.epdsColor : group.mpasColor)
+        .style("stroke-width", 2.5);
+      
+      // Add a filled area
+      const areaPath = [...pathData];
+      areaPath.push({ x: 0, y: 0 });  // Add center point
+      areaPath.unshift({ x: 0, y: 0 });  // Add center point at beginning too
+      
+      // Create a polygon with the data points
+      svg.append("polygon")
+        .attr("points", areaPath.map(d => `${d.x},${d.y}`).join(" "))
+        .style("fill", dataType === "epds" ? group.epdsColor : group.mpasColor)
+        .style("fill-opacity", 0.75)
+        .style("stroke", "none");
+      
+      // Add dots at each data point
+      svg.selectAll(".radarDot")
+        .data(pathData)
+        .enter()
+        .append("circle")
+        .attr("class", "radarDot")
+        .attr("r", 3.5)
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y)
+        .style("fill", dataType === "epds" ? group.epdsColor : group.mpasColor)
+        .style("stroke", "#fff")
+        .style("stroke-width", 1.5);
+        
+      // Add data values at each dot
+      svg.selectAll(".radarValue")
+        .data(pathData)
+        .enter()
+        .append("text")
+        .attr("class", "radarValue")
+        .attr("x", d => {
+          const angle = Math.atan2(d.y, d.x);
+          return d.x + 16 * Math.cos(angle);
+        })
+        .attr("y", d => {
+          const angle = Math.atan2(d.y, d.x);
+          return d.y + 16 * Math.sin(angle);
+        })
+        .text(d => d.value !== null ? d.value.toFixed(1) : "")
+        .style("font-size", "9px")
+        .style("font-family", "'Fira Sans', sans-serif")
+        .style("font-weight", "500")
+        .style("text-anchor", "middle")
+        .style("fill", "#685044");
+    }
+    
+    // Create all the charts for each group
+    // EPDS Charts (top halves)
+    createHalfRadarChart('healthy', '#chart-healthy-epds', epdsFeatures, "epds", true);
+    createHalfRadarChart('anxiety', '#chart-anxiety-epds', epdsFeatures, "epds", true);
+    createHalfRadarChart('depression', '#chart-depression-epds', epdsFeatures, "epds", true);
+    
+    // MPAS Charts (bottom halves, but rotated to point up)
+    createHalfRadarChart('healthy', '#chart-healthy-mpas', mpasFeatures, "mpas", true);
+    createHalfRadarChart('anxiety', '#chart-anxiety-mpas', mpasFeatures, "mpas", true);
+    createHalfRadarChart('depression', '#chart-depression-mpas', mpasFeatures, "mpas", true);
+  });
+</script>
+</body>
+</html>
