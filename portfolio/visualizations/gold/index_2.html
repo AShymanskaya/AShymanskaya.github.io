@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Purity Through History - Integrated Timeline</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/inter-ui/3.19.3/inter.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f7f7f7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #333;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .page-container {
+            max-width: 1200px;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        h1 {
+            text-align: center;
+            margin: 5px 0 5px;
+            font-size: 3rem;
+            font-weight: 200;
+            color: #2a6a8f;
+            letter-spacing: -0.04em;
+        }
+        
+        .intro-text {
+            text-align: center;
+            max-width: 1100px;
+            margin: 0 auto 30px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #555;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: 300;
+            color: #2a6a8f;
+            margin: 40px 0 30px;
+            letter-spacing: -0.03em;
+        }
+        
+        /* Timeline Styles */
+        .timeline-section {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .timeline-container {
+            position: relative;
+            padding-left: 50px;
+        }
+        
+        .timeline-container::before {
+            content: '';
+            position: absolute;
+            left: 30px;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(250, 229, 128, 0.7), rgba(42, 106, 143, 0.7));
+            border-radius: 2px;
+        }
+        
+        .era-section {
+            margin-bottom: 60px;
+        }
+        
+        .era-heading {
+            font-size: 1.8rem;
+            font-weight: 400;
+            color: #2a6a8f;
+            margin: 0 0 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(42, 106, 143, 0.3);
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 60px;
+        }
+        
+        .timeline-date {
+            position: absolute;
+            left: -50px;
+            background: #f0c300;
+            color: #333;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            z-index: 1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            white-space: nowrap;
+            transform: translateX(-50%);
+        }
+        
+        .timeline-flex-container {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .timeline-content {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            position: relative;
+            flex: 3;
+        }
+        
+        .timeline-content::before {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 20px;
+            border-style: solid;
+            border-width: 10px 10px 10px 0;
+            border-color: transparent white transparent transparent;
+        }
+        
+        .timeline-content h3 {
+            margin-top: 0;
+            color: #2a6a8f;
+            font-size: 1.3rem;
+            font-weight: 500;
+        }
+        
+        .timeline-content p {
+            margin-bottom: 0;
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .timeline-rings {
+            display: flex;
+            gap: 15px;
+            flex: 2;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        /* Rings Styles */
+        .ring-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .ring-container {
+    width: 200px; /* Increased from 100px */
+    height: 200px; /* Increased from 100px */
+    position: relative;
+}
+.smaller-ring-container {
+    width: 120px; /* Increased from 100px */
+    height: 120px; /* Increased from 100px */
+    position: relative;
+} 
+        .ring-title {
+            margin: 10px 0 5px;
+            font-size: 1rem;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            color: #2a6a8f;
+            text-align: center;
+        }
+        
+        .karat-badge {
+            display: inline-block;
+            background: #2a6a8f;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-weight: 500;
+            font-size: 0.75rem;
+            margin-top: 5px;
+        }
+        
+        /* Timeline era badges for matching with rings */
+        .era-badge {
+            display: inline-block;
+            background: #2a6a8f;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            margin-right: 8px;
+        }
+        .rings-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    max-width: 900px;
+    margin: 0 auto 60px;
+}
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .turbulence {
+            filter: url(#turbulence);
+        }
+        
+        .light-burst {
+            opacity: 0;
+            animation: light-pulse 8s ease-in-out infinite;
+        }
+        
+        @keyframes light-pulse {
+            0% { opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* Ring-specific animations based on gold content */
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .rotate-9k {
+            animation: rotate 37s linear infinite; /* 37.5% gold = slower rotation */
+        }
+        
+        .rotate-10k {
+            animation: rotate 32s linear infinite; /* 41.7% gold */
+        }
+        
+        .rotate-12k {
+            animation: rotate 30s linear infinite; /* 50% gold */
+        }
+        
+        .rotate-14k {
+            animation: rotate 27s linear infinite; /* 58.3% gold */
+        }
+        
+        .rotate-15k {
+            animation: rotate 23s linear infinite; /* 62.5% gold */
+        }
+        
+        .rotate-18k {
+            animation: rotate 20s linear infinite; /* 75% gold */
+        }
+        
+        .rotate-22k {
+            animation: rotate 13s linear infinite; /* 91.7% gold */
+        }
+        
+        .rotate-24k {
+            animation: rotate 10s linear infinite; /* 99.9% gold = faster rotation */
+        }
+        
+        .glow-9k {
+            animation: glow-9k 5s ease-in-out infinite;
+        }
+        
+        .glow-10k {
+            animation: glow-10k 5s ease-in-out infinite;
+        }
+        
+        .glow-12k {
+            animation: glow-12k 5s ease-in-out infinite;
+        }
+        
+        .glow-14k {
+            animation: glow-14k 5s ease-in-out infinite;
+        }
+        
+        .glow-15k {
+            animation: glow-15k 5s ease-in-out infinite;
+        }
+        
+        .glow-18k {
+            animation: glow-18k 5s ease-in-out infinite;
+        }
+        
+        .glow-22k {
+            animation: glow-22k 5s ease-in-out infinite;
+        }
+        
+        .glow-24k {
+            animation: glow-24k 5s ease-in-out infinite;
+        }
+        
+        @keyframes glow-9k {
+            0% { filter: drop-shadow(0 0 8px rgba(75, 177, 206, 0.4)); }
+            50% { filter: drop-shadow(0 0 15px rgba(75, 177, 206, 0.7)); }
+            100% { filter: drop-shadow(0 0 8px rgba(75, 177, 206, 0.4)); }
+        }
+        
+        @keyframes glow-10k {
+            0% { filter: drop-shadow(0 0 8px rgba(68, 169, 166, 0.45)); }
+            50% { filter: drop-shadow(0 0 15px rgba(68, 169, 166, 0.75)); }
+            100% { filter: drop-shadow(0 0 8px rgba(68, 169, 166, 0.45)); }
+        }
+        
+        @keyframes glow-12k {
+            0% { filter: drop-shadow(0 0 9px rgba(64, 165, 132, 0.5)); }
+            50% { filter: drop-shadow(0 0 16px rgba(64, 165, 132, 0.8)); }
+            100% { filter: drop-shadow(0 0 9px rgba(64, 165, 132, 0.5)); }
+        }
+        
+        @keyframes glow-14k {
+            0% { filter: drop-shadow(0 0 10px rgba(60, 161, 98, 0.6)); }
+            50% { filter: drop-shadow(0 0 18px rgba(60, 161, 98, 0.85)); }
+            100% { filter: drop-shadow(0 0 10px rgba(60, 161, 98, 0.6)); }
+        }
+        
+        @keyframes glow-15k {
+            0% { filter: drop-shadow(0 0 11px rgba(81, 173, 82, 0.65)); }
+            50% { filter: drop-shadow(0 0 19px rgba(81, 173, 82, 0.9)); }
+            100% { filter: drop-shadow(0 0 11px rgba(81, 173, 82, 0.65)); }
+        }
+        
+        @keyframes glow-18k {
+            0% { filter: drop-shadow(0 0 12px rgba(102, 184, 67, 0.75)); }
+            50% { filter: drop-shadow(0 0 20px rgba(102, 184, 67, 0.95)); }
+            100% { filter: drop-shadow(0 0 12px rgba(102, 184, 67, 0.75)); }
+        }
+        
+        @keyframes glow-22k {
+            0% { filter: drop-shadow(0 0 14px rgba(240, 195, 0, 0.85)); }
+            50% { filter: drop-shadow(0 0 22px rgba(240, 195, 0, 0.98)); }
+            100% { filter: drop-shadow(0 0 14px rgba(240, 195, 0, 0.85)); }
+        }
+        
+        @keyframes glow-24k {
+            0% { filter: drop-shadow(0 0 15px #fae580); }
+            50% { filter: drop-shadow(0 0 25px #fae580); }
+            100% { filter: drop-shadow(0 0 15px #fae580); }
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 900px) {
+            .timeline-flex-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .timeline-rings {
+                margin-left: 20px;
+                justify-content: flex-start;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .timeline-container {
+                padding-left: 40px;
+            }
+            
+            .timeline-date {
+                left: -40px;
+                font-size: 0.8rem;
+                padding: 5px 10px;
+            }
+            
+            .era-heading {
+                font-size: 1.5rem;
+            }
+            
+            .ring-wrapper {
+                width: 90px;
+            }
+            
+            .ring-container {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .ring-title {
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .ring-wrapper {
+                width: 70px;
+            }
+            
+            .ring-container {
+                width: 65px;
+                height: 65px;
+            }
+            
+            .karat-badge {
+                font-size: 0.7rem;
+                padding: 2px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <h1>Gold Purity Through History</h1>
+        
+        <p class="intro-text">
+            Gold purity is measured in karats. Lower karat numbers indicate a higher percentage of metals mixed with gold, changing both the color and properties of the final alloy. Different metals create distinct alloys: copper produces rose gold, silver and copper create yellow gold, while nickel, palladium or zinc yield white gold. 
+        </p>
+        <!-- Complete Rings Container from the first code for implementation in the second code -->
+<div class="rings-container">
+    <!-- 9K Gold Ring - 37.5% gold (Blue) -->
+    <div class="ring-wrapper">
+        <div class="ring-container rotate-9k">
+            <svg viewBox="0 0 600 600" class="glow-9k">
+                <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="1" />
+                
+                <g class="turbulence">
+                    <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#blueGradient9k)" stroke-width="90" stroke-linecap="round" />
+                    <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="20" stroke-opacity="0.7" stroke-linecap="round" />
+                    <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="15" stroke-opacity="0.6" stroke-linecap="round" />
+                    <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="12" stroke-opacity="0.5" stroke-linecap="round" />
+                    
+                    <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.6" />
+                    <circle cx="180" cy="420" r="18" fill="white" opacity="0.6" />
+                    <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.7" />
+                    <circle cx="150" cy="200" r="14" fill="white" opacity="0.7" />
+                </g>
+                
+                <rect width="600" height="600" fill="white" opacity="0.03" filter="url(#sparkle)" />
+            </svg>
+        </div>
+        <h2 class="ring-title">9K Gold <br> 37.5% gold content</h2>
+    </div>
+    
+    <!-- 10K Gold Ring - 41.7% gold (Blue-Teal) -->
+    <div class="ring-wrapper">
+        <div class="ring-container rotate-10k">
+            <svg viewBox="0 0 600 600" class="glow-10k">
+                <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.22" />
+                
+                <g class="turbulence">
+                    <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#blueGradient10k)" stroke-width="90" stroke-linecap="round" />
+                    <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="18" stroke-opacity="0.7" stroke-linecap="round" />
+                    <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="18" stroke-opacity="0.6" stroke-linecap="round" />
+                    <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="10" stroke-opacity="0.5" stroke-linecap="round" />
+                    
+                    <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.65" />
+                    <circle cx="180" cy="420" r="18" fill="white" opacity="0.6" />
+                    <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.7" />
+                    <circle cx="150" cy="200" r="14" fill="white" opacity="0.65" />
+                </g>
+                
+                <rect width="600" height="600" fill="white" opacity="0.035" filter="url(#sparkle)" />
+            </svg>
+        </div>
+        <h2 class="ring-title">10K Gold <br> 41.7% gold content</h2>
+    </div>
+    
+    <!-- 12K Gold Ring - 50% gold (Teal) -->
+    <div class="ring-wrapper">
+        <div class="ring-container rotate-12k">
+            <svg viewBox="0 0 600 600" class="glow-12k">
+                <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.25" />
+                
+                <g class="turbulence">
+                    <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#tealGradient12k)" stroke-width="90" stroke-linecap="round" />
+                    <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="16" stroke-opacity="0.65" stroke-linecap="round" />
+                    <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="19" stroke-opacity="0.63" stroke-linecap="round" />
+                    <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="9" stroke-opacity="0.48" stroke-linecap="round" />
+                    
+                    <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.68" />
+                    <circle cx="180" cy="420" r="18" fill="white" opacity="0.58" />
+                    <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.73" />
+                    <circle cx="150" cy="200" r="14" fill="white" opacity="0.63" />
+                </g>
+                
+                <rect width="600" height="600" fill="white" opacity="0.038" filter="url(#sparkle)" />
+            </svg>
+        </div>
+        <h2 class="ring-title">12K Gold <br> 50% gold content</h2>
+    </div>
+    
+    <!-- 14K Gold Ring - 58.3% gold (Teal-Green) -->
+    <div class="ring-wrapper">
+        <div class="ring-container rotate-14k">
+            <svg viewBox="0 0 600 600" class="glow-14k">
+                <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.3" />
+                
+                <g class="turbulence">
+                    <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#greenGradient14k)" stroke-width="90" stroke-linecap="round" />
+                    <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="14" stroke-opacity="0.65" stroke-linecap="round" />
+                    <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="20" stroke-opacity="0.65" stroke-linecap="round" />
+                    <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="8" stroke-opacity="0.45" stroke-linecap="round" />
+                    
+                    <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.7" />
+                    <circle cx="180" cy="420" r="18" fill="white" opacity="0.55" />
+                    <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.75" />
+                    <circle cx="150" cy="200" r="14" fill="white" opacity="0.6" />
+                </g>
+                
+                <rect width="600" height="600" fill="white" opacity="0.04" filter="url(#sparkle)" />
+            </svg>
+        </div>
+        <h2 class="ring-title">14K Gold <br> 58.3% gold content</h2>
+    </div>
+    
+    <!-- 15K Gold Ring - 62.5% gold (Green-Yellow) -->
+    <div class="ring-wrapper">
+        <div class="ring-container rotate-15k">
+            <svg viewBox="0 0 600 600" class="glow-15k">
+                <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.35" />
+                
+                <g class="turbulence">
+                    <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#greenGradient15k)" stroke-width="90" stroke-linecap="round" />
+                    <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="12" stroke-opacity="0.62" stroke-linecap="round" />
+                    <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="21" stroke-opacity="0.67" stroke-linecap="round" />
+                    <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="7" stroke-opacity="0.42" stroke-linecap="round" />
+                    
+                    <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.72" />
+                    <circle cx="180" cy="420" r="18" fill="white" opacity="0.53" />
+                    <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.77" />
+                    <circle cx="150" cy="200" r="14" fill="white" opacity="0.58" />
+                </g>
+                
+                <rect width="600" height="600" fill="white" opacity="0.042" filter="url(#sparkle)" />
+            </svg>
+        </div>
+        <h2 class="ring-title">15K Gold <br> 62.5% gold content</h2>
+    </div>
+    
+    <!-- 18K Gold Ring - 75% gold (Green) -->
+    <div class="ring-wrapper">
+        <div class="ring-container rotate-18k">
+            <svg viewBox="0 0 600 600" class="glow-18k">
+                <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.4" />
+                
+                <g class="turbulence">
+                    <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#greenGradient18k)" stroke-width="90" stroke-linecap="round" />
+                    <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="10" stroke-opacity="0.6" stroke-linecap="round" />
+                    <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="22" stroke-opacity="0.7" stroke-linecap="round" />
+                    <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="6" stroke-opacity="0.4" stroke-linecap="round" />
+                    
+                    <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.75" />
+                    <circle cx="180" cy="420" r="18" fill="white" opacity="0.5" />
+                    <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.8" />
+                    <circle cx="150" cy="200" r="14" fill="white" opacity="0.55" />
+                </g>
+                
+                <rect width="600" height="600" fill="white" opacity="0.045" filter="url(#sparkle)" />
+            </svg>
+        </div>
+        <h2 class="ring-title">18K Gold <br> 75% gold content</h2>
+    </div>
+    
+    <!-- 22K Gold Ring - 91.7% gold (Yellow-Gold) -->
+    <div class="ring-wrapper">
+        <div class="ring-container rotate-22k">
+            <svg viewBox="0 0 600 600" class="glow-22k">
+                <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.45" />
+                
+                <g class="turbulence">
+                    <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#goldGradient22k)" stroke-width="90" stroke-linecap="round" />
+                    <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="7" stroke-opacity="0.55" stroke-linecap="round" />
+                    <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#f0c300" stroke-width="23" stroke-opacity="0.75" stroke-linecap="round" />
+                    <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.35" stroke-linecap="round" />
+                    
+                    <circle cx="400" cy="150" r="15" fill="#f0c300" opacity="0.8" />
+                    <circle cx="180" cy="420" r="18" fill="white" opacity="0.45" />
+                    <circle cx="350" cy="450" r="12" fill="#f0c300" opacity="0.85" />
+                    <circle cx="150" cy="200" r="14" fill="white" opacity="0.5" />
+                </g>
+                
+                <rect width="600" height="600" fill="white" opacity="0.048" filter="url(#sparkle)" />
+            </svg>
+        </div>
+        <h2 class="ring-title">22K Gold <br> 91.7% gold content</h2>
+    </div>
+    
+    <!-- 24K Gold Ring - 99.9% gold (Pure Gold) -->
+    <div class="ring-wrapper">
+        <div class="ring-container rotate-24k">
+            <svg viewBox="0 0 600 600" class="glow-24k">
+                <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.5" />
+                
+                <g class="turbulence">
+                    <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#greenGradient24k)" stroke-width="90" stroke-linecap="round" />
+                    <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="5" stroke-opacity="0.5" stroke-linecap="round" />
+                    <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="25" stroke-opacity="0.8" stroke-linecap="round" />
+                    <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="3" stroke-opacity="0.3" stroke-linecap="round" />
+                    
+                    <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.8" />
+                    <circle cx="180" cy="420" r="18" fill="white" opacity="0.4" />
+                    <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.85" />
+                    <circle cx="150" cy="200" r="14" fill="white" opacity="0.5" />
+                </g>
+                
+                <rect width="600" height="600" fill="white" opacity="0.05" filter="url(#sparkle)" />
+            </svg>
+        </div>
+        <h2 class="ring-title">24K <br> 99.9% gold content</h2>
+    </div>
+</div>
+    
+        <!-- SVG Filters and Definitions -->
+        <svg width="0" height="0">
+            <defs>
+                <filter id="turbulence" x="-50%" y="-50%" width="200%" height="200%">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="5" seed="3" result="noise" />
+                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="12" xChannelSelector="R" yChannelSelector="G" />
+                    <feGaussianBlur stdDeviation="2.5" />
+                    <feComposite operator="in" in2="SourceGraphic" />
+                </filter>
+                
+                <!-- 9K Gold - Blue Gradient (37.5% gold) -->
+                <linearGradient id="blueGradient9k" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ffffff" />
+                    <stop offset="20%" stop-color="#fdf2bf" />
+                    <stop offset="35%" stop-color="#fae580" />
+                    <!-- Gold portion - 37.5% -->
+                    <stop offset="37.5%" stop-color="#f9df60" />
+                    <!-- Alloy portion - 62.5% (strong blue) -->
+                    <stop offset="60%" stop-color="#4bb1ce" />
+                    <stop offset="80%" stop-color="#2a6a8f" />
+                    <stop offset="100%" stop-color="#c9e6f2" />
+                </linearGradient>
+                
+                <!-- 10K Gold - Blue-Teal Gradient (41.7% gold) -->
+                <linearGradient id="blueGradient10k" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ffffff" />
+                    <stop offset="20%" stop-color="#fdf2bf" />
+                    <stop offset="35%" stop-color="#fae580" />
+                    <!-- Gold portion - 41.7% -->
+                    <stop offset="41.7%" stop-color="#f9df60" />
+                    <!-- Alloy portion - 58.3% (blue-teal) -->
+                    <stop offset="60%" stop-color="#44a9a6" />
+                    <stop offset="80%" stop-color="#2e7a77" />
+                    <stop offset="100%" stop-color="#c6e8e8" />
+                </linearGradient>
+                
+                <!-- 12K Gold - Teal Gradient (50% gold) -->
+                <linearGradient id="tealGradient12k" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ffffff" />
+                    <stop offset="20%" stop-color="#fdf2bf" />
+                    <stop offset="35%" stop-color="#fae580" />
+                    <!-- Gold portion - 50% -->
+                    <stop offset="50%" stop-color="#f9df60" />
+                    <!-- Alloy portion - 50% (teal) -->
+                    <stop offset="65%" stop-color="#40a584" />
+                    <stop offset="80%" stop-color="#2e7a77" />
+                    <stop offset="100%" stop-color="#c8ede2" />
+                </linearGradient>
+                
+                <!-- 14K Gold - Teal-Green Gradient (58.3% gold) -->
+                <linearGradient id="greenGradient14k" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ffffff" />
+                    <stop offset="20%" stop-color="#fdf2bf" />
+                    <stop offset="35%" stop-color="#fae580" />
+                    <!-- Gold portion - 58.3% -->
+                    <stop offset="58.3%" stop-color="#f9df60" />
+                    <!-- Alloy portion - 41.7% (teal-green) -->
+                    <stop offset="70%" stop-color="#60c1a5" />
+                    <stop offset="85%" stop-color="#3c9262" />
+                    <stop offset="100%" stop-color="#c8ede2" />
+                </linearGradient>
+                
+                <!-- 15K Gold - Green-Yellow Gradient (62.5% gold) -->
+                <linearGradient id="greenGradient15k" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ffffff" />
+                    <stop offset="20%" stop-color="#fdf2bf" />
+                    <stop offset="35%" stop-color="#fae580" />
+                    <!-- Gold portion - 62.5% -->
+                    <stop offset="62.5%" stop-color="#f9df60" />
+                    <!-- Alloy portion - 37.5% (green) -->
+                    <stop offset="75%" stop-color="#51ad52" />
+                    <stop offset="85%" stop-color="#3c9262" />
+                    <stop offset="100%" stop-color="#c8ede2" />
+                </linearGradient>
+                
+                <!-- 18K Gold - Yellow-Green Gradient (75% gold) -->
+                <linearGradient id="greenGradient18k" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ffffff" />
+                    <stop offset="20%" stop-color="#fdf2bf" />
+                    <stop offset="40%" stop-color="#fae580" />
+                    <!-- Gold portion - 75% -->
+                    <stop offset="75%" stop-color="#f8d840" />
+                    <!-- Alloy portion - 25% (light green) -->
+                    <stop offset="85%" stop-color="#3c9262" />
+                    <stop offset="100%" stop-color="#c8ede2" />
+                </linearGradient>
+                
+                <!-- 22K Gold - Yellow-Gold Gradient (91.7% gold) -->
+                <linearGradient id="goldGradient22k" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ffffff" />
+                    <stop offset="20%" stop-color="#fef9df" />
+                    <stop offset="45%" stop-color="#fae580" />
+                    <!-- Gold portion - 91.7% -->
+                    <stop offset="91.7%" stop-color="#f0c300" />
+                    <!-- Alloy portion - 8.3% (very slight green tint) -->
+                    <stop offset="95%" stop-color="#f6d220" />
+                    <stop offset="100%" stop-color="#fdf7c3" />
+                </linearGradient>
+                
+                <!-- 24K Gold - Pure Gold (99.9% gold) -->
+                <linearGradient id="greenGradient24k" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ffffff" />
+                    <stop offset="20%" stop-color="#fef9df" />
+                    <stop offset="40%" stop-color="#f9df60" />
+                    <stop offset="60%" stop-color="#f8d840" />
+                    <stop offset="80%" stop-color="#f6d220" />
+                    <stop offset="100%" stop-color="#f5cb00" />
+                </linearGradient>
+                
+                <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                    <stop offset="0%" stop-color="rgba(255, 255, 255, 0)" />
+                    <stop offset="40%" stop-color="rgba(255, 215, 0, 0)" />
+                    <stop offset="100%" stop-color="rgba(255, 215, 0, 0)" />
+                </radialGradient>
+                
+                <filter id="sparkle">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.15" numOctaves="2" seed="5" result="noise" />
+                    <feColorMatrix type="luminanceToAlpha" in="noise" result="alpha" />
+                    <feComponentTransfer in="alpha">
+                        <feFuncA type="table" tableValues="0 0 0 0 0 0 0 0 0 1" />
+                    </feComponentTransfer>
+                </filter>
+            </defs>
+        </svg>
+        
+        <!-- Timeline Section -->
+        <div class="timeline-section">
+            <h2 class="section-title">Gold Purity Timeline</h2>
+            
+            <div class="timeline-container">
+                <!-- EPOCH 1: Ancient Era (High Purity 22K-24K) -->
+                <div class="era-section">
+                    <h3 class="era-heading">Ancient & Medieval Gold (22K-24K)</h3>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-date">3100 BCE - early 1500s</div>
+                        <div class="timeline-flex-container">
+                            <div class="timeline-content">
+                                <p>Ancient civilizations used nearly pure gold (22K-24K). The Egyptians mastered refining techniques to create exceptional purity gold items, often using it for royal tombs and religious artifacts. Etruscans employed high-purity gold for their intricate granulation work, creating detailed decorative elements. Romans standardized their coins around 22K-24K during peak empire periods to maintain economic stability across their territories.</p>
+                                <p>During the Middle Ages, gold was extensively used for religious artifacts, illuminated manuscripts, and jewelry by royalty and nobility. Techniques such as soldering, gilding, and filigree were employed to create intricate designs. Gold purity during this period varied but was generally high, often around 22 karats, as lower purities were considered less valuable and sometimes deceptive.</p>
+                                <span class="era-badge">22K-24K (91.7-99.9% Pure)</span>
+                            </div>
+                            <div class="timeline-rings">
+                                <!-- 22K Gold Ring - 91.7% gold (Yellow-Gold) -->
+                                <div class="ring-wrapper">
+                                    <div class="smaller-ring-container rotate-22k">
+                                        <svg viewBox="0 0 600 600" class="glow-22k">
+                                            <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.45" />
+                                            
+                                            <g class="turbulence">
+                                                <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#goldGradient22k)" stroke-width="90" stroke-linecap="round" />
+                                                <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="7" stroke-opacity="0.55" stroke-linecap="round" />
+                                                <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#f0c300" stroke-width="23" stroke-opacity="0.75" stroke-linecap="round" />
+                                                <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.35" stroke-linecap="round" />
+                                                
+                                                <circle cx="400" cy="150" r="15" fill="#f0c300" opacity="0.8" />
+                                                <circle cx="180" cy="420" r="18" fill="white" opacity="0.45" />
+                                                <circle cx="350" cy="450" r="12" fill="#f0c300" opacity="0.85" />
+                                                <circle cx="150" cy="200" r="14" fill="white" opacity="0.5" />
+                                            </g>
+                                            
+                                            <rect width="600" height="600" fill="white" opacity="0.048" filter="url(#sparkle)" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="ring-title">22K Gold</h2>
+                                </div>
+                                
+                                <!-- 24K Gold Ring - 99.9% gold (Pure Gold) -->
+                                <div class="ring-wrapper">
+                                    <div class="smaller-ring-container rotate-24k">
+                                        <svg viewBox="0 0 600 600" class="glow-24k">
+                                            <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.5" />
+                                            
+                                            <g class="turbulence">
+                                                <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#greenGradient24k)" stroke-width="90" stroke-linecap="round" />
+                                                <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="5" stroke-opacity="0.5" stroke-linecap="round" />
+                                                <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="25" stroke-opacity="0.8" stroke-linecap="round" />
+                                                <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="3" stroke-opacity="0.3" stroke-linecap="round" />
+                                                
+                                                <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.8" />
+                                                <circle cx="180" cy="420" r="18" fill="white" opacity="0.4" />
+                                                <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.85" />
+                                                <circle cx="150" cy="200" r="14" fill="white" opacity="0.5" />
+                                            </g>
+                                            
+                                            <rect width="600" height="600" fill="white" opacity="0.05" filter="url(#sparkle)" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="ring-title">24K Gold</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- EPOCH 2: Georgian and Early Victorian Era (18K-22K) -->
+                <div class="era-section">
+                    <h3 class="era-heading">Georgian and Early Victorian Era (18K-22K)</h3>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-date">late 1500s - mid 1800s</div>
+                        <div class="timeline-flex-container">
+                            <div class="timeline-content">
+                                <p>From the Renaissance through the early Victorian period, gold standards were strictly regulated. Prior to 1854, only 22-karat and 18-karat gold were allowed for hallmarking in England, reflecting both the value placed on gold purity and the guild regulations that controlled the jewelry trade. 18K gold (75% pure) became particularly popular for jewelry during this period because it offered a balance between purity and durability that pure gold lacks.</p>
+                                <p>Throughout Europe, similar standards were enforced by goldsmiths' guilds, though the specific purities varied by region. </p>
+                                <span class="era-badge">18K (75%)</span>
+                                <span class="era-badge">22K (91.7%)</span>
+                            </div>
+                            <div class="timeline-rings">
+                                <!-- 18K Gold Ring - 75% gold (Green) -->
+                                <div class="ring-wrapper">
+                                    <div class="smaller-ring-container rotate-18k">
+                                        <svg viewBox="0 0 600 600" class="glow-18k">
+                                            <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.4" />
+                                            
+                                            <g class="turbulence">
+                                                <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#greenGradient18k)" stroke-width="90" stroke-linecap="round" />
+                                                <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="10" stroke-opacity="0.6" stroke-linecap="round" />
+                                                <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="22" stroke-opacity="0.7" stroke-linecap="round" />
+                                                <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="6" stroke-opacity="0.4" stroke-linecap="round" />
+                                                
+                                                <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.75" />
+                                                <circle cx="180" cy="420" r="18" fill="white" opacity="0.5" />
+                                                <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.8" />
+                                                <circle cx="150" cy="200" r="14" fill="white" opacity="0.55" />
+                                            </g>
+                                            
+                                            <rect width="600" height="600" fill="white" opacity="0.045" filter="url(#sparkle)" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="ring-title">18K Gold</h2>
+                                </div>
+                                
+                                <!-- 22K Gold Ring - 91.7% gold (Yellow-Gold) -->
+                                <div class="ring-wrapper">
+                                    <div class="smaller-ring-container rotate-22k">
+                                        <svg viewBox="0 0 600 600" class="glow-22k">
+                                            <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.45" />
+                                            
+                                            <g class="turbulence">
+                                                <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#goldGradient22k)" stroke-width="90" stroke-linecap="round" />
+                                                <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="7" stroke-opacity="0.55" stroke-linecap="round" />
+                                                <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#f0c300" stroke-width="23" stroke-opacity="0.75" stroke-linecap="round" />
+                                                <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.35" stroke-linecap="round" />
+                                                
+                                                <circle cx="400" cy="150" r="15" fill="#f0c300" opacity="0.8" />
+                                                <circle cx="180" cy="420" r="18" fill="white" opacity="0.45" />
+                                                <circle cx="350" cy="450" r="12" fill="#f0c300" opacity="0.85" />
+                                                <circle cx="150" cy="200" r="14" fill="white" opacity="0.5" />
+                                            </g>
+                                            
+                                            <rect width="600" height="600" fill="white" opacity="0.048" filter="url(#sparkle)" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="ring-title">22K Gold</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NEW: Added 1854 Hallmarking Act -->
+                    <div class="timeline-item">
+                        <div class="timeline-date">1854</div>
+                        <div class="timeline-flex-container">
+                            <div class="timeline-content">
+                                <p>The Hallmarking Act of 1854 marked a significant turning point in gold standards, particularly in Britain. This legislation expanded legal gold standards by introducing 15K, 12K, and 9K as legally recognized purities for jewelry and decorative items. This change was driven by economic factors and the desire to make gold jewelry more affordable for the growing middle class during the height of the Victorian era.</p>
+                                <p>The introduction of 9K gold (37.5% gold) in particular democratized access to gold jewelry, making it available to a much wider segment of society. These lower purity standards coincided with the industrial revolution, which enabled mass production techniques for jewelry manufacturing.</p>
+                                <span class="era-badge">9K (37.5%)</span>
+                                <span class="era-badge">12K (50%)</span>
+                                <span class="era-badge">15K (62.5%)</span>
+                            </div>
+                            <div class="timeline-rings">
+                                <!-- 9K Gold Ring - 37.5% gold (Blue) -->
+                                <div class="ring-wrapper">
+                                    <div class="smaller-ring-container rotate-9k">
+                                        <svg viewBox="0 0 600 600" class="glow-9k">
+                                            <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.25" />
+                                            
+                                            <g class="turbulence">
+                                                <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#blueGradient9k)" stroke-width="90" stroke-linecap="round" />
+                                                <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="20" stroke-opacity="0.7" stroke-linecap="round" />
+                                                <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="15" stroke-opacity="0.6" stroke-linecap="round" />
+                                                <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="12" stroke-opacity="0.5" stroke-linecap="round" />
+                                                
+                                                <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.6" />
+                                                <circle cx="180" cy="420" r="18" fill="white" opacity="0.6" />
+                                                <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.7" />
+                                                <circle cx="150" cy="200" r="14" fill="white" opacity="0.7" />
+                                            </g>
+                                            
+                                            <rect width="600" height="600" fill="white" opacity="0.03" filter="url(#sparkle)" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="ring-title">9K Gold</h2>
+                                </div>
+                                
+                                <!-- 12K Gold Ring - 50% gold (Teal) -->
+                                <div class="ring-wrapper">
+                                    <div class="smaller-ring-container rotate-12k">
+                                        <svg viewBox="0 0 600 600" class="glow-12k">
+                                            <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.25" />
+                                            
+                                            <g class="turbulence">
+                                                <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#tealGradient12k)" stroke-width="90" stroke-linecap="round" />
+                                                <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="16" stroke-opacity="0.65" stroke-linecap="round" />
+                                                <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="19" stroke-opacity="0.63" stroke-linecap="round" />
+                                                <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="9" stroke-opacity="0.48" stroke-linecap="round" />
+                                                
+                                                <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.68" />
+                                                <circle cx="180" cy="420" r="18" fill="white" opacity="0.58" />
+                                                <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.73" />
+                                                <circle cx="150" cy="200" r="14" fill="white" opacity="0.63" />
+                                            </g>
+                                            
+                                            <rect width="600" height="600" fill="white" opacity="0.038" filter="url(#sparkle)" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="ring-title">12K Gold</h2>
+                                </div>
+                                
+                                <!-- 15K Gold Ring - 62.5% gold (Green-Yellow) -->
+                                <div class="ring-wrapper">
+                                    <div class="smaller-ring-container rotate-15k">
+                                        <svg viewBox="0 0 600 600" class="glow-15k">
+                                            <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.35" />
+                                            
+                                            <g class="turbulence">
+                                                <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#greenGradient15k)" stroke-width="90" stroke-linecap="round" />
+                                                <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="12" stroke-opacity="0.62" stroke-linecap="round" />
+                                                <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="21" stroke-opacity="0.67" stroke-linecap="round" />
+                                                <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="7" stroke-opacity="0.42" stroke-linecap="round" />
+                                                
+                                                <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.72" />
+                                                <circle cx="180" cy="420" r="18" fill="white" opacity="0.53" />
+                                                <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.77" />
+                                                <circle cx="150" cy="200" r="14" fill="white" opacity="0.58" />
+                                            </g>
+                                            
+                                            <rect width="600" height="600" fill="white" opacity="0.042" filter="url(#sparkle)" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="ring-title">15K Gold</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EPOCH 3: Late Victorian to 20th Century -->
+                <div class="era-section">
+                    <h3 class="era-heading">Late Victorian Era to 20th Century</h3>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-date">late 1800s - 1930s</div>
+                        <div class="timeline-flex-container">
+                            <div class="timeline-content">
+                                <p>The late Victorian period and early 20th century saw the full adoption of diverse gold standards across different regions. Britain and its colonies embraced 9K and 15K gold for affordable jewelry, while 14K became standardized in the United States. In 1932, Britain officially replaced the 12K and 15K standard with 14K to align with international standards, though 9K remained distinctively popular in British markets.</p>
+                                <span class="era-badge">9K (37.5%)</span>
+                                <span class="era-badge">14K (58.3%)</span>
+                                <span class="era-badge">18K (75%)</span>
+                            </div>
+                            <div class="timeline-rings">
+                                <!-- 9K Gold Ring - 37.5% gold (Blue) -->
+                                <div class="ring-wrapper">
+                                    <div class="smaller-ring-container rotate-9k">
+                                        <svg viewBox="0 0 600 600" class="glow-9k">
+                                            <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.25" />
+                                            
+                                            <g class="turbulence">
+                                                <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#blueGradient9k)" stroke-width="90" stroke-linecap="round" />
+                                                <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="20" stroke-opacity="0.7" stroke-linecap="round" />
+                                                <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="15" stroke-opacity="0.6" stroke-linecap="round" />
+                                                <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="12" stroke-opacity="0.5" stroke-linecap="round" />
+                                                
+                                                <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.6" />
+                                                <circle cx="180" cy="420" r="18" fill="white" opacity="0.6" />
+                                                <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.7" />
+                                                <circle cx="150" cy="200" r="14" fill="white" opacity="0.7" />
+                                            </g>
+                                            
+                                            <rect width="600" height="600" fill="white" opacity="0.03" filter="url(#sparkle)" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="ring-title">9K Gold</h2>
+                                </div>
+                                
+                                <!-- 14K Gold Ring - 58.3% gold (Teal-Green) -->
+                                <div class="ring-wrapper">
+                                    <div class="smaller-ring-container rotate-14k">
+                                        <svg viewBox="0 0 600 600" class="glow-14k">
+                                            <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.3" />
+                                            
+                                            <g class="turbulence">
+                                                <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#greenGradient14k)" stroke-width="90" stroke-linecap="round" />
+                                                <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="14" stroke-opacity="0.65" stroke-linecap="round" />
+                                                <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="20" stroke-opacity="0.65" stroke-linecap="round" />
+                                                <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="8" stroke-opacity="0.45" stroke-linecap="round" />
+                                                
+                                                <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.7" />
+                                                <circle cx="180" cy="420" r="18" fill="white" opacity="0.55" />
+                                                <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.75" />
+                                                <circle cx="150" cy="200" r="14" fill="white" opacity="0.6" />
+                                            </g>
+                                            
+                                            <rect width="600" height="600" fill="white" opacity="0.04" filter="url(#sparkle)" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="ring-title">14K Gold</h2>
+                                </div>
+                                
+                                <!-- 18K Gold Ring - 75% gold (Green) -->
+                                <div class="ring-wrapper">
+                                    <div class="smaller-ring-container rotate-18k">
+                                        <svg viewBox="0 0 600 600" class="glow-18k">
+                                            <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.4" />
+                                            
+                                            <g class="turbulence">
+                                                <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#greenGradient18k)" stroke-width="90" stroke-linecap="round" />
+                                                <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="10" stroke-opacity="0.6" stroke-linecap="round" />
+                                                <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="22" stroke-opacity="0.7" stroke-linecap="round" />
+                                                <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="6" stroke-opacity="0.4" stroke-linecap="round" />
+                                                
+                                                <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.75" />
+                                                <circle cx="180" cy="420" r="18" fill="white" opacity="0.5" />
+                                                <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.8" />
+                                                <circle cx="150" cy="200" r="14" fill="white" opacity="0.55" />
+                                            </g>
+                                            
+                                            <rect width="600" height="600" fill="white" opacity="0.045" filter="url(#sparkle)" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="ring-title">18K Gold</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NEW: World War II restrictions -->
+                    <div class="timeline-item">
+                        <div class="timeline-date">1939 - 1945</div>
+                        <div class="timeline-flex-container">
+                            <div class="timeline-content">
+                                <p>World War II dramatically impacted gold use globally. Many countries imposed strict restrictions on gold for civilian use, directing precious metals toward the war effort. In the United States, the War Production Board's L-93 regulation in 1942 severely limited gold use in jewelry, effectively halting production of gold jewelry exceeding 10K in purity. Similar restrictions were implemented across Europe, forcing jewelers to work with alternative materials or lower gold content alloys.</p>
+                                <span class="era-badge">9K-10K (37.5-41.7%)</span>
+                            </div>
+                            <div class="timeline-rings">
+                                <!-- 9K Gold Ring - 37.5% gold (Blue) -->
+                                <div class="ring-wrapper">
+                                    <div class="smaller-ring-container rotate-9k">
+                                        <svg viewBox="0 0 600 600" class="glow-9k">
+                                            <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.25" />
+                                            
+                                            <g class="turbulence">
+                                                <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#blueGradient9k)" stroke-width="90" stroke-linecap="round" />
+                                                <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="20" stroke-opacity="0.7" stroke-linecap="round" />
+                                                <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="15" stroke-opacity="0.6" stroke-linecap="round" />
+                                                <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="12" stroke-opacity="0.5" stroke-linecap="round" />
+                                                
+                                                <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.6" />
+                                                <circle cx="180" cy="420" r="18" fill="white" opacity="0.6" />
+                                                <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.7" />
+                                                <circle cx="150" cy="200" r="14" fill="white" opacity="0.7" />
+                                            </g>
+                                            
+                                            <rect width="600" height="600" fill="white" opacity="0.03" filter="url(#sparkle)" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="ring-title">9K Gold</h2>
+                                </div>
+                                
+                                <!-- 10K Gold Ring - 41.7% gold (Blue-Teal) -->
+                                <div class="ring-wrapper">
+                                    <div class="smaller-ring-container rotate-10k">
+                                        <svg viewBox="0 0 600 600" class="glow-10k">
+                                            <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.28" />
+                                            
+                                            <g class="turbulence">
+                                                <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#blueGradient10k)" stroke-width="90" stroke-linecap="round" />
+                                                <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="18" stroke-opacity="0.7" stroke-linecap="round" />
+                                                <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="18" stroke-opacity="0.6" stroke-linecap="round" />
+                                                <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="10" stroke-opacity="0.5" stroke-linecap="round" />
+                                                
+                                                <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.65" />
+                                                <circle cx="180" cy="420" r="18" fill="white" opacity="0.6" />
+                                                <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.7" />
+                                                <circle cx="150" cy="200" r="14" fill="white" opacity="0.65" />
+                                            </g>
+                                            
+                                            <rect width="600" height="600" fill="white" opacity="0.035" filter="url(#sparkle)" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="ring-title">10K Gold</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EPOCH 4: Post-War to Present Day -->
+                <div class="era-section">
+                    <h3 class="era-heading">Post-War to Present Day</h3>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-date">1950s - Present</div>
+                        <div class="timeline-flex-container">
+                            <div class="timeline-content">
+                                <p>The post-war period witnessed a global standardization of gold purity markers, though regional preferences persist to this day. 18K-24K remains popular in Asia (particularly China and India) where gold's purity is highly valued; 14K-18K is standard in Europe and North America, balancing purity with durability; and 9K-10K continues to be common in Britain and its former colonies.</p>
+                                <p>Modern technology has allowed for precisely controlled gold alloys with tailored properties for specific applications. Advances in metallurgy have created specialized alloys like heat-treatable 14K and 18K gold for manufacturing, hypoallergenic white gold compositions without nickel, and modern colored golds with enhanced durability.</p>
+                                <span class="era-badge">9K (37.5%)</span>
+                                <span class="era-badge">10K (41.7%)</span>
+                                <span class="era-badge">14K (58.3%)</span>
+                                <span class="era-badge">18K (75%)</span>
+                                <span class="era-badge">22K (91.7%)</span>
+                                <span class="era-badge">24K (99.9%)</span>
+                            </div>
+                            <div class="timeline-rings">
+                                <!-- Modern selection of rings -->
+                                <!-- 14K Gold Ring - 58.3% gold (Teal-Green) -->
+                                <div class="ring-wrapper">
+                                    <div class="smaller-ring-container rotate-14k">
+                                        <svg viewBox="0 0 600 600" class="glow-14k">
+                                            <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.3" />
+                                            
+                                            <g class="turbulence">
+                                                <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#greenGradient14k)" stroke-width="90" stroke-linecap="round" />
+                                                <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="14" stroke-opacity="0.65" stroke-linecap="round" />
+                                                <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="20" stroke-opacity="0.65" stroke-linecap="round" />
+                                                <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="8" stroke-opacity="0.45" stroke-linecap="round" />
+                                                
+                                                <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.7" />
+                                                <circle cx="180" cy="420" r="18" fill="white" opacity="0.55" />
+                                                <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.75" />
+                                                <circle cx="150" cy="200" r="14" fill="white" opacity="0.6" />
+                                            </g>
+                                            
+                                            <rect width="600" height="600" fill="white" opacity="0.04" filter="url(#sparkle)" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="ring-title">14K Gold</h2>
+                                </div>
+                                
+                                <!-- 18K Gold Ring - 75% gold (Green) -->
+                                <div class="ring-wrapper">
+                                    <div class="smaller-ring-container rotate-18k">
+                                        <svg viewBox="0 0 600 600" class="glow-18k">
+                                            <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.4" />
+                                            
+                                            <g class="turbulence">
+                                                <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#greenGradient18k)" stroke-width="90" stroke-linecap="round" />
+                                                <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="10" stroke-opacity="0.6" stroke-linecap="round" />
+                                                <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="22" stroke-opacity="0.7" stroke-linecap="round" />
+                                                <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="6" stroke-opacity="0.4" stroke-linecap="round" />
+                                                
+                                                <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.75" />
+                                                <circle cx="180" cy="420" r="18" fill="white" opacity="0.5" />
+                                                <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.8" />
+                                                <circle cx="150" cy="200" r="14" fill="white" opacity="0.55" />
+                                            </g>
+                                            
+                                            <rect width="600" height="600" fill="white" opacity="0.045" filter="url(#sparkle)" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="ring-title">18K Gold</h2>
+                                </div>
+                                
+                                <!-- 22K Gold Ring - 91.7% gold (Yellow-Gold) -->
+                                <div class="ring-wrapper">
+                                    <div class="smaller-ring-container rotate-22k">
+                                        <svg viewBox="0 0 600 600" class="glow-22k">
+                                            <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.45" />
+                                            
+                                            <g class="turbulence">
+                                                <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#goldGradient22k)" stroke-width="90" stroke-linecap="round" />
+                                                <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="7" stroke-opacity="0.55" stroke-linecap="round" />
+                                                <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#f0c300" stroke-width="23" stroke-opacity="0.75" stroke-linecap="round" />
+                                                <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.35" stroke-linecap="round" />
+                                                
+                                                <circle cx="400" cy="150" r="15" fill="#f0c300" opacity="0.8" />
+                                                <circle cx="180" cy="420" r="18" fill="white" opacity="0.45" />
+                                                <circle cx="350" cy="450" r="12" fill="#f0c300" opacity="0.85" />
+                                                <circle cx="150" cy="200" r="14" fill="white" opacity="0.5" />
+                                            </g>
+                                            
+                                            <rect width="600" height="600" fill="white" opacity="0.048" filter="url(#sparkle)" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="ring-title">22K Gold</h2>
+                                </div>
+                                
+                                <!-- 24K Gold Ring - 99.9% gold (Pure Gold) -->
+                                <div class="ring-wrapper">
+                                    <div class="smaller-ring-container rotate-24k">
+                                        <svg viewBox="0 0 600 600" class="glow-24k">
+                                            <circle cx="300" cy="300" r="290" fill="url(#centerGlow)" opacity="0.5" />
+                                            
+                                            <g class="turbulence">
+                                                <path d="M 300,30 A 270,270 0 1,1 299,30" fill="none" stroke="url(#greenGradient24k)" stroke-width="90" stroke-linecap="round" />
+                                                <path d="M 300,60 A 240,240 0 1,1 299,60" fill="none" stroke="#ffffff" stroke-width="5" stroke-opacity="0.5" stroke-linecap="round" />
+                                                <path d="M 300,85 A 215,215 0 1,1 299,85" fill="none" stroke="#fae580" stroke-width="25" stroke-opacity="0.8" stroke-linecap="round" />
+                                                <path d="M 300,105 A 195,195 0 1,1 299,105" fill="none" stroke="#ffffff" stroke-width="3" stroke-opacity="0.3" stroke-linecap="round" />
+                                                
+                                                <circle cx="400" cy="150" r="15" fill="#fae580" opacity="0.8" />
+                                                <circle cx="180" cy="420" r="18" fill="white" opacity="0.4" />
+                                                <circle cx="350" cy="450" r="12" fill="#fae580" opacity="0.85" />
+                                                <circle cx="150" cy="200" r="14" fill="white" opacity="0.5" />
+                                            </g>
+                                            
+                                            <rect width="600" height="600" fill="white" opacity="0.05" filter="url(#sparkle)" />
+                                        </svg>
+                                    </div>
+                                    <h2 class="ring-title">24K Gold</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
