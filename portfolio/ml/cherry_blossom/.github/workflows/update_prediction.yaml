@@ -1,0 +1,97 @@
+name: Cherry Blossom Prediction Update
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Run daily at 6:00 UTC (early morning in US Eastern time)
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  update-prediction:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas numpy requests scikit-learn joblib matplotlib seaborn
+      
+      - name: Set up directories
+        run: |
+          mkdir -p data/daily
+          mkdir -p data/output
+          mkdir -p model
+      
+      - name: Check if historical data exists
+        id: check-data
+        run: |
+          if [ ! -f "data/daily/weather_2015_2023.csv" ]; then
+            echo "missing_data=true" >> $GITHUB_OUTPUT
+          else
+            echo "missing_data=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Fail if historical data missing
+        if: steps.check-data.outputs.missing_data == 'true'
+        run: |
+          echo "Error: Historical data file (weather_2015_2023.csv) not found in data/daily directory."
+          echo "Please add the historical weather data file to your repository before continuing."
+          exit 1
+      
+      - name: Check if initial setup is needed
+        id: check-setup
+        run: |
+          if [ ! -f "model/cherry_blossom_model_latest.pkl" ]; then
+            echo "setup=true" >> $GITHUB_OUTPUT
+          else
+            echo "setup=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Initial setup (if needed)
+        if: steps.check-setup.outputs.setup == 'true'
+        run: python cherry_blossom_workflow.py --setup
+        env:
+          RAPID_API_KEY: ${{ secrets.RAPID_API_KEY }}
+      
+      - name: Update prediction
+        if: steps.check-setup.outputs.setup == 'false'
+        run: python cherry_blossom_workflow.py --update
+        env:
+          RAPID_API_KEY: ${{ secrets.RAPID_API_KEY }}
+      
+      - name: Create empty recent file if needed
+        run: |
+          if [ ! -f "data/daily/weather_2024_2025.csv" ]; then
+            touch data/daily/weather_2024_2025.csv
+          fi
+      
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          
+          # Add all relevant changes
+          git add data/daily/weather_2024_2025.csv || true
+          git add data/output/cherry_blossom_prediction.json || true
+          git add data/output/prediction_history.csv || true
+          git add data/output/harmonized_historical_data.csv || true
+          git add model/cherry_blossom_model_*.pkl || true
+          git add model/feature_cols.json || true
+          git add model/model_metadata.json || true
+          
+          # Only commit if there are changes staged
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update Cherry Blossom prediction for $(date +'%Y-%m-%d')"
+            git push
+          fi

@@ -1,0 +1,23 @@
+{
+  "year": 2025,
+  "predicted_bloom_doy": 101.21,
+  "predicted_bloom_start": "2025-04-11",
+  "estimated_bloom_end": "2025-04-24",
+  "estimated_duration": 14.3,
+  "days_until_bloom": 16,
+  "last_updated": "2025-04-09 11:03:14",
+  "available_months": [
+    "january",
+    "february",
+    "march",
+    "april"
+  ],
+  "data_completeness": {
+    "january": true,
+    "february": true,
+    "march": true,
+    "april": true
+  },
+  "latest_weather_date": "2025-03-26",
+  "confidence": "medium-high"
+}

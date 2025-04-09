@@ -1,0 +1,47 @@
+{
+  "training_date": "2025-04-09",
+  "feature_count": 68,
+  "model_file": "cherry_blossom_model_20250409.pkl",
+  "top_features": [
+    [
+      "tavg_roll_60d",
+      0.07616232091758705
+    ],
+    [
+      "tmax_roll_60d",
+      0.05257256839497362
+    ],
+    [
+      "february_tavg",
+      0.051523309731020435
+    ],
+    [
+      "tmin_roll_60d",
+      0.05090463049416283
+    ],
+    [
+      "tmax_roll_30d",
+      0.045734854335573887
+    ],
+    [
+      "winter_tmin",
+      0.04357871367941492
+    ],
+    [
+      "february_tmin",
+      0.04319354803282896
+    ],
+    [
+      "winter_tmax",
+      0.04280996006142706
+    ],
+    [
+      "winter_tavg",
+      0.03886956130258131
+    ],
+    [
+      "march_chill_days",
+      0.035460853791525415
+    ]
+  ]
+}
