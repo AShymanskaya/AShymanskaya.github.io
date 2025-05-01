@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Democracy in Free Fall</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap');
+    
+    body {
+      font-family: 'Merriweather', 'Georgia', serif;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f9f7f3;
+      color: #121212;
+      line-height: 1.6;
+      max-width: 1800px;
+    }
+    
+    .content {
+      background-color: #f9f7f3;
+      padding: 30px;
+      border: 1px solid #d1c9b9;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    
+    .main-headline {
+      font-family: 'Playfair Display', 'Times New Roman', serif;
+      font-size: 2.5rem;
+      font-weight: 900;
+      margin: 20px 0 5px;
+      line-height: 1.1;
+      color: #000000;
+      text-align: center;
+    }
+    
+    .subheadline {
+      font-size: 1.5rem;
+      font-style: italic;
+      margin-top: 0;
+      font-weight: normal;
+      color: #1a1a1a;
+      font-family: 'Libre Baskerville', 'Georgia', serif;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    section {
+      margin: 30px 0;
+      padding-top: 20px;
+    }
+    
+    h2 {
+      font-family: 'Playfair Display', 'Times New Roman', serif;
+      font-size: 1.8rem;
+      text-align: center;
+      border-bottom: 1px solid #d1c9b9;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+      color: #0c0c0c;
+    }
+    
+    p {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      text-align: justify;
+      hyphens: auto;
+    }
+    
+    .lead {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      font-weight: 500;
+      color: #121212;
+      font-family: 'Libre Baskerville', 'Georgia', serif;
+      text-indent: 2em;
+    }
+    
+    .caption {
+      font-size: 0.8rem;
+      font-style: italic;
+      color: #444;
+      margin-top: 10px;
+      text-align: center;
+    }
+    
+    .editorial {
+      background-color: #edeae3;
+      padding: 15px 20px;
+      border-left: 4px solid #121212;
+      margin: 20px 0;
+      font-family: 'Libre Baskerville', 'Georgia', serif;
+    }
+    
+    .editorial h3 {
+      font-family: 'Playfair Display', 'Times New Roman', serif;
+      margin-top: 0;
+      color: #0c0c0c;
+      letter-spacing: 0.5px;
+    }
+    
+    .highlight {
+      font-weight: bold;
+    }
+    
+    .highlight-negative {
+      font-weight: bold;
+      color: #6B0000;
+    }
+    
+    .chart-container {
+      background-color: #f7f5f0;
+      border: 1px solid #d1c9b9;
+      padding: 10px;
+      margin-bottom: 10px;
+      height: 450px;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.05);
+    }
+    
+    .key-stat {
+      text-align: center;
+      margin: 5px 0 5px 0;
+      font-size: 1.2rem;
+      font-family: 'Libre Baskerville', 'Georgia', serif;
+      line-height: 1.8;
+      color: #121212;
+      border-bottom: 1px dotted #d1c9b9;
+      border-top: 1px dotted #d1c9b9;
+      padding-bottom: 5px;
+    }
+    
+    .key-number {
+      font-weight: bold;
+      font-size: 1.4rem;
+    }
+    
+    .quote-box {
+      border-left: 3px solid #121212;
+      padding-left: 15px;
+      margin: 20px 0;
+      font-size: 1.1rem;
+      font-style: italic;
+    }
+    
+    .quote-attribution {
+      text-align: right;
+      font-size: 0.9rem;
+      font-style: normal;
+      margin-top: 10px;
+    }
+    
+    .chart-intro {
+      font-family: 'Libre Baskerville', 'Georgia', serif;
+      font-style: italic;
+      text-align: center;
+      margin: 0 auto 20px auto;
+      max-width: 700px;
+      padding: 0 20px;
+      font-size: 1.1rem;
+      color: #121212;
+    }
+    
+    /* Decorative elements */
+    .dropcap {
+      float: left;
+      font-size: 4rem;
+      line-height: 0.8;
+      padding-top: 5px;
+      padding-right: 8px;
+      font-family: 'Playfair Display', 'Times New Roman', serif;
+      font-weight: bold;
+    }
+    
+    /* Add a section title for each chart */
+    .chart-title {
+      font-family: 'Playfair Display', 'Times New Roman', serif;
+      font-size: 1.4rem;
+      text-align: center;
+      margin-top: 40px;
+      margin-bottom: 10px;
+      color: #0c0c0c;
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <h1 class="main-headline">U.S. DEMOCRACY IN FREE FALL</h1>
+    <p class="subheadline">Current democracy rating has fallen to pre-1950s levels</p>
+    <div class="key-stat">
+        <span><span class="key-number highlight-negative">100 days</span> into the office, Trump administration erased <span class="key-number highlight-negative"> 75 years </span> of democratic progress.
+        <br>
+        <span>Trump's second term shows <span class="key-number highlight-negative">40 times faster</span> democratic decline than his first term.</span>
+        <br>
+        <span>From the 1995 peak to February 2025, democracy has experienced its steepest fall by <span class="key-number highlight-negative">29%</span>.</span>
+    </div>
+
+    <!-- Historical Context Section - Timeline Chart -->
+    <section class="article-section">      
+      <div class="chart-container">
+        <canvas id="timelineChart"></canvas>
+      </div>
+      <p class="lead"><span class="dropcap"></span> U.S.A. democracy ratings have experienced their sharpest decline in history, with February 2025 marking a return to pre-1950s levels. The data by Bright Line Watch reveals a dramatic collapse during the second Trump term that has erased 75 years of democratic progress in a matter of months. The second Trump administration has seen an unprecedented acceleration in the rate of democratic decline. While during the first Trump term, between Feb 2017 and Nov 2020, the score fell roughly 4%, the last three months saw a decline by a whopping 11.5%. Experts predict further decline by 2027. Source: https://brightlinewatch.org/.</p>
+
+      
+
+  <script>
+    // Data for the democracy ratings over time
+    const keyPointsData = [
+  { year: 1950, month: 1, rating: 58.67473684210526 },
+  { year: 1975, month: 1, rating: 75.31301652892562 },
+  { year: 1985, month: 1, rating: 76.90471414242728 },
+  { year: 1995, month: 1, rating: 78.15953307392996, highlight: true, description: "Peak Democracy" },
+  { year: 2005, month: 1, rating: 75.27478753541077 },
+  { year: 2015, month: 1, rating: 75.78301886792453 },
+  { year: 2017, month: 0, rating: 68.19374201160935 },
+  { year: 2018, month: 0, rating: 65.68817051016804 },
+  { year: 2019, month: 3, rating: 68.20919881305637 },
+  { year: 2020, month: 0, rating: 62.50238095238095 },
+  { year: 2021, month: 0, rating: 67.00558268359831 },
+  { year: 2022, month: 0, rating: 67.40686906494767 },
+  { year: 2023, month: 7, rating: 70.26241134751773 },
+  { year: 2024, month: 0, rating: 68.98624605604012 },
+  { year: 2025, month: 2, rating: 55.46153846153846, highlight: true, description: "Current Rating" }
+];
+
+    const timePeriods = [
+      {
+        start: 1950,
+        end: 1975,
+        label: "Cold War Era"
+      },
+      {
+        start: 1975,
+        end: 1995,
+        label: "Late Cold War"
+      },
+      {
+        start: 1995,
+        end: 2015,
+        label: "Post-Cold War"
+      },
+      {
+        start: 2019,
+        end: 2020,
+        label: "COVID"
+      },
+      
+    ];
+
+    // Define the specific years to label on the data points
+    const yearsToLabel = [1950, 1975, 1985, 1995, 2005, 2015, 2020, 2025];
+
+    // Function to create the timeline chart with added presidents
+function createTimelineChart() {
+  const ctx = document.getElementById('timelineChart').getContext('2d');
+  
+  // Define presidents to add under time periods
+  const presidents = [
+    { startYear: 1950, endYear: 1953, name: "Truman" },
+    { startYear: 1953, endYear: 1961, name: "Eisenhower" },
+    { startYear: 1961, endYear: 1963, name: "Kennedy" },
+    { startYear: 1963, endYear: 1969, name: "Johnson" },
+    { startYear: 1969, endYear: 1974, name: "Nixon" },
+    { startYear: 1974, endYear: 1977, name: "Ford" },
+    { startYear: 1977, endYear: 1981, name: "Carter" },
+    { startYear: 1981, endYear: 1989, name: "Reagan" },
+    { startYear: 1989, endYear: 1993, name: "Bush Sr." },
+    { startYear: 1993, endYear: 2001, name: "Clinton" },
+    { startYear: 2001, endYear: 2009, name: "Bush Jr." },
+    { startYear: 2009, endYear: 2017, name: "Obama" },
+    { startYear: 2017, endYear: 2021, name: "Trump" },
+    { startYear: 2021, endYear: 2025, name: "Biden" },
+    { startYear: 2025, endYear: 2028, name: "Trump" }
+  ];
+  
+  // Calculate rate of change data
+  const rateOfChangeData = [];
+  
+  for (let i = 0; i < keyPointsData.length; i++) {
+    if (i === 0) {
+      // First point has no previous point to compare with
+      rateOfChangeData.push(0);
+    } else {
+      const current = keyPointsData[i];
+      const previous = keyPointsData[i-1];
+      
+      // Calculate time difference in years (accounting for months)
+      const yearDiff = current.year - previous.year + (current.month - previous.month) / 12;
+      
+      // Calculate annualized rate of change
+      if (yearDiff > 0) {
+        const annualRate = (current.rating - previous.rating) / yearDiff;
+        rateOfChangeData.push(annualRate);
+      } else {
+        rateOfChangeData.push(0);
+      }
+    }
+  }
+  
+  // Function to generate colors based on rate of change
+  function getRateColor(rate) {
+    if (rate > 0.5) return 'rgba(58, 95, 71, 0.7)'; // Strong positive: green
+    if (rate > 0.2) return 'rgba(58, 95, 71, 0.5)'; // Moderate positive: lighter green
+    if (rate > 0) return 'rgba(58, 95, 71, 0.3)';   // Slight positive: very light green
+    if (rate > -0.3) return 'rgba(205, 92, 92, 0.3)'; // Slight negative: light red
+    if (rate > -1.0) return 'rgba(165, 42, 42, 0.5)'; // Moderate negative: medium red
+    return 'rgba(107, 0, 0, 0.7)';                  // Strong negative: dark red
+  }
+  
+  // Generate background colors based on rate of change
+  const backgroundColors = rateOfChangeData.map(rate => getRateColor(rate));
+  
+  // Find the current value and the historical point with the closest value
+  const lastDataPoint = keyPointsData[keyPointsData.length - 1];
+  const currentValue = lastDataPoint.rating;
+  
+  // Find historical equivalent (when was rating last at this level)
+  let historicalEquivalent = null;
+  let minDifference = Infinity;
+  
+  // Skip the last 10 years in the search to find truly historical equivalent
+  const cutoffYear = keyPointsData[keyPointsData.length - 1].year - 10;
+  for (let i = 0; i < keyPointsData.length; i++) {
+    if (keyPointsData[i].year < cutoffYear) {
+      const diff = Math.abs(keyPointsData[i].rating - currentValue);
+      if (diff < minDifference) {
+        minDifference = diff;
+        historicalEquivalent = keyPointsData[i];
+      }
+    }
+  }
+  
+  // Create realistic time intervals for x-axis
+  // Map the data to more realistic x-axis positions
+  const realXPositions = keyPointsData.map((point, index) => {
+    // Convert to decimal year (year + month/12)
+    return point.year + (point.month - 1) / 12;
+  });
+  
+  // Add custom plugins for background and reference lines
+  const timelinePlugins = {
+    id: 'timelinePlugins',
+    beforeDraw: function(chart) {
+      const ctx = chart.ctx;
+      const xAxis = chart.scales.x;
+      const yAxis = chart.scales.y;
+      const meta = chart.getDatasetMeta(0);
+      
+      // 1. Draw horizon background gradients - colored bands based on rate of change
+      for (let i = 0; i < meta.data.length - 1; i++) {
+        const current = meta.data[i];
+        const next = meta.data[i + 1];
+        
+        // Skip if undefined (protects against errors)
+        if (!current || !next) continue;
+        
+        // Calculate positions
+        const x1 = current.x;
+        const x2 = next.x;
+        const y1 = yAxis.getPixelForValue(0); // Bottom of chart
+        const y2 = yAxis.bottom;              // Top of chart (visual bottom)
+        
+        // Create gradient
+        const gradient = ctx.createLinearGradient(x1, 0, x2, 0);
+        gradient.addColorStop(0, backgroundColors[i]);
+        gradient.addColorStop(1, backgroundColors[i+1]);
+        
+        // Draw rectangle
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+      }
+      
+      // 2. Draw the reference horizontal line at current value
+      if (historicalEquivalent) {
+        const currentY = yAxis.getPixelForValue(currentValue);
+        // Find the x position for the closest historical point
+        const historicalPointIndex = keyPointsData.indexOf(historicalEquivalent);
+        const historicalPoint = meta.data[historicalPointIndex];
+        const currentPoint = meta.data[meta.data.length - 1];
+        
+        // Skip if undefined (protects against errors)
+        if (historicalPoint && currentPoint) {
+          // Draw dashed reference line
+          ctx.save();
+          ctx.strokeStyle = 'rgba(107, 0, 0, 0.7)';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 3]);
+          ctx.beginPath();
+          ctx.moveTo(historicalPoint.x, currentY);
+          ctx.lineTo(currentPoint.x, currentY);
+          ctx.stroke();
+          
+          // Add label for the reference line
+          ctx.fillStyle = 'rgba(107, 0, 0, 0.9)';
+          ctx.font = 'italic 12px Merriweather';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          const midX = (historicalPoint.x + currentPoint.x) / 2-100;
+          ctx.fillText(`Democracy Level Last Seen: ${historicalEquivalent.year}`, midX, currentY - 5);
+          ctx.restore();
+        }
+      }
+      
+      // 3. Find our peak point for reference
+      let peakIndex = 0;
+      let peakValue = -Infinity;
+      for (let i = 0; i < keyPointsData.length; i++) {
+        if (keyPointsData[i].rating > peakValue) {
+          peakValue = keyPointsData[i].rating;
+          peakIndex = i;
+        }
+      }
+      
+      // Draw a shorter horizontal reference line at the peak value (only right portion)
+      const peakY = yAxis.getPixelForValue(peakValue);
+      const peakPoint = meta.data[peakIndex];
+      
+      if (peakPoint) {
+        ctx.strokeStyle = 'rgba(58, 95, 71, 0.5)';  // Green for peak
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(peakPoint.x, peakY);
+        ctx.lineTo(peakPoint.x + 150, peakY);  // Shortened line - only extends 150px to the right
+        ctx.stroke();
+        
+        // Add peak label
+        ctx.fillStyle = 'rgba(58, 95, 71, 0.9)';
+        ctx.font = 'italic 15px Merriweather';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(`Peak: ${peakValue.toFixed(1)} (${keyPointsData[peakIndex].year})`, peakPoint.x + 15, peakY - 5);
+      }
+      
+      // Add current value reference for the last data point
+      const lastPoint = meta.data[meta.data.length - 1];
+      const lastRating = keyPointsData[keyPointsData.length - 1].rating;
+      
+      if (lastPoint) {
+        // Add current value label
+        ctx.fillStyle = 'rgba(107, 0, 0, 0.9)';
+        ctx.font = 'italic 15px Merriweather';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'top';
+        ctx.fillText(`Current: ${lastRating.toFixed(1)} (${keyPointsData[keyPointsData.length-1].year})`, xAxis.right - 50, lastPoint.y + 5);
+      }
+      
+      // Add year labels along the top of the chart
+      yearsToLabel.forEach(year => {
+        // Find the nearest data point to this year
+        const nearestPoint = keyPointsData.find(point => point.year === year);
+        if (nearestPoint) {
+          const index = keyPointsData.indexOf(nearestPoint);
+          if (index !== -1 && meta.data[index]) {
+            const point = meta.data[index];
+            
+            // Draw year label at the top of the chart
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+            ctx.font = 'bold 15px Merriweather';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(year.toString(), point.x, yAxis.top - 20);
+          }
+        } else {
+          // If no exact match, use the x-axis scale to position the label
+          const xPos = xAxis.getPixelForValue(year);
+          
+          // Draw year label at the top of the chart
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+          ctx.font = 'bold 15px Merriweather';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(year.toString(), xPos, yAxis.top - 10);
+        }
+      });
+      
+      
+      
+      // 6. Draw president names beneath the period labels
+      presidents.forEach(president => {
+        // Find positions for start and end years
+        const startPos = xAxis.getPixelForValue(president.startYear);
+        const endPos = xAxis.getPixelForValue(president.endYear);
+        
+        if (startPos && endPos) {
+          const midX = (startPos + endPos) / 2;
+          const width = endPos - startPos;
+          
+          // Only draw president name if there's enough space
+          if (width > 25) {
+            // Draw president name below period labels
+            ctx.save();
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.font = '15px Merriweather';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText(president.name, midX, yAxis.bottom + 20); // 20px below the x-axis
+            ctx.restore();
+          }
+        }
+      });
+      
+      // 7. Add value labels for specific years
+      meta.data.forEach((point, index) => {
+        if (point) {
+          const dataPoint = keyPointsData[index];
+          const shouldLabel = yearsToLabel.includes(dataPoint.year);
+          
+          if (shouldLabel) {
+            // Find the closest month data point for the year
+            // For 2024, we want to use November (post-election) data
+            if (dataPoint.year === 2024 && dataPoint.month !== 11) {
+              return;
+            }
+            
+            ctx.fillStyle = dataPoint.highlight ? 'rgba(107, 0, 0, 0.9)' : 'rgba(0, 0, 0, 0.7)';
+            ctx.font = dataPoint.highlight ? 'bold 13px Merriweather' : '13px Merriweather';
+            
+            // Draw the value above the point
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(dataPoint.rating.toFixed(1), point.x+2, point.y - 20);
+          }
+        }
+      });
+    }
+  };
+  
+  // Create the timeline chart
+  const chart = new Chart(ctx, {
+    type: 'line',
+    plugins: [timelinePlugins],
+    data: {
+      labels: realXPositions, // Use realistic decimal years for x-axis
+      datasets: [
+        // Main timeline dataset
+        {
+          label: 'Democracy Rating',
+          data: keyPointsData.map(item => item.rating),
+          borderColor: '#000000',
+          borderWidth: 3,
+          tension: 0.4,
+          fill: false,
+          pointBackgroundColor: keyPointsData.map(item => 
+            item.highlight ? '#6B0000' : '#2F4F4F'
+          ),
+          pointRadius: keyPointsData.map((item, index) => {
+            // Make points for labeled years larger
+            if (yearsToLabel.includes(item.year)) {
+              return item.highlight ? 8 : 6;
+            }
+            return item.highlight ? 7 : 4;
+          }),
+          pointHoverRadius: keyPointsData.map(item => 
+            item.highlight ? 9 : 7
+          ),
+          pointBorderWidth: 2,
+          pointBorderColor: '#FFFFFF'
+        },
+        // Hidden dataset for rate of change (used for tooltips only)
+        {
+          label: 'Rate of Change',
+          data: rateOfChangeData,
+          hidden: true
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: {
+        padding: {
+          top: 50,  // Added more padding at top for year labels
+          right: 20,
+          bottom: 35, // Added more padding at bottom for president names
+          left: 20
+        }
+      },
+      scales: {
+        y: {
+          min: -15, 
+          max: 85,
+          display: false, // Hide the y-axis as requested
+          grid: {
+            display: false // Hide y-axis grid lines
+          }
+        },
+        x: {
+          type: 'linear',
+          min: 1949,
+          max: 2027,
+          grid: {
+            display: false
+          },
+          display: false, // Hide x-axis labels since we're drawing custom ones at the top
+        },
+      },
+      plugins: {
+        title: {
+          display: false
+        },
+        subtitle: {
+          display: false
+        },
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            title: function(context) {
+              const index = context[0].dataIndex;
+              // Protect against undefined
+              if (index === undefined || !keyPointsData[index]) {
+                return '';
+              }
+              return keyPointsData[index].year.toString();
+            },
+            label: function(context) {
+              if (context.datasetIndex === 0) {
+                return `Democracy Rating: ${context.raw.toFixed(2)}`;
+              }
+              return '';
+            },
+            afterLabel: function(context) {
+              if (context.datasetIndex === 0) {
+                const index = context.dataIndex;
+                // Protect against undefined
+                if (index === undefined || !keyPointsData[index]) {
+                  return '';
+                }
+                
+                let result = [];
+                
+                // Add description from keyPointsData if it exists
+                if (keyPointsData[index].description) {
+                  result.push(keyPointsData[index].description);
+                }
+                
+                // Add rate of change information (except for first point)
+                if (index > 0) {
+                  const rate = rateOfChangeData[index];
+                  let rateText = `Annual Rate of Change: ${rate.toFixed(2)} points/year`;
+                  
+                  // Add change intensity description
+                  let intensity = '';
+                  if (rate > 0.5) intensity = '(Rapid Democratic Progress)';
+                  else if (rate > 0.2) intensity = '(Moderate Democratic Progress)';
+                  else if (rate > 0) intensity = '(Slight Democratic Progress)';
+                  else if (rate > -0.3) intensity = '(Slight Democratic Decline)';
+                  else if (rate > -1.0) intensity = '(Moderate Democratic Decline)';
+                  else intensity = '(Severe Democratic Decline)';
+                  
+                  result.push(rateText);
+                  result.push(intensity);
+                  
+                  // Add total change since previous point
+                  const changeFromPrev = keyPointsData[index].rating - keyPointsData[index-1].rating;
+                  result.push(`Change from previous: ${changeFromPrev.toFixed(2)} points`);
+                }
+                
+                return result;
+              }
+              return '';
+            }
+          }
+        }
+      },
+      animation: {
+        duration: 2000
+      }
+    }
+  });
+  
+  return chart;
+}
+
+// Call this function to initialize the chart
+document.addEventListener('DOMContentLoaded', function() {
+  // Set global chart options
+  Chart.defaults.font.family = "'Merriweather', 'Georgia', serif";
+  Chart.defaults.color = '#121212';
+  
+  // Create the chart
+  createTimelineChart();
+});
+
+  </script>
+</body>
+</html>
