@@ -118,7 +118,14 @@
       height: 450px;
       box-shadow: 2px 2px 6px rgba(0,0,0,0.05);
     }
-    
+    .chart-container-waterfall {
+      background-color: #f7f5f0;
+      border: 1px solid #d1c9b9;
+      padding: 10px;
+      margin-bottom: 10px;
+      height: 900px;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.05);
+    }    
     .key-stat {
       text-align: center;
       margin: 5px 0 5px 0;
@@ -201,6 +208,10 @@
       <div class="chart-container">
         <canvas id="timelineChart"></canvas>
       </div>
+      <!-- 2. Waterfall Chart -->
+    <div class="chart-container-waterfall ">
+          <canvas id="waterfallChart"></canvas>
+      </div>
       <p class="lead"><span class="dropcap"></span> U.S.A. democracy ratings have experienced their sharpest decline in history, with February 2025 marking a return to pre-1950s levels. The data by Bright Line Watch reveals a dramatic collapse during the second Trump term that has erased 75 years of democratic progress in a matter of months. The second Trump administration has seen an unprecedented acceleration in the rate of democratic decline. While during the first Trump term, between Feb 2017 and Nov 2020, the score fell roughly 4%, the last three months saw a decline by a whopping 11.5%. Experts predict further decline by 2027. Source: https://brightlinewatch.org/.</p>
 
       
@@ -225,29 +236,7 @@
   { year: 2025, month: 2, rating: 55.46153846153846, highlight: true, description: "Current Rating" }
 ];
 
-    const timePeriods = [
-      {
-        start: 1950,
-        end: 1975,
-        label: "Cold War Era"
-      },
-      {
-        start: 1975,
-        end: 1995,
-        label: "Late Cold War"
-      },
-      {
-        start: 1995,
-        end: 2015,
-        label: "Post-Cold War"
-      },
-      {
-        start: 2019,
-        end: 2020,
-        label: "COVID"
-      },
-      
-    ];
+    
 
     // Define the specific years to label on the data points
     const yearsToLabel = [1950, 1975, 1985, 1995, 2005, 2015, 2020, 2025];
@@ -674,7 +663,735 @@ function createTimelineChart() {
   
   return chart;
 }
+// Improved Waterfall Chart with Year Ranges and Rate Changes
+function createWaterfallChart() {
+  const ctx = document.getElementById('waterfallChart').getContext('2d');
+  
+  // Prepare data for waterfall chart
+  const waterfallData = [];
+  const waterfallLabels = [];
+  const colors = [];
+  const borderColors = [];
+  const yearPairs = [];
+  
 
+  const majorEvents = [
+  // 1950s: Early Cold War & Civil Rights
+  { year: 1950, event: "McCarthyism", impact: "negative" }, // Red Scare and suppression of dissent [5]
+  { year: 1954, event: "Brown v. Board of Education", impact: "positive" }, // Landmark desegregation ruling [5][6]
+
+  // 1960s: Civil Rights & Social Upheaval
+  { year: 1964, event: "Civil Rights Act", impact: "positive" }, // Outlawed segregation, major civil rights advance [1][2][6]
+  { year: 1965, event: "Voting Rights Act", impact: "positive" }, // Protected voting rights for minorities [2][6]
+
+  // 1970s: Political Accountability
+  { year: 1972, event: "Watergate scandal exposed & Nixon resignation", impact: "positive" }, // Major political scandal, undermined trust [3]
+
+  // 1980s: Political Realignment & Scandal
+  { year: 1980, event: "Reagan elected president", impact: "mixed" }, // Political realignment, rise of new conservatism [4]
+  { year: 1986, event: "Iran-Contra affair", impact: "negative" }, // Abuse of executive power [4]
+
+  // 1990s: End of Cold War
+  { year: 1991, event: "End of Cold War", impact: "positive" }, // U.S. emerges as sole superpower, democratic optimism [4]
+
+  // 2000s: Terrorism & Civil Liberties
+  { year: 2001, event: "September 11 Attacks & Patriot Act", impact: "negative" }, // Erosion of civil liberties [3]
+
+  // 2010s: Political Polarization & Institutions
+  { year: 2010, event: "Citizens United Supreme Court decision", impact: "negative" }, // Expanded role of money in politics
+  { year: 2016, event: "Trump elected president", impact: "negative" }, // Marked start of accelerated democratic backsliding
+  { year: 2017, event: "Firing of FBI Director James Comey", impact: "negative" },
+  { year: 2017, event: "Travel ban and sanctuary cities executive orders", impact: "negative" },
+  { year: 2020, event: "COVID-19", impact: "negative" }, // Restrictions on the society 
+
+  // 2020s: Democratic Crisis
+  { year: 2021, event: "January 6 capitol riot", impact: "negative" }, // Direct attack on democratic institutions
+  { year: 2022, event: "Midterm elections", impact: "positive" }, // Defeat of many election deniers, modest democratic recovery
+  { year: 2024, event: "Trump return", impact: "negative" },
+  { year: 2025, event: "ICE detains Mahmoud Khalil, crackdown on protest rights", impact: "negative" }, // [1]
+];
+
+  // Helper function to wrap text into multiple lines
+  function wrapText(ctx, text, maxWidth) {
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = words[0];
+
+    for (let i = 1; i < words.length; i++) {
+      const word = words[i];
+      const width = ctx.measureText(currentLine + ' ' + word).width;
+      if (width < maxWidth) {
+        currentLine += ' ' + word;
+      } else {
+        lines.push(currentLine);
+        currentLine = word;
+      }
+    }
+    lines.push(currentLine);
+    return lines;
+  }
+  // Calculate changes between periods
+  for (let i = 0; i < keyPointsData.length; i++) {
+    const point = keyPointsData[i];
+    
+    if (i === 0) {
+      // Starting point (base)
+      waterfallData.push(point.rating);
+      waterfallLabels.push(`${point.year}`);
+      colors.push('rgba(112,128,144,0.8)'); // Starting color 
+      borderColors.push('rgb(47, 79, 79)');
+    } else {
+      // Calculate change from previous period
+      const prevPoint = keyPointsData[i-1];
+      const change = point.rating - prevPoint.rating;
+      
+      // Skip very small changes to simplify chart
+      if (Math.abs(change) < 0.3 && i !== keyPointsData.length - 1) {
+        continue;
+      }
+      
+      // Store year pairs for labels
+      yearPairs.push({
+        startYear: prevPoint.year,
+        endYear: point.year,
+        change: change
+      });
+      
+      // Add the change
+      waterfallData.push(change);
+      
+      // Simplified labels with just year ranges
+      waterfallLabels.push(`${prevPoint.year} → ${point.year}`);
+      
+      // Enhanced color based on positive/negative change
+      if (change > 0) {
+        const intensity = Math.min(0.8, 0.3 + Math.abs(change) / 10);
+        colors.push(`rgba(58, 95, 71, ${intensity})`); // Green for improvement
+        borderColors.push('rgb(58, 95, 71)');
+      } else {
+        // Gradations of red for declines
+        if (change < -10) {
+          colors.push('rgba(107, 0, 0, 0.8)'); // Deep red for severe decline
+          borderColors.push('rgb(107, 0, 0)');
+        } else if (change < -5) {
+          colors.push('rgba(165, 42, 42, 0.7)'); // Medium red
+          borderColors.push('rgb(165, 42, 42)');
+        } else {
+          colors.push('rgba(205, 92, 92, 0.6)'); // Light red for minor decline
+          borderColors.push('rgb(205, 92, 92)');
+        }
+      }
+    }
+  }
+  
+  // Create an array of years we want to highlight in the timeline
+  const highlightedYears = [];
+  keyPointsData.forEach(point => {
+    highlightedYears.push(point.year);
+  });
+  
+  // Create custom plugin for waterfall connections and annotations
+  const waterfallPlugin = {
+    id: 'waterfallPlugin',
+    beforeDraw: function(chart) {
+      const ctx = chart.ctx;
+      const xAxis = chart.scales.x;
+      const yAxis = chart.scales.y;
+      const datasets = chart.data.datasets;
+      
+      if (!datasets || !datasets[0] || !datasets[0].data) return;
+      
+      // Running total to calculate connections
+      let runningTotal = datasets[0].data[0];
+      
+      // Draw connecting lines between bars
+      ctx.save();
+      ctx.strokeStyle = 'rgba(50, 50, 50, 0.7)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 2]);
+      
+      // Draw connecting lines between bars
+      for (let i = 1; i < datasets[0].data.length; i++) {
+        const prev = runningTotal;
+        const current = datasets[0].data[i];
+        runningTotal += current;
+        
+        const prevX = xAxis.getPixelForValue(i - 1) + (xAxis.width / xAxis.ticks.length / 2);
+        const currentX = xAxis.getPixelForValue(i) - (xAxis.width / xAxis.ticks.length / 2);
+      }
+      
+      // Draw rate changes directly at the top of each bar
+      for (let i = 1; i < datasets[0].data.length; i++) {
+        const value = datasets[0].data[i];
+        const barX = xAxis.getPixelForValue(i);
+        
+        // Calculate the bar's position
+        const meta = chart.getDatasetMeta(0);
+        const bar = meta.data[i];
+        
+        // Format the rate change text
+        const changeText = value > 0 ? `+${value.toFixed(1)}` : `${value.toFixed(1)}`;
+        
+        // Position text directly at the top of each bar (regardless of whether positive or negative)
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 15px "Merriweather", "Georgia", serif';
+        
+        // Set color based on positive/negative change
+        if (value > 0) {
+          ctx.fillStyle = 'rgba(58, 95, 71, 1)';
+          // For positive bars, position at the top edge of the bar
+          ctx.fillText(changeText, barX, bar.y - 5);
+        } else {
+          ctx.fillStyle = 'rgba(107, 0, 0, 1)';
+          // For negative bars, position at the top edge of the bar (which is actually the bottom visually)
+          ctx.fillText(changeText, barX, bar.y + bar.height*0.1 + 15);
+        }
+      }
+      
+      // Add final rating value text at the end of the chart
+      const finalValue = keyPointsData[keyPointsData.length - 1].rating;
+      const finalX = xAxis.right - 70; // Position near right edge
+      
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+      ctx.textAlign = 'right';
+      ctx.font = 'bold 15px "Merriweather", "Georgia", serif';
+      ctx.fillText('Final Rating: ' + finalValue.toFixed(1), finalX+30, yAxis.top+150);
+      ctx.fillText('1950s Rating: ' + '58.7', finalX-1470, yAxis.top+00);
+
+      // Add a title and subtitle directly on the chart
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 32px "Playfair Display", "Times New Roman", serif';
+      ctx.fillStyle = '#000000';
+      ctx.fillText('U.S. Democracy: Building Up and Breaking Down', 
+                  (xAxis.right + xAxis.left) / 2, yAxis.top - 50);
+      
+      ctx.font = 'italic 24px "Libre Baskerville", "Georgia", serif';
+      ctx.fillStyle = '#333333';
+      ctx.fillText('How democratic institutions have strengthened and eroded over time', 
+                  (xAxis.right + xAxis.left) / 2, yAxis.top - 10);
+                  
+      // Draw the historical events timeline at the bottom
+      ctx.restore();
+      ctx.save();
+      
+      // Define timeline parameters
+      const timelineY = yAxis.bottom + 180; // Position below x-axis
+      const timelineStartX = xAxis.left;
+      const timelineEndX = xAxis.right;
+      
+      // Title for the timeline
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 18px "Playfair Display", "Times New Roman", serif';
+      ctx.fillStyle = '#000000';
+      ctx.fillText('Key Historical Events Impacting U.S. Democracy', 
+                  (timelineStartX + timelineEndX) / 2, timelineY - 30);
+      
+      // Draw timeline base line
+      ctx.strokeStyle = '#333333';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(timelineStartX, timelineY);
+      ctx.lineTo(timelineEndX, timelineY);
+      ctx.stroke();
+      
+      // Map years to x-coordinates directly using the bar positions
+      const yearToX = {};
+      
+      // For the first bar (base value)
+      const baseYear = parseInt(chart.data.labels[0]);
+      yearToX[baseYear] = xAxis.getPixelForValue(0);
+      
+      // For the rest of the bars
+      for (let i = 1; i < chart.data.labels.length; i++) {
+        const label = chart.data.labels[i];
+        const endYear = parseInt(label.split('→')[1].trim());
+        yearToX[endYear] = xAxis.getPixelForValue(i);
+      }
+      
+      // For years between the ones we have positions for, use linear interpolation
+      function getXForYear(year) {
+        // If we have an exact position, use it
+        if (yearToX[year] !== undefined) {
+          return yearToX[year];
+        }
+        
+        // Otherwise, find the closest years and interpolate
+        const years = Object.keys(yearToX).map(y => parseInt(y)).sort((a, b) => a - b);
+        
+        // If year is before the first year we have
+        if (year < years[0]) {
+          return timelineStartX;
+        }
+        
+        // If year is after the last year we have
+        if (year > years[years.length - 1]) {
+          return timelineEndX;
+        }
+        
+        // Find the years that bracket our target year
+        let prevYear = years[0];
+        let nextYear = years[years.length - 1];
+        
+        for (let i = 0; i < years.length - 1; i++) {
+          if (years[i] <= year && years[i + 1] > year) {
+            prevYear = years[i];
+            nextYear = years[i + 1];
+            break;
+          }
+        }
+        
+        // Linearly interpolate between the two positions
+        const ratio = (year - prevYear) / (nextYear - prevYear);
+        return yearToX[prevYear] + ratio * (yearToX[nextYear] - yearToX[prevYear]);
+      }
+      
+      // Draw the years on the timeline
+      highlightedYears.forEach(year => {
+        const x = getXForYear(year);
+        
+        // Draw year marker
+        ctx.beginPath();
+        ctx.moveTo(x, timelineY - 8);
+        ctx.lineTo(x, timelineY + 8);
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        
+        // Label year
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.font = 'bold 14px "Merriweather", "Georgia", serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(year.toString(), x, timelineY + 22);
+      });
+      
+      // Draw light vertical alignment lines from chart to timeline
+      ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 3]);
+      
+      highlightedYears.forEach(year => {
+        const x = getXForYear(year);
+        
+        ctx.beginPath();
+        ctx.moveTo(x, yAxis.bottom);
+        ctx.lineTo(x, timelineY);
+        ctx.stroke();
+      });
+      
+      // NEW APPROACH: Calculate event layout with multiple distinct rows
+      
+      // Calculate the available width per year segment
+      const timelineWidth = timelineEndX - timelineStartX;
+      const yearSpan = Math.max(...highlightedYears) - Math.min(...highlightedYears);
+      const pixelsPerYear = timelineWidth / yearSpan;
+      
+// Define constants for event layout
+const rowHeight = 100; // Increased height for multi-line text
+      const firstRowOffset = 60; // Increased offset for multi-line text
+      const maxLabelWidth = 100; // Maximum width for text wrapping
+   
+      // Divide events into year-based sections
+      const yearSections = {};
+      
+      // Group events by year
+      majorEvents.forEach(event => {
+        if (!yearSections[event.year]) {
+          yearSections[event.year] = [];
+        }
+        yearSections[event.year].push(event);
+      });
+      
+      // Calculate the row assignments for each event based on proximity
+      // First determine maximum events per year to set row counts
+      const maxEventsPerYear = Math.max(...Object.values(yearSections).map(events => events.length));
+      const minRowsNeeded = Math.min(5, Math.max(3, Math.ceil(maxEventsPerYear / 2)));
+      
+      // Function to detect text overlap
+      function wouldOverlap(x1, width1, x2, width2, buffer = 10) {
+        return Math.abs(x1 - x2) < (width1 / 2 + width2 / 2 + buffer);
+      }
+      
+      // Create a grid to track occupied positions
+      const rowOccupancy = Array(minRowsNeeded).fill().map(() => []);
+      
+       // IMPROVED LAYOUT ALGORITHM: Assign rows to minimize overlaps
+      Object.entries(yearSections).forEach(([year, events]) => {
+        // Sort events by impact (negative first, then mixed, then positive)
+        events.sort((a, b) => {
+          const impactOrder = { "negative": 0, "mixed": 1, "positive": 2 };
+          return impactOrder[a.impact] - impactOrder[b.impact];
+        });
+        
+        events.forEach(event => {
+          const x = getXForYear(parseInt(year));
+          
+          // Calculate text width for checking overlaps
+          ctx.font = '14px "Libre Baskerville", "Georgia", serif';
+          const wrappedLines = wrapText(ctx, event.event, maxLabelWidth);
+          const textWidth = Math.min(maxLabelWidth, ctx.measureText(event.event).width) + 10; // Add padding
+          
+          // Save the wrapped lines for later use
+          event.wrappedLines = wrappedLines;
+          
+          // Find the best row with the least overlap
+          let bestRow = 0;
+          let minOverlaps = Infinity;
+          
+          // Try each row to find the best position
+          for (let rowIndex = 0; rowIndex < minRowsNeeded; rowIndex++) {
+            let overlaps = 0;
+            
+            // Check for overlaps with existing events in this row
+            rowOccupancy[rowIndex].forEach(existingEvent => {
+              if (wouldOverlap(x, textWidth, existingEvent.x, existingEvent.width)) {
+                overlaps++;
+              }
+            });
+            
+            // If this row has fewer overlaps, choose it
+            if (overlaps < minOverlaps) {
+              minOverlaps = overlaps;
+              bestRow = rowIndex;
+              
+              // If no overlaps, we can stop searching
+              if (overlaps === 0) break;
+            }
+          }
+          
+          // Assign the event to the best row
+          event.row = bestRow;
+          
+          // Record this position in the occupancy grid
+          rowOccupancy[bestRow].push({
+            x: x,
+            width: textWidth,
+            event: event
+          });
+        });
+      });
+      
+      // Now draw the events with proper row positioning
+      Object.values(yearSections).flat().forEach(event => {
+        const x = getXForYear(event.year);
+        
+        // Get number of events in this year
+        const eventsInThisYear = yearSections[event.year].length;
+        
+        // Get this event's index in its year group
+        const eventIndexInYear = yearSections[event.year].indexOf(event);
+        
+        // Calculate staggered vertical position - more pronounced in dense areas
+        const verticalJitter = eventsInThisYear > 1 ? 20 * (eventIndexInYear - (eventsInThisYear-10)/2) : 0;
+        
+        // Apply vertical offset based on assigned row with added jitter
+        const y = timelineY + firstRowOffset + (event.row * rowHeight) + verticalJitter*0.5;
+        // Apply manual vertical offsets for specific years
+        let finalY = y;
+
+        // Manual adjustments for specific years
+        if (event.year === 1972) {
+        finalY = timelineY + firstRowOffset + (event.row * rowHeight) + 150; // Push Watergate down
+        } else if (event.year === 1964) {
+        finalY = timelineY + firstRowOffset + (event.row * rowHeight) - 30; // Push Civil Rights Act up
+        } else if (event.year === 1965) {
+        finalY = timelineY + firstRowOffset + (event.row * rowHeight) + 40; // Push Voting Rights Act further down
+        } else {
+        // Use the standard calculation with jitter for all other years
+        finalY = timelineY + firstRowOffset + (event.row * rowHeight) + verticalJitter*0.5;
+        }
+
+        // Then use finalY instead of y for all positioning calculations
+        // Draw the event marker on the timeline
+        ctx.beginPath();
+        ctx.arc(x, timelineY, 4, 0, Math.PI * 2);
+        
+        if (event.impact === "positive") {
+          ctx.fillStyle = 'rgba(58, 95, 71, 0.8)';
+        } else if (event.impact === "negative") {
+          ctx.fillStyle = 'rgba(107, 0, 0, 0.8)';
+        } else {
+          ctx.fillStyle = 'rgba(125, 125, 125, 0.8)';
+        }
+        
+        ctx.fill();
+        
+        // Get wrapped lines
+        const lines = event.wrappedLines;
+        const lineHeight = 16;
+        const totalHeight = lines.length * lineHeight;
+        
+        // Calculate text width for background based on the longest line
+        ctx.font = '14px "Libre Baskerville", "Georgia", serif';
+        let maxWidth = 0;
+        lines.forEach(line => {
+          const lineWidth = ctx.measureText(line).width;
+          if (lineWidth > maxWidth) maxWidth = lineWidth;
+        });
+        
+        // Draw text background for better readability
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.fillRect(x - (maxWidth / 2) - 5, finalY - (totalHeight / 2) - 5, maxWidth + 10, totalHeight + 10);
+        
+        // Draw border around text background
+        if (event.impact === "positive") {
+          ctx.strokeStyle = 'rgba(58, 95, 71, 0.8)';
+        } else if (event.impact === "negative") {
+          ctx.strokeStyle = 'rgba(107, 0, 0, 0.8)';
+        } else {
+          ctx.strokeStyle = 'rgba(125, 125, 125, 0.8)';
+        }
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x - (maxWidth / 2) - 5, finalY - (totalHeight / 2) - 5, maxWidth + 10, totalHeight + 10);
+        
+        // Draw connector line from timeline DOWN to text
+        ctx.beginPath();
+        ctx.moveTo(x, timelineY);
+        ctx.lineTo(x, finalY - (totalHeight / 2) - 7);
+        ctx.stroke();
+        
+        // Draw event text line by line
+        if (event.impact === "positive") {
+          ctx.fillStyle = 'rgba(58, 95, 71, 1)';
+        } else if (event.impact === "negative") {
+          ctx.fillStyle = 'rgba(107, 0, 0, 1)';
+        } else {
+          ctx.fillStyle = 'rgba(90, 90, 90, 1)';
+        }
+        
+        ctx.textAlign = 'center';
+        lines.forEach((line, lineIndex) => {
+          const lineY = finalY - (totalHeight / 2) + (lineIndex * lineHeight) + 12; // +12 for vertical centering
+          ctx.fillText(line, x, lineY);
+        });
+      });
+      
+      
+      // Add legend for event colors
+      const maxRow = Math.max(...Object.values(yearSections).flat().map(event => event.row || 0));
+      const legendY = timelineY + firstRowOffset + ((maxRow + 1) * rowHeight) + 30; // Position below all events
+      
+      ctx.textAlign = 'center';
+      ctx.font = 'italic 14px "Merriweather", "Georgia", serif';
+      
+      // Draw legend entries side by side
+      const legendWidth = 120;
+      const totalLegendWidth = 3 * legendWidth;
+      const legendStartX = (timelineStartX + timelineEndX - totalLegendWidth) / 2;
+      
+      // Positive event legend
+      ctx.fillStyle = 'rgba(58, 95, 71, 0.8)';
+      ctx.beginPath();
+      ctx.arc(legendStartX + 10, legendY, 4, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = 'rgba(58, 95, 71, 1)';
+      ctx.textAlign = 'left';
+      ctx.fillText('Positive Impact', legendStartX + 20, legendY + 5);
+      
+      // Negative event legend
+      ctx.fillStyle = 'rgba(107, 0, 0, 0.8)';
+      ctx.beginPath();
+      ctx.arc(legendStartX + legendWidth + 10, legendY, 4, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = 'rgba(107, 0, 0, 1)';
+      ctx.fillText('Negative Impact', legendStartX + legendWidth + 20, legendY + 5);
+      
+      // Mixed event legend
+      ctx.fillStyle = 'rgba(125, 125, 125, 0.8)';
+      ctx.beginPath();
+      ctx.arc(legendStartX + 2 * legendWidth + 10, legendY, 4, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = 'rgba(90, 90, 90, 1)';
+      ctx.fillText('Mixed Impact', legendStartX + 2 * legendWidth + 20, legendY + 5);
+      
+      ctx.restore();
+    }
+  };
+  
+  // Create the chart with expanded bottom padding for timeline
+  const chart = new Chart(ctx, {
+    type: 'bar',
+    plugins: [waterfallPlugin],
+    data: {
+      labels: waterfallLabels,
+      datasets: [{
+        label: 'Democracy Rating Change',
+        data: waterfallData,
+        backgroundColor: colors,
+        borderColor: borderColors,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: {
+        padding: {
+          top: 80,
+          bottom: 500 // Significantly increased bottom padding to accommodate staggered timeline labels
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: false,
+          display: false, // Hide y-axis
+          grid: {
+            display: false // Hide grid lines
+          },
+          border: {
+            display: false // Hide y-axis border
+          }
+        },
+        x: {
+          grid: {
+            display: false
+          },
+          border: {
+            color: 'rgba(0, 0, 0, 0.3)',
+            width: 1
+          },
+          ticks: {
+            maxRotation: 45, 
+            minRotation: 45,
+            padding: 8,
+            font: {
+              family: "'Merriweather', 'Georgia', serif",
+              size: 14,
+              weight: function(context) {
+                const index = context.index;
+                return index === 0 ? 'bold' : 'normal';
+              }
+            },
+            color: function(context) {
+              const index = context.index;
+              const value = waterfallData[index];
+              
+              if (index === 0) {
+                return '#000000';
+              }
+              
+              if (value > 0) {
+                return '#3A5F47';
+              } else {
+                return '#6B0000';
+              }
+            }
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          titleColor: '#000000',
+          bodyColor: '#333333',
+          borderColor: '#d1c9b9',
+          borderWidth: 1,
+          caretPadding: 5,
+          cornerRadius: 5,
+          bodyFont: {
+            family: "'Merriweather', 'Georgia', serif"
+          },
+          titleFont: {
+            family: "'Playfair Display', 'Times New Roman', serif",
+            weight: 'bold'
+          },
+          callbacks: {
+            title: function(context) {
+              return context[0].label;
+            },
+            label: function(context) {
+              const index = context.dataIndex;
+              const value = context.raw;
+              
+              if (index === 0) {
+                return `Starting value: ${value.toFixed(2)}`;
+              } else if (value >= 0) {
+                return `Democratic gain: +${value.toFixed(2)} points`;
+              } else {
+                return `Democratic decline: ${value.toFixed(2)} points`;
+              }
+            },
+            afterLabel: function(context) {
+              const index = context.dataIndex;
+              
+              // For middle points, show running total and historical context
+              if (index > 0) {
+                let runningTotal = waterfallData[0];
+                for (let i = 1; i <= index; i++) {
+                  runningTotal += waterfallData[i];
+                }
+                
+                let results = [`Rating after this period: ${runningTotal.toFixed(2)}`];
+                
+                // Find relevant events for this time period
+                const label = context.label;
+                let startYear, endYear;
+                
+                if (label.includes('→')) {
+                  startYear = parseInt(label.split('→')[0].trim());
+                  endYear = parseInt(label.split('→')[1].trim());
+                } else {
+                  // For the base value
+                  startYear = parseInt(label.split(' ')[0]) - 5;
+                  endYear = parseInt(label.split(' ')[0]);
+                }
+                
+                // Find events in this period
+                const periodEvents = majorEvents.filter(event => 
+                  event.year >= startYear && event.year <= endYear
+                );
+                
+                if (periodEvents.length > 0) {
+                  results.push("Notable events in this period:");
+                  periodEvents.forEach(event => {
+                    let impactSymbol = "";
+                    if (event.impact === "positive") impactSymbol = "↑";
+                    else if (event.impact === "negative") impactSymbol = "↓";
+                    else impactSymbol = "↔";
+                    
+                    results.push(`${event.year}: ${event.event} ${impactSymbol}`);
+                  });
+                }
+                
+                // Add description of change magnitude
+                const change = context.raw;
+                if (change > 5) {
+                  results.push("Major democratic advancement");
+                } else if (change > 2) {
+                  results.push("Significant democratic growth");
+                } else if (change > 0) {
+                  results.push("Slight democratic improvement");
+                } else if (change > -2) {
+                  results.push("Minor democratic regression");
+                } else if (change > -5) {
+                  results.push("Significant democratic erosion");
+                } else {
+                  results.push("Severe democratic breakdown");
+                }
+                
+                return results;
+              }
+              
+              return '';
+            }
+          }
+        }
+      },
+      animation: {
+        duration: 2000,
+        easing: 'easeOutQuart'
+      }
+    }
+  });
+  
+  return chart;
+}
 // Call this function to initialize the chart
 document.addEventListener('DOMContentLoaded', function() {
   // Set global chart options
@@ -683,6 +1400,8 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Create the chart
   createTimelineChart();
+  createWaterfallChart();
+
 });
 
   </script>
