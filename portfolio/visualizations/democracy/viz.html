@@ -30,7 +30,7 @@
       font-family: 'Playfair Display', 'Times New Roman', serif;
       font-size: 2.5rem;
       font-weight: 900;
-      margin: 20px 0 5px;
+      margin: 10px 0 5px;
       line-height: 1.1;
       color: #000000;
       text-align: center;
@@ -44,12 +44,12 @@
       color: #1a1a1a;
       font-family: 'Libre Baskerville', 'Georgia', serif;
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 10px;
     }
     
     section {
-      margin: 30px 0;
-      padding-top: 20px;
+      margin: 10px 0;
+      padding-top: 10px;
     }
     
     h2 {
@@ -115,7 +115,7 @@
       border: 1px solid #d1c9b9;
       padding: 10px;
       margin-bottom: 10px;
-      height: 450px;
+      height: 500px;
       box-shadow: 2px 2px 6px rgba(0,0,0,0.05);
     }
     .chart-container-waterfall {
@@ -196,8 +196,7 @@
     <h1 class="main-headline">U.S. DEMOCRACY IN FREE FALL</h1>
     <p class="subheadline">Current democracy rating has fallen to pre-1950s levels</p>
     <div class="key-stat">
-        <span><span class="key-number highlight-negative">100 days</span> into the office, Trump administration erased <span class="key-number highlight-negative"> 75 years </span> of democratic progress.
-        <br>
+
         <span>Trump's second term shows <span class="key-number highlight-negative">40 times faster</span> democratic decline than his first term.</span>
         <br>
         <span>From the 1995 peak to February 2025, democracy has experienced its steepest fall by <span class="key-number highlight-negative">29%</span>.</span>
@@ -481,7 +480,7 @@ function createTimelineChart() {
             // Draw president name below period labels
             ctx.save();
             ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            ctx.font = '15px Merriweather';
+            ctx.font = '14px Merriweather';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
             ctx.fillText(president.name, midX, yAxis.bottom + 20); // 20px below the x-axis
@@ -513,6 +512,69 @@ function createTimelineChart() {
           }
         }
       });
+      
+      // Calculate a good position based on chart dimensions
+      const keyStatX = (xAxis.right + xAxis.left) / 2; // Center horizontally
+      const keyStatY = yAxis.top + 230; // Position in upper area, but not too high
+
+      // Define text properties
+      const textPadding = 0;
+      const textWidth = 1100; // Adjust based on your text length
+      const textHeight = 50; // Adjust based on your text size and line count
+
+      
+      // Line 1: "100 days into the office, Trump administration erased 75 years of democratic progress."
+      const line1Y = keyStatY;
+
+      // Set text baseline for consistent positioning
+      ctx.textBaseline = 'middle';
+
+      // Fix the text overlap issue by using left alignment and manually calculating positions
+      ctx.textAlign = 'left';
+
+      // Define font styles directly here
+      const normalFont = 'italic 20px Merriweather';
+      const highlightFont = 'bold 40px Merriweather';
+
+      // First, measure the total width with appropriate fonts
+      ctx.font = highlightFont;
+      const width1 = ctx.measureText("100 days").width*1.1;
+      ctx.font = normalFont;
+      const width2 = ctx.measureText(" into the office, Trump administration erased ").width*1.1;
+      ctx.font = highlightFont;
+      const width3 = ctx.measureText("75 years").width*1.1;
+      ctx.font = normalFont;
+      const width4 = ctx.measureText(" of democratic progress.").width*1.1;
+
+      const totalWidth = width1 + width2 + width3 + width4;
+
+      // Start position for left-aligned text
+      let textX = keyStatX - (totalWidth / 2)+100;
+
+      // Draw the first highlighted segment
+      ctx.font = highlightFont;
+      ctx.fillStyle = '#6B0000';
+      ctx.fillText("100 days", textX, line1Y);
+      textX += width1;
+
+      // Draw the second normal segment
+      ctx.font = normalFont;
+      ctx.fillStyle = '#121212';
+      ctx.fillText(" into the office, Trump administration erased ", textX, line1Y);
+      textX += width2;
+
+      // Draw the third highlighted segment
+      ctx.font = highlightFont;
+      ctx.fillStyle = '#6B0000';
+      ctx.fillText("75 years", textX, line1Y);
+      textX += width3;
+
+      // Draw the fourth normal segment
+      ctx.font = normalFont;
+      ctx.fillStyle = '#121212';
+      ctx.fillText(" of democratic progress.", textX, line1Y);
+
+
     }
   };
   
