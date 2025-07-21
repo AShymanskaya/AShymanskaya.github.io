@@ -1,0 +1,47 @@
+/* Override default Create React App styles */
+.App {
+  text-align: left !important; /* Override the default center alignment */
+  position: relative;
+  background: linear-gradient(135deg, 
+    rgba(45, 108, 176, 0.05) 0%, 
+    rgba(26, 54, 93, 0.03) 25%,
+    rgba(255, 255, 255, 0.02) 50%,
+    rgba(45, 108, 176, 0.03) 75%,
+    rgba(26, 54, 93, 0.05) 100%);
+  scroll-snap-type: y mandatory;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+/* Remove default Create React App styles that might interfere */
+.App-logo {
+  display: none;
+}
+
+.App-header {
+  display: none;
+}
+
+.App-link {
+  display: none;
+}
+
+/* Ensure scroll snap works properly */
+.hero,
+.story-section-fullscreen,
+.story-section,
+.narrative-transition {
+  scroll-snap-align: start;
+}
+
+/* Ensure smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Make sure the scroll container is properly configured */
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}

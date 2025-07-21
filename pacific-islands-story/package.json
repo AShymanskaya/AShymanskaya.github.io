@@ -1,0 +1,47 @@
+{
+  "name": "pacific-islands-story",
+  "version": "0.1.0",
+  "description": "Interactive data story about Pacific Islands climate resilience",
+  "private": true,
+  "dependencies": {
+    "@react-spring/web": "^9.7.3",
+    "chart.js": "^4.5.0",
+    "d3": "^7.9.0",
+    "framer-motion": "^10.16.4",
+    "lodash": "^4.17.21",
+    "lucide-react": "^0.525.0",
+    "papaparse": "^5.5.3",
+    "react": "^18.2.0",
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^18.2.0",
+    "react-intersection-observer": "^9.5.2",
+    "react-scripts": "5.0.1",
+    "react-use": "^17.4.0",
+    "recharts": "^2.8.0",
+    "web-vitals": "^5.0.3"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
