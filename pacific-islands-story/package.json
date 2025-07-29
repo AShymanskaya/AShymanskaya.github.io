@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Interactive data story about Pacific Islands climate resilience",
   "private": true,
+  "homepage": "https://as.github.io/",
   "dependencies": {
     "@react-spring/web": "^9.7.3",
     "chart.js": "^4.5.0",
@@ -18,13 +19,16 @@
     "react-scripts": "5.0.1",
     "react-use": "^17.4.0",
     "recharts": "^2.8.0",
-    "web-vitals": "^5.0.3"
+    "web-vitals": "^5.0.3",
+    "gh-pages": "^6.1.1"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
