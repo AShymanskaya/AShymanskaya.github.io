@@ -13,7 +13,6 @@ import {
 } from 'chart.js';
 import Papa from 'papaparse';
 
-// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -25,22 +24,23 @@ ChartJS.register(
   Filler
 );
 
-// Custom plugin to add inline labels and custom legend
-const inlineLabelsPlugin = {
-  id: 'inlineLabels',
+const temperatureChartLabelsPlugin = {
+  id: 'temperatureChartLabels',
   afterDatasetsDraw(chart) {
     const { ctx } = chart;
     
-    // Draw custom legend inside chart area
-    this.drawCustomLegend(chart, ctx);
     
     // Draw dataset labels and temperature values
-    
     chart.data.datasets.forEach((dataset, datasetIndex) => {
+      // Safety check for dataset properties
+      if (!dataset || !dataset.data) return;
+      
       const meta = chart.getDatasetMeta(datasetIndex);
+      if (!meta || !meta.data) return;
+      
       const data = dataset.data;
       
-      // Find valid data points
+      // Find valid data points with their original indices
       const validPoints = [];
       data.forEach((value, index) => {
         if (value !== null && value !== undefined && !isNaN(value)) {
@@ -50,7 +50,8 @@ const inlineLabelsPlugin = {
               x: point.x,
               y: point.y,
               value: value,
-              year: chart.data.labels[index]
+              year: chart.data.labels[index],
+              originalIndex: index
             });
           }
         }
@@ -58,235 +59,195 @@ const inlineLabelsPlugin = {
       
       if (validPoints.length === 0) return;
       
-      // Better distribution of temperature value labels
+      // For annual data (not averages), label only first and last actual datapoints
       const pointsToLabel = [];
-      const totalPoints = validPoints.length;
+      const isAnnualData = !dataset.label || !dataset.label.includes('Average');
       
-      // For annual data, show fewer labels to reduce clutter
-      const isAnnualData = !dataset.label.includes('Trend');
-      const labelInterval = isAnnualData ? Math.max(25, Math.floor(totalPoints / 4)) : Math.max(20, Math.floor(totalPoints / 5));
-      
-      // Always include first and last points
-      pointsToLabel.push(validPoints[0]);
-      if (totalPoints > 1) {
-        pointsToLabel.push(validPoints[totalPoints - 1]);
+      if (isAnnualData) {
+        // Only label first and last actual datapoints for annual data
+        pointsToLabel.push(validPoints[0]); // First datapoint
+        if (validPoints.length > 1) {
+          pointsToLabel.push(validPoints[validPoints.length - 1]); // Last datapoint
+        }
+      } else {
+        // For average lines, label first and last points
+        pointsToLabel.push(validPoints[0]); // First average point
+        if (validPoints.length > 1) {
+          pointsToLabel.push(validPoints[validPoints.length - 1]); // Last average point
+        }
       }
       
-      // Add evenly distributed points in between
-      for (let i = labelInterval; i < totalPoints - labelInterval; i += labelInterval) {
-        pointsToLabel.push(validPoints[i]);
-      }
-      
-      // Remove duplicates and sort by x position
-      const uniquePoints = pointsToLabel.filter((point, index, self) => 
-        index === self.findIndex(p => Math.abs(p.x - point.x) < 10)
-      ).sort((a, b) => a.x - b.x);
-      
-      // Draw temperature value labels with better spacing
+      // Draw temperature value labels with manual positioning
       ctx.save();
-      ctx.font = 'bold 11px Arial';
+      ctx.font = 'bold 16px Arial';  // Slightly larger font
       ctx.textAlign = 'center';
       
-      // Set color to match line color
-      ctx.fillStyle = dataset.borderColor;
+      // Set color to match line color with proper fallback and safety checks
+      let labelColor = '#4a5568'; // Default fallback color
+      if (dataset.borderColor) {
+        if (typeof dataset.borderColor === 'string') {
+          labelColor = dataset.borderColor;
+          // Only modify if it contains rgba
+          if (labelColor.includes('rgba')) {
+            labelColor = labelColor.replace(/0\.4/g, '0.8').replace(/0\.6/g, '1.0');
+          }
+        } else {
+          // If borderColor is not a string, use the fallback
+          labelColor = '#4a5568';
+        }
+      }
+      ctx.fillStyle = labelColor;
       
-      uniquePoints.forEach((point, index) => {
-        // Only show temperature labels for trend lines to reduce clutter
-        if (!dataset.label.includes('Trend')) return;
-        
+      pointsToLabel.forEach((point, index) => {
         const label = `${point.value.toFixed(1)}°C`;
         
-        // Smart positioning to avoid overlap
-        const isEven = index % 2 === 0;
-        const baseOffset = -20;
-        const offsetY = baseOffset + (isEven ? -15 : 15);
+        // Manual positioning based on dataset and point position
+        const isFirst = index === 0;
+        const isLast = index === pointsToLabel.length - 1;
+        const isLandData = dataset.label && dataset.label.includes('Land');
+        const isOceanData = dataset.label && dataset.label.includes('Ocean');
+        
+        // Use chart area for more reliable positioning
+        const { chartArea } = chart;
+        let offsetX = 0;
+        let offsetY = -40;
+        
+        // Fixed positioning relative to chart area rather than point position
+        if (isLandData) {
+          if (isFirst) {
+            offsetX = -40;  // Move further left for first land point
+            offsetY = -20;  // Move up more
+          } else if (isLast) {
+            offsetX = 40;   // Move further right for last land point
+            offsetY = -20;  // Move up more
+          }
+        } else if (isOceanData) {
+          if (isFirst) {
+            offsetX = -30;   // Move further right for first ocean point
+            offsetY = -20;  // Move up even more
+          } else if (isLast) {
+            offsetX = 30;  // Move further left for last ocean point
+            offsetY = -20;  // Move up even more
+          }
+        }
         
         ctx.textBaseline = 'bottom';
         
-        // Add background for better readability
-        const textWidth = ctx.measureText(label).width;
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.fillRect(point.x - textWidth/2 - 3, point.y + offsetY - 12, textWidth + 6, 14);
+        // Draw the temperature label with manual positioning
+        ctx.fillStyle = labelColor;
+        ctx.fillText(label, point.x + offsetX, point.y + offsetY);
         
-        ctx.fillStyle = dataset.borderColor;
-        ctx.fillText(label, point.x, point.y + offsetY);
-        
-        // Add year labels only for first and last points
-        if (index === 0 || index === uniquePoints.length - 1) {
+        // Add year labels for first and last points
+        if (index === 0 || index === pointsToLabel.length - 1) {
           ctx.save();
-          ctx.font = 'bold 9px Arial';
+          ctx.font = 'bold 15px Arial';  // Slightly larger year font
           ctx.textBaseline = 'top';
-          const yearOffsetY = offsetY + (isEven ? 5 : -5);
           
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-          const yearWidth = ctx.measureText(point.year).width;
-          ctx.fillRect(point.x - yearWidth/2 - 2, point.y + yearOffsetY, yearWidth + 4, 12);
+          // Position year labels with proper spacing
+          const yearOffsetY = offsetY + 30; // Below temperature label
           
-          ctx.fillStyle = dataset.borderColor;
-          ctx.fillText(point.year, point.x, point.y + yearOffsetY + 2);
+          // Draw the year label with same styling as temperature
+          ctx.fillStyle = labelColor;
+          ctx.fillText(point.year, point.x + offsetX, point.y + yearOffsetY);
           ctx.restore();
         }
       });
       
+      // Add dataset title over the line (center of the chart area)
+      this.drawDatasetTitle(chart, ctx, dataset, datasetIndex, meta);
+      
       ctx.restore();
-
-      // Remove dataset label section - commented out to eliminate land/ocean labels
-      /*
-      // Add dataset label intelligently positioned
-      if (validPoints.length > 0) {
-        const lastPoint = validPoints[validPoints.length - 1];
-        const firstPoint = validPoints[0];
-        
-        ctx.save();
-        ctx.font = 'bold 13px Arial';
-        ctx.fillStyle = dataset.borderColor;
-        
-        // Clean up the dataset label text
-        let labelText = dataset.label;
-        if (labelText.includes('(Annual)')) {
-          labelText = labelText.replace(' (Annual)', '');
-        }
-        if (labelText.includes('(10-Year Trend)')) {
-          labelText = labelText.replace(' Temperature (10-Year Trend)', ' Trend');
-        }
-        
-        // Smart positioning: choose between start, middle, or end based on available space
-        const chartWidth = chart.width - chart.chartArea.left - chart.chartArea.right;
-        const middlePoint = validPoints[Math.floor(validPoints.length / 2)];
-        
-        let labelX, labelY, textAlign;
-        
-        // For trend lines (thicker lines), position them in the middle-right area
-        if (labelText.includes('Trend')) {
-          labelX = middlePoint.x + 30;
-          labelY = middlePoint.y - 20;
-          textAlign = 'left';
-        } else {
-          // For main lines, position at the end with some offset
-          labelX = lastPoint.x - 50;
-          labelY = lastPoint.y - 25;
-          textAlign = 'center';
-        }
-        
-        // Add semi-transparent background for better readability
-        ctx.textAlign = textAlign;
-        ctx.textBaseline = 'middle';
-        
-        const textWidth = ctx.measureText(labelText).width;
-        const padding = 6;
-        
-        let rectX = labelX;
-        if (textAlign === 'center') {
-          rectX = labelX - textWidth/2;
-        }
-        
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-        ctx.fillRect(rectX - padding/2, labelY - 8, textWidth + padding, 16);
-        
-        // Add subtle border
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(rectX - padding/2, labelY - 8, textWidth + padding, 16);
-        
-        // Draw the text
-        ctx.fillStyle = dataset.borderColor;
-        ctx.fillText(labelText, labelX, labelY);
-        
-        ctx.restore();
-      }
-      */
     });
   },
 
-  drawCustomLegend(chart, ctx) {
+  drawDatasetTitle(chart, ctx, dataset, datasetIndex, meta) {
     const { chartArea } = chart;
-    const datasets = chart.data.datasets;
     
-    // Legend positioning
-    const legendX = chartArea.left + 20;
-    const legendY = chartArea.top + 30;
-    const lineHeight = 25;
-    const lineWidth = 20;
+    // Safety checks
+    if (!dataset || !meta || !meta.data) return;
+    
+    const validPoints = meta.data.filter(point => point && !isNaN(point.y));
+    
+    if (validPoints.length === 0) return;
+    
+    // Use fixed positions relative to chart area instead of line positions
+    const chartCenterX = chartArea.left + (chartArea.width / 2);
+    const chartCenterY = chartArea.top + (chartArea.height / 2);
     
     ctx.save();
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     
-    datasets.forEach((dataset, index) => {
-      const y = legendY + (index * lineHeight);
-      const meta = chart.getDatasetMeta(index);
-      const isVisible = meta.visible !== false;
-      
-      // Draw legend background with transparency
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';  // Made more transparent
-      ctx.fillRect(legendX - 5, y - 8, 140, 20);
-      
-      // Draw border
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(legendX - 5, y - 8, 140, 20);
-      
-      // Draw line sample
-      ctx.strokeStyle = dataset.borderColor;
-      ctx.lineWidth = dataset.borderWidth;
-      ctx.globalAlpha = isVisible ? 1 : 0.3;
-      
-      ctx.beginPath();
-      ctx.moveTo(legendX, y);
-      ctx.lineTo(legendX + lineWidth, y);
-      ctx.stroke();
-      
-      // Draw text
-      ctx.fillStyle = isVisible ? '#2d3748' : '#a0aec0';
-      ctx.font = '11px Arial';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      
-      // Clean up label text
-      let labelText = dataset.label;
-      if (labelText.includes('(Annual)')) {
-        labelText = labelText.replace(' (Annual)', '');
+    // Clean up dataset label for title with safety checks
+    let title = 'Temperature';
+    if (dataset.label) {
+      title = dataset.label;
+      title = title.replace(' (Annual)', '');
+      title = title.replace(' Temperature', '');
+    }
+    
+    // Fixed positioning for dataset titles relative to chart area
+    const isLandData = dataset.label && dataset.label.includes('Land');
+    const isOceanData = dataset.label && dataset.label.includes('Ocean');
+    
+    let titleX = chartCenterX;
+    let titleY = chartCenterY;
+    
+    if (isLandData) {
+      titleX = chartArea.left + (chartArea.width * 0.8);  // 25% from left
+      titleY = chartArea.top + (chartArea.height * 0.65);   // 30% from top
+    } else if (isOceanData) {
+      titleX = chartArea.left + (chartArea.width * 0.8);  // 75% from left
+      titleY = chartArea.top + (chartArea.height * 0.05);   // 70% from top
+    }
+    if (isLandData) {
+      title = 'Land Surface Temperature';
+    } else if (isOceanData) {
+      title = 'Ocean Surface Temperature';
+    }
+    
+    // Draw title background for better readability
+    const titleMetrics = ctx.measureText(title);
+    const padding = 12;
+    const bgX = titleX - (titleMetrics.width / 2) - padding;
+    const bgY = titleY - 12 - padding;
+    const bgWidth = titleMetrics.width + (padding * 2);
+    const bgHeight = 24 + (padding * 2);
+    
+    ctx.fillStyle = 'transparent';
+    ctx.fillRect(bgX, bgY, bgWidth, bgHeight);
+    
+    
+    
+    // Draw title text with safe color handling
+    let titleColor = '#1a365d'; // Default fallback color
+    if (dataset.borderColor) {
+      if (typeof dataset.borderColor === 'string') {
+        titleColor = dataset.borderColor;
+        // Only modify if it contains rgba
+        if (titleColor.includes('rgba')) {
+          titleColor = titleColor.replace(/0\.4/g, '0.9').replace(/0\.6/g, '1.0');
+        }
       }
-      if (labelText.includes('(10-Year Trend)')) {
-        labelText = labelText.replace(' Temperature (10-Year Trend)', ' Trend');
-      }
-      
-      ctx.fillText(labelText, legendX + lineWidth + 8, y);
-      
-      ctx.globalAlpha = 1;
-    });
+    }
+    if (isLandData) {
+      titleColor = 'rgba(74, 85, 104, 0.6)' ;
+    } else if (isOceanData) {
+      titleColor = '#1a365d';
+    }
+    
+    ctx.fillStyle = titleColor;
+    ctx.fillText(title, titleX, titleY);
     
     ctx.restore();
-    
-    // Add click handler for legend
-    if (!chart.legendClickHandler) {
-      chart.legendClickHandler = (event) => {
-        const rect = chart.canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        
-        const legendX = chartArea.left + 20;
-        const legendY = chartArea.top + 30;
-        const lineHeight = 25;
-        
-        datasets.forEach((dataset, index) => {
-          const itemY = legendY + (index * lineHeight);
-          
-          if (x >= legendX - 5 && x <= legendX + 135 && 
-              y >= itemY - 8 && y <= itemY + 12) {
-            
-            const meta = chart.getDatasetMeta(index);
-            meta.hidden = meta.hidden === null ? !chart.data.datasets[index].hidden : null;
-            chart.update();
-          }
-        });
-      };
-      
-      chart.canvas.addEventListener('click', chart.legendClickHandler);
-    }
-  }
+  },
+
+  
 };
 
-// Register the plugin
-ChartJS.register(inlineLabelsPlugin);
+// Register the plugin with a unique name
+ChartJS.register(temperatureChartLabelsPlugin);
 
 // Custom hook for loading data
 const useTemperatureData = (dataFile) => {
@@ -341,37 +302,6 @@ const useTemperatureData = (dataFile) => {
   return { data, loading, error };
 };
 
-// Apply 10-year smoothing function
-const apply10YearSmoothing = (data) => {
-  if (!data || data.length === 0) return [];
-  
-  const sortedData = [...data].sort((a, b) => a.Year - b.Year);
-  const smoothedData = [];
-  const windowSize = 10;
-  
-  // Use a trailing moving average to preserve more data points
-  for (let i = windowSize - 1; i < sortedData.length; i++) {
-    const window = sortedData.slice(i - windowSize + 1, i + 1);
-    
-    // Filter out any invalid data points within the window
-    const validWindowData = window.filter(d => 
-      d.Annual_Temperature_C !== null && 
-      d.Annual_Temperature_C !== undefined && 
-      !isNaN(d.Annual_Temperature_C)
-    );
-    
-    if (validWindowData.length >= windowSize * 0.7) { // Require at least 70% valid data
-      const avgTemp = validWindowData.reduce((sum, d) => sum + d.Annual_Temperature_C, 0) / validWindowData.length;
-      
-      smoothedData.push({
-        Year: sortedData[i].Year,
-        Annual_Temperature_C: avgTemp
-      });
-    }
-  }
-  
-  return smoothedData;
-};
 
 // Process ocean temperature data to yearly averages
 const processOceanDataToYearly = (data) => {
@@ -440,7 +370,7 @@ const ChartLoading = ({ message = "Loading temperature data..." }) => (
 );
 
 // United Temperature Chart Component
-export const UnifiedTemperatureChart = () => {
+export const UnifiedTemperatureChart = ({ transparent = false }) => {
   const { data: oceanData, loading: oceanLoading, error: oceanError } = useTemperatureData('total_average_sst.csv');
   const { data: landData, loading: landLoading, error: landError } = useTemperatureData('oceania_absolute_temperatures.csv');
 
@@ -485,48 +415,21 @@ export const UnifiedTemperatureChart = () => {
         const dataPoint = sortedLandData.find(d => d.Year === year);
         return dataPoint ? dataPoint.Annual_Temperature_C : null;
       }),
-      borderColor: '#2d3748',
-      backgroundColor: (context) => {
-        const ctx = context.chart.ctx;
-        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(43, 108, 176, 0.1)');
-        gradient.addColorStop(1, 'rgba(43, 108, 176, 0.02)');
-        return gradient;
-      },
-      borderWidth: 2,
+      borderColor: 'rgba(74, 85, 104, 0.4)', // Dark gray, more transparent
+      backgroundColor: 'transparent',
+      borderWidth: 7, 
       fill: true,
       tension: 0.3,
-      pointRadius: 2,
+      pointRadius: 3,
       pointHoverRadius: 6,
-      pointBackgroundColor: '#2d3748',
-      pointBorderColor: '#ffffff',
-      pointBorderWidth: 1,
+      pointBackgroundColor: 'rgba(74, 85, 104, 0.3)', 
+      pointBorderColor: 'rgba(74, 85, 104, 0.3)', 
+      pointBorderWidth: 2,
       pointHoverBorderWidth: 2,
       spanGaps: true
     });
 
-    // Add smoothed land temperature trend line
-    const smoothedLandData = apply10YearSmoothing(validLandData);
-    if (smoothedLandData.length > 0) {
-      datasets.push({
-        label: 'Land Temperature (10-Year Trend)',
-        data: yearLabels.map(year => {
-          const dataPoint = smoothedLandData.find(d => d.Year === year);
-          return dataPoint ? dataPoint.Annual_Temperature_C : null;
-        }),
-        borderColor: '#2d3748',
-        backgroundColor: 'transparent',
-        borderWidth: 3,
-        fill: false,
-        tension: 0.4,
-        pointRadius: 2,
-        pointHoverRadius: 7,
-        pointBackgroundColor: '#2d3748',
-        pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
-        spanGaps: true
-      });
-    }
+    
   }
 
   // Add ocean temperature dataset with all available data
@@ -537,48 +440,21 @@ export const UnifiedTemperatureChart = () => {
         const dataPoint = sortedOceanData.find(d => d.Year === year);
         return dataPoint ? dataPoint.Annual_Temperature_C : null;
       }),
-      borderColor: '#2b6cb0',
-      backgroundColor: (context) => {
-        const ctx = context.chart.ctx;
-        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(237, 131, 54, 0.15)');
-        gradient.addColorStop(1, 'rgba(237, 131, 54, 0.02)');
-        return gradient;
-      },
-      borderWidth: 2,
+      borderColor: 'rgba(26,54,93, 0.6)', 
+      backgroundColor: 'transparent',
+      borderWidth: 7, 
       fill: true,
       tension: 0.3,
-      pointRadius: 2,
+      pointRadius: 3,
       pointHoverRadius: 6,
-      pointBackgroundColor: '#1a365d',
-      pointBorderColor: '#ffffff',
-      pointBorderWidth: 1,
+      pointBackgroundColor: 'rgba(26,54,93, 0.6)', 
+      pointBorderColor: 'rgba(26,54,93, 0.6)', 
+      pointBorderWidth: 2,
       pointHoverBorderWidth: 2,
       spanGaps: true
     });
 
-    // Add smoothed ocean temperature trend line
-    const smoothedOceanData = apply10YearSmoothing(yearlyOceanData);
-    if (smoothedOceanData.length > 0) {
-      datasets.push({
-        label: 'Ocean Temperature (10-Year Trend)',
-        data: yearLabels.map(year => {
-          const dataPoint = smoothedOceanData.find(d => d.Year === year);
-          return dataPoint ? dataPoint.Annual_Temperature_C : null;
-        }),
-        borderColor: '#2b6cb0',
-        backgroundColor: 'transparent',
-        borderWidth: 3,
-        fill: false,
-        tension: 0.4,
-        pointRadius: 2,
-        pointHoverRadius: 7,
-        pointBackgroundColor: '#1a365d',
-        pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
-        spanGaps: true
-      });
-    }
+    
   }
 
   const chartData = {
@@ -591,10 +467,10 @@ export const UnifiedTemperatureChart = () => {
     maintainAspectRatio: false,
     layout: {
       padding: {
-        top: 150,   // Reduced since legend is now on left
-        bottom: 40,
-        left: 0, // Increased left padding for legend
-        right: 80  
+        top: 2,    
+        bottom: 2,
+        left: 100,   
+        right: 100   
       }
     },
     interaction: {
@@ -604,6 +480,9 @@ export const UnifiedTemperatureChart = () => {
     plugins: {
       legend: {
         display: false  // Hide default legend since we're using custom one
+      },
+      temperatureChartLabels: {
+        enabled: true  // Explicitly enable our custom plugin for this chart only
       },
       tooltip: {
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -671,18 +550,18 @@ export const UnifiedTemperatureChart = () => {
   };
 
   return (
-    <div className="united-temperature-chart">
-      <style jsx>{`
-        .united-temperature-chart {
-          width: 100%;
-          height: 100%;
-          position: relative;
-          background: #f4a261;
-          border-radius: 12px;
-          padding: 20px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-      `}</style>
+    <div 
+      className="united-temperature-chart"
+      style={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        background: transparent ? 'transparent' : '#f4a261',
+        borderRadius: transparent ? '0' : '12px',
+        padding: '0', // Removed padding
+        boxShadow: transparent ? 'none' : '0 10px 30px rgba(0, 0, 0, 0.3)'
+      }}
+    >
       <Line data={chartData} options={options} />
     </div>
   );

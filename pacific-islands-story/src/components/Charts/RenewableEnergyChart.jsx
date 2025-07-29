@@ -14,6 +14,7 @@ const RenewableEnergyChart = ({ transparent = false }) => {
   });
   
   const svgRef = useRef(null);
+  const containerRef = useRef(null);
 
   // Define the color palette
   const colors = {
@@ -52,6 +53,18 @@ const RenewableEnergyChart = ({ transparent = false }) => {
       } else if (activeChart === 'share' && Object.keys(shareData).length > 0) {
         createClevelandPlot(shareData, 'share');
       }
+      
+      // Add resize listener
+      const handleResize = () => {
+        if (activeChart === 'capacity' && Object.keys(capacityData).length > 0) {
+          createClevelandPlot(capacityData, 'capacity');
+        } else if (activeChart === 'share' && Object.keys(shareData).length > 0) {
+          createClevelandPlot(shareData, 'share');
+        }
+      };
+      
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
     }
   }, [activeChart, capacityData, shareData, loading, error]);
 
@@ -64,7 +77,7 @@ const RenewableEnergyChart = ({ transparent = false }) => {
       
       // Try to fetch the data file
       try {
-        const dataFile = '/data/renewable_energy.csv'; // You can modify this path as needed
+        const dataFile = '/data/renewable_energy.csv';
         const response = await fetch(dataFile);
         if (response.ok) {
           csvContent = await response.text();
@@ -189,18 +202,36 @@ const RenewableEnergyChart = ({ transparent = false }) => {
     const svgElement = svgRef.current;
     d3.select(svgElement).selectAll("*").remove();
 
-    const margin = { top: 20, right: 40, bottom: 50, left: 420 };
-    const width = 700 - margin.left - margin.right;
-    const height = 620 - margin.top - margin.bottom;
+    // Get container dimensions
+    const containerRect = containerRef.current?.getBoundingClientRect();
+    const containerWidth = containerRect?.width || 800;
+    const containerHeight = containerRect?.height || 500;
+    const isMobile = window.innerWidth < 768;
+    
+    const margin = { 
+      top: 10, 
+      right: isMobile ? 10 : 20, 
+      bottom: 60, 
+      left: isMobile ? 120 : 200 
+    };
+    
+    // Calculate available space
+    const totalHeight = containerHeight - 80; // Account for buttons and title
+    const width = containerWidth - margin.left - margin.right;
+    const height = totalHeight - margin.top - margin.bottom;
 
     const svg = d3.select(svgElement)
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom);
+      .attr("width", containerWidth)
+      .attr("height", totalHeight)
+      .attr("viewBox", `0 0 ${containerWidth} ${totalHeight}`)
+      .attr("preserveAspectRatio", "xMidYMid meet");
 
     const g = svg.append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const countries = Object.values(data).sort((a, b) => b.change - a.change);
+    const countries = Object.values(data)
+      .sort((a, b) => b.change - a.change)
+      .slice(0, 8); // Limit to 8 countries to fit better
     
     if (countries.length === 0) return;
 
@@ -217,11 +248,11 @@ const RenewableEnergyChart = ({ transparent = false }) => {
     const yScale = d3.scaleBand()
       .domain(countries.map(d => d.name))
       .range([0, height])
-      .padding(0.25);
+      .padding(0.3);
 
     // Background grid lines
     g.selectAll(".grid-line")
-      .data(xScale.ticks(6))
+      .data(xScale.ticks(isMobile ? 4 : 6))
       .enter()
       .append("line")
       .attr("class", "grid-line")
@@ -236,10 +267,10 @@ const RenewableEnergyChart = ({ transparent = false }) => {
     // X axis
     g.append("g")
       .attr("transform", `translate(0,${height})`)
-      .call(d3.axisBottom(xScale).ticks(6))
+      .call(d3.axisBottom(xScale).ticks(isMobile ? 4 : 6))
       .selectAll("text")
       .style("fill", colors.neutral600)
-      .style("font-size", "12px")
+      .style("font-size", isMobile ? "10px" : "12px")
       .style("font-family", "'Inter', sans-serif");
 
     g.selectAll(".domain")
@@ -253,15 +284,13 @@ const RenewableEnergyChart = ({ transparent = false }) => {
       .call(d3.axisLeft(yScale))
       .selectAll("text")
       .style("fill", colors.neutral700)
-      .style("font-size", "13px")
+      .style("font-size", isMobile ? "10px" : "12px")
       .style("font-weight", "500")
-      .style("font-family", "'Inter', sans-serif");
-
-    g.selectAll(".domain")
-      .style("stroke", colors.neutral400);
-
-    g.selectAll(".tick line")
-      .style("stroke", colors.neutral400);
+      .style("font-family", "'Inter', sans-serif")
+      .text(function(d) {
+        // Don't truncate on desktop, only on mobile if really long
+        return isMobile && d.length > 15 ? d.substring(0, 15) + '...' : d;
+      });
 
     // Lines connecting the dots
     g.selectAll(".connecting-line")
@@ -273,13 +302,13 @@ const RenewableEnergyChart = ({ transparent = false }) => {
       .attr("x2", d => xScale(d.lastYear.value))
       .attr("y1", d => yScale(d.name) + yScale.bandwidth() / 2)
       .attr("y2", d => yScale(d.name) + yScale.bandwidth() / 2)
-      .attr("stroke", d => d.change >= 0 ? colors.accentGreen : colors.accentCoral)
-      .attr("stroke-width", 2.5)
+      .attr("stroke", d => d.change >= 0 ? colors.primaryDeepBlue : colors.accentCoral)
+      .attr("stroke-width", 2)
       .attr("opacity", 0.7)
       .style("opacity", 0)
       .transition()
       .duration(800)
-      .delay((d, i) => i * 60)
+      .delay((d, i) => i * 50)
       .style("opacity", 0.7);
 
     // First year circles (baseline)
@@ -293,11 +322,11 @@ const RenewableEnergyChart = ({ transparent = false }) => {
       .attr("r", 0)
       .style("fill", colors.neutral500)
       .style("stroke", colors.neutral600)
-      .style("stroke-width", 2)
+      .style("stroke-width", 1.5)
       .transition()
       .duration(600)
-      .delay((d, i) => i * 60 + 300)
-      .attr("r", 6);
+      .delay((d, i) => i * 50 + 200)
+      .attr("r", isMobile ? 3 : 5);
 
     // Last year circles (current)
     g.selectAll(".circle-last")
@@ -310,11 +339,11 @@ const RenewableEnergyChart = ({ transparent = false }) => {
       .attr("r", 0)
       .style("fill", d => d.change >= 0 ? colors.primaryOcean : colors.accentCoral)
       .style("stroke", d => d.change >= 0 ? colors.primaryDeepBlue : colors.accentCoral)
-      .style("stroke-width", 2.5)
+      .style("stroke-width", 2)
       .transition()
       .duration(600)
-      .delay((d, i) => i * 60 + 500)
-      .attr("r", 8);
+      .delay((d, i) => i * 50 + 400)
+      .attr("r", isMobile ? 5 : 7);
 
     // Tooltips
     const tooltip = d3.select("body").append("div")
@@ -355,7 +384,7 @@ const RenewableEnergyChart = ({ transparent = false }) => {
         d3.select(this)
           .transition()
           .duration(200)
-          .attr("r", isFirst ? 8 : 10)
+          .attr("r", isFirst ? (isMobile ? 5 : 7) : (isMobile ? 7 : 9))
           .style("filter", "drop-shadow(0 4px 8px rgba(0,0,0,0.2))");
       })
       .on("mousemove", function(event) {
@@ -370,88 +399,90 @@ const RenewableEnergyChart = ({ transparent = false }) => {
         d3.select(this)
           .transition()
           .duration(200)
-          .attr("r", isFirst ? 6 : 8)
+          .attr("r", isFirst ? (isMobile ? 3 : 5) : (isMobile ? 5 : 7))
           .style("filter", "none");
       });
 
-    // Legend
-    const legend = g.append("g")
-    .attr("transform", `translate(${width + 25}, 30)`);
+    // Compact Legend - move it more to the right to avoid overlapping
+    if (!isMobile && width > 300) {
+      const legend = g.append("g")
+        .attr("transform", `translate(${width - 60}, 5)`);
 
-    // Legend background (make it taller for 3 items)
-    legend.append("rect")
-    .attr("x", -15)
-    .attr("y", -15)
-    .attr("width", 110)
-    .attr("height", 105) // Increased height for 3 items
-    .attr("fill", colors.glassBg)
-    .attr("stroke", colors.glassBorder)
-    .attr("stroke-width", 1)
-    .attr("rx", 8)
-    .style("backdrop-filter", "blur(10px)");
+      legend.append("rect")
+        .attr("x", -10)
+        .attr("y", -10)
+        .attr("width", 75)
+        .attr("height", 65)
+        .attr("fill", colors.glassBg)
+        .attr("stroke", colors.glassBorder)
+        .attr("stroke-width", 1)
+        .attr("rx", 6)
+        .style("backdrop-filter", "blur(10px)");
 
-    // First year circles (baseline) - gray
-    legend.append("circle")
-    .attr("cx", 0)
-    .attr("cy", 0)
-    .attr("r", 6)
-    .style("fill", colors.neutral500)
-    .style("stroke", colors.neutral600)
-    .style("stroke-width", 2);
+      // First year
+      legend.append("circle")
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .attr("r", 4)
+        .style("fill", colors.neutral500)
+        .style("stroke", colors.neutral600)
+        .style("stroke-width", 1.5);
 
-    legend.append("text")
-    .attr("x", 15)
-    .attr("y", 5)
-    .style("fill", colors.neutral700)
-    .style("font-size", "12px")
-    .style("font-weight", "500")
-    .style("font-family", "'Inter', sans-serif")
-    .text(`${firstYear} (baseline)`);
+      legend.append("text")
+        .attr("x", 10)
+        .attr("y", 3)
+        .style("fill", colors.neutral700)
+        .style("font-size", "10px")
+        .style("font-weight", "400")
+        .style("font-family", "'Inter', sans-serif")
+        .text(`${firstYear}`);
 
-    // Last year circles - increase (blue)
-    legend.append("circle")
-    .attr("cx", 0)
-    .attr("cy", 25)
-    .attr("r", 8)
-    .style("fill", colors.primaryOcean)
-    .style("stroke", colors.primaryDeepBlue)
-    .style("stroke-width", 2.5);
+      // Last year increase
+      legend.append("circle")
+        .attr("cx", 0)
+        .attr("cy", 18)
+        .attr("r", 6)
+        .style("fill", colors.primaryOcean)
+        .style("stroke", colors.primaryDeepBlue)
+        .style("stroke-width", 2);
 
-    legend.append("text")
-    .attr("x", 15)
-    .attr("y", 30)
-    .style("fill", colors.neutral700)
-    .style("font-size", "12px")
-    .style("font-weight", "500")
-    .style("font-family", "'Inter', sans-serif")
-    .text(`${lastYear} (increase)`);
+      legend.append("text")
+        .attr("x", 10)
+        .attr("y", 21)
+        .style("fill", colors.neutral700)
+        .style("font-size", "10px")
+        .style("font-weight", "400")
+        .style("font-family", "'Inter', sans-serif")
+        .text(`${lastYear} ↑`);
 
-    // Last year circles - decrease (coral)
-    legend.append("circle")
-    .attr("cx", 0)
-    .attr("cy", 50)
-    .attr("r", 8)
-    .style("fill", colors.accentCoral)
-    .style("stroke", colors.accentCoral)
-    .style("stroke-width", 2.5);
+      // Last year decrease
+      legend.append("circle")
+        .attr("cx", 0)
+        .attr("cy", 36)
+        .attr("r", 6)
+        .style("fill", colors.accentCoral)
+        .style("stroke", colors.accentCoral)
+        .style("stroke-width", 2);
 
-    legend.append("text")
-    .attr("x", 15)
-    .attr("y", 55)
-    .style("fill", colors.neutral700)
-    .style("font-size", "12px")
-    .style("font-weight", "500")
-    .style("font-family", "'Inter', sans-serif")
-    .text(`${lastYear} (decrease)`);
+      legend.append("text")
+        .attr("x", 10)
+        .attr("y", 39)
+        .style("fill", colors.neutral700)
+        .style("font-size", "10px")
+        .style("font-weight", "400")
+        .style("font-family", "'Inter', sans-serif")
+        .text(`${lastYear} ↓`);
+    }
+    
     // X-axis label
     g.append("text")
-      .attr("transform", `translate(${width / 2}, ${height + 40})`)
+      .attr("transform", `translate(${width / 2}, ${height + 45})`)
       .style("text-anchor", "middle")
       .style("fill", colors.neutral600)
-      .style("font-size", "14px")
+      .style("font-size", isMobile ? "11px" : "13px")
       .style("font-weight", "500")
       .style("font-family", "'Inter', sans-serif")
-      .text(type === 'capacity' ? 'Renewable Capacity (Watts per capita)' : 'Renewable Energy Share (%)');
+      .text(type === 'capacity' ? 'Renewable Capacity (W/capita)' : 'Renewable Energy Share (%)');
   };
 
   const updateStats = (type, data) => {
@@ -479,18 +510,22 @@ const RenewableEnergyChart = ({ transparent = false }) => {
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '500px',
-        background: `linear-gradient(135deg, ${colors.primaryDeepBlue} 0%, ${colors.primaryOcean} 100%)`,
-        borderRadius: '20px',
-        border: `1px solid ${colors.neutral300}`,
-        color: colors.neutral600,
-        fontFamily: "'Inter', sans-serif"
-      }}>
+      <div 
+        ref={containerRef}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+          height: '100%',
+          background: transparent ? 'transparent' : `linear-gradient(135deg, ${colors.primaryDeepBlue} 0%, ${colors.primaryOcean} 100%)`,
+          borderRadius: '20px',
+          border: transparent ? 'none' : `1px solid ${colors.neutral300}`,
+          color: colors.neutral600,
+          fontFamily: "'Inter', sans-serif"
+        }}
+      >
         <div style={{
           border: `3px solid ${colors.neutral300}`,
           borderTop: `3px solid ${colors.primaryOcean}`,
@@ -501,62 +536,71 @@ const RenewableEnergyChart = ({ transparent = false }) => {
           marginBottom: '1rem'
         }} />
         <p style={{ fontSize: '16px', fontWeight: '500' }}>Loading renewable energy data...</p>
+        <style jsx>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '500px',
-        background: `linear-gradient(135deg, ${colors.neutral100} 0%, ${colors.neutral50} 100%)`,
-        borderRadius: '20px',
-        border: `1px solid ${colors.neutral300}`,
-        color: colors.accentCoral,
-        fontSize: '16px',
-        fontWeight: '500',
-        textAlign: 'center',
-        padding: '2rem',
-        fontFamily: "'Inter', sans-serif"
-      }}>
+      <div 
+        ref={containerRef}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+          height: '100%',
+          background: transparent ? 'transparent' : `linear-gradient(135deg, ${colors.neutral100} 0%, ${colors.neutral50} 100%)`,
+          borderRadius: '20px',
+          border: transparent ? 'none' : `1px solid ${colors.neutral300}`,
+          color: colors.accentCoral,
+          fontSize: '16px',
+          fontWeight: '500',
+          textAlign: 'center',
+          padding: '2rem',
+          fontFamily: "'Inter', sans-serif"
+        }}
+      >
         {error}
       </div>
     );
   }
 
-  const currentStats = stats[activeChart];
-  const chartTitle = activeChart === 'capacity' 
-    ? 'Renewable Energy Capacity Progress' 
-    : 'Renewable Energy Share Progress';
-  const chartSubtitle = activeChart === 'capacity'
-    ? 'Installed renewable capacity from first to latest available data'
-    : 'Renewable energy share from first to latest available data';
+  const isMobile = window.innerWidth < 768;
 
   return (
-    <div style={{
-      width: '100%',
-      minHeight: '700px',
-      background: `transparent`,
-      borderRadius: '20px',
-      padding: '32px',
-      fontFamily: "'Inter', sans-serif"
-    }}>
-      
-
+    <div 
+      ref={containerRef}
+      style={{
+        width: '100%',
+        height: '100%',
+        background: 'transparent',
+        borderRadius: '20px',
+        padding: '0',
+        fontFamily: "'Inter', sans-serif",
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative'
+      }}
+    >
       {/* Chart Toggle Buttons */}
       <div style={{
         display: 'flex',
         justifyContent: 'center',
-        gap: '12px',
-        marginBottom: '32px'
+        gap: isMobile ? '8px' : '12px',
+        marginBottom: isMobile ? '8px' : '16px',
+        flexWrap: 'wrap'
       }}>
         <button
           onClick={() => setActiveChart('capacity')}
           style={{
-            padding: '12px 24px',
+            padding: isMobile ? '4px 12px' : '6px 16px',
             borderRadius: '12px',
             border: 'none',
             background: activeChart === 'capacity' 
@@ -564,7 +608,7 @@ const RenewableEnergyChart = ({ transparent = false }) => {
               : colors.glassBg,
             color: activeChart === 'capacity' ? colors.white : colors.neutral700,
             fontWeight: '600',
-            fontSize: '14px',
+            fontSize: isMobile ? '11px' : '13px',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
             fontFamily: "'Inter', sans-serif",
@@ -578,7 +622,7 @@ const RenewableEnergyChart = ({ transparent = false }) => {
         <button
           onClick={() => setActiveChart('share')}
           style={{
-            padding: '12px 24px',
+            padding: isMobile ? '4px 12px' : '6px 16px',
             borderRadius: '12px',
             border: 'none',
             background: activeChart === 'share' 
@@ -586,13 +630,9 @@ const RenewableEnergyChart = ({ transparent = false }) => {
               : colors.glassBg,
             color: activeChart === 'share' ? colors.white : colors.neutral700,
             fontWeight: '600',
-            fontSize: '14px',
+            fontSize: isMobile ? '11px' : '13px',
             cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            fontFamily: "'Inter', sans-serif",
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${activeChart === 'share' ? 'transparent' : colors.glassBorder}`,
-            boxShadow: activeChart === 'share' ? `0 4px 12px ${colors.primaryOcean}40` : 'none'
+            transition: 'all 0.3s ease'
           }}
         >
           Renewable Energy Share 
@@ -601,94 +641,16 @@ const RenewableEnergyChart = ({ transparent = false }) => {
 
       {/* Chart Container */}
       <div style={{ 
+        flex: 1,
         display: 'flex', 
         justifyContent: 'center',
-        marginBottom: '32px',
+        alignItems: 'center',
         background: 'transparent',
         borderRadius: '16px',
-        padding: '24px',
+        overflow: 'hidden',
+        width: '100%'
       }}>
-        <svg ref={svgRef}></svg>
-      </div>
-
-      {/* Summary Stats */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '20px'
-      }}>
-        <div style={{
-          textAlign: 'center',
-          padding: '24px 20px',
-          background: 'transparent',
-          border: `1px solid ${colors.neutral200}`,
-          borderRadius: '16px',
-          boxShadow: `0 4px 12px ${colors.glassShadow}`
-        }}>
-          <div style={{
-            fontSize: '1.5rem',
-            fontWeight: '700',
-            color: colors.primaryOcean,
-            marginBottom: '8px',
-            fontFamily: "'Space Grotesk', 'Inter', sans-serif"
-          }}>{currentStats.avgGrowth}</div>
-          <div style={{
-            fontSize: '13px',
-            color: colors.neutral600,
-            textTransform: 'uppercase',
-            fontWeight: '600',
-            letterSpacing: '0.5px'
-          }}>Average Growth</div>
-        </div>
-
-        <div style={{
-          textAlign: 'center',
-          padding: '24px 20px',
-          background: 'transparent',
-          border: `1px solid ${colors.neutral200}`,
-          borderRadius: '16px',
-          boxShadow: `0 4px 12px ${colors.glassShadow}`
-        }}>
-          <div style={{
-            fontSize: '1.125rem',
-            fontWeight: '700',
-            color: colors.accentGreen,
-            marginBottom: '8px',
-            lineHeight: '1.2',
-            fontFamily: "'Space Grotesk', 'Inter', sans-serif"
-          }}>{currentStats.topGainer}</div>
-          <div style={{
-            fontSize: '13px',
-            color: colors.neutral600,
-            textTransform: 'uppercase',
-            fontWeight: '600',
-            letterSpacing: '0.5px'
-          }}>Top Performer</div>
-        </div>
-
-        <div style={{
-          textAlign: 'center',
-          padding: '24px 20px',
-          background: `linear-gradient(135deg, ${colors.white} 0%, ${colors.neutral50} 100%)`,
-          border: `1px solid ${colors.neutral200}`,
-          borderRadius: '16px',
-          boxShadow: `0 4px 12px ${colors.glassShadow}`
-        }}>
-          <div style={{
-            fontSize: '1.5rem',
-            fontWeight: '700',
-            color: colors.accentTeal,
-            marginBottom: '8px',
-            fontFamily: "'Space Grotesk', 'Inter', sans-serif"
-          }}>{currentStats.countries}</div>
-          <div style={{
-            fontSize: '13px',
-            color: colors.neutral600,
-            textTransform: 'uppercase',
-            fontWeight: '600',
-            letterSpacing: '0.5px'
-          }}>Countries Analyzed</div>
-        </div>
+        <svg ref={svgRef} style={{ maxWidth: '100%', height: 'auto' }}></svg>
       </div>
 
       <style>{`

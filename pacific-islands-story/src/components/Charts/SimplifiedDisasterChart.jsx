@@ -1,326 +1,48 @@
-import React, { useState, useEffect, useRef } from 'react';
-import Chart from 'chart.js/auto';
+import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 import _ from 'lodash';
 
+const countryMapping = {
+  'CK': 'Cook Islands', 'FJ': 'Fiji', 'FM': 'Micronesia', 'KI': 'Kiribati',
+  'MH': 'Marshall Islands', 'NC': 'New Caledonia', 'NR': 'Nauru', 'NU': 'Niue',
+  'PF': 'French Polynesia', 'PG': 'Papua New Guinea', 'PW': 'Palau',
+  'SB': 'Solomon Islands', 'TO': 'Tonga', 'TV': 'Tuvalu', 'VU': 'Vanuatu', 'WS': 'Samoa'
+};
+
 const SimplifiedDisasterChart = () => {
-  const canvasRef = useRef(null);
-  const chartRef = useRef(null);
+  const [data, setData] = useState([]);
+  const [rawDisasters, setRawDisasters] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [allData, setAllData] = useState([]);
-  const [climateData, setClimateData] = useState([]);
   const [error, setError] = useState(null);
 
-  // Climate indicators
-  const PEOPLE_INDICATOR = 'VC_DSR_AFFCT';
-  const ECONOMIC_INDICATOR = 'VC_DSR_LSGP'; // Economic loss as % of GDP
-
-  // Country code mappings
-  const COUNTRY_CODES = {
-    'CK': 'Cook Islands',
-    'FJ': 'Fiji',
-    'FM': 'Federated States of Micronesia',
-    'KI': 'Kiribati',
-    'MH': 'Marshall Islands',
-    'NR': 'Nauru',
-    'NC': 'New Caledonia',
-    'NU': 'Niue',
-    'PF': 'French Polynesia',
-    'PG': 'Papua New Guinea',
-    'PW': 'Palau',
-    'SB': 'Solomon Islands',
-    'TO': 'Tonga',
-    'TV': 'Tuvalu',
-    'VU': 'Vanuatu',
-    'WS': 'Samoa',
-    'Australia': 'Australia',
-    'China': 'China',
-    'India': 'India',
-    'Indonesia': 'Indonesia',
-    'Japan': 'Japan',
-    'Philippines': 'Philippines',
-    'Thailand': 'Thailand',
-    'United States': 'United States',
-    'Bangladesh': 'Bangladesh',
-    'Myanmar': 'Myanmar',
-    'Vietnam': 'Vietnam'
+  const colors = {
+    primaryDeepBlue: '#1a365d',
+    primaryOcean: '#2b6cb0',
+    primaryLight: '#3182ce',
+    accentCoral: '#ed8936',
+    accentWarm: '#f6ad55',
+    accentLight: '#fbd38d',
+    accentGreen: '#38a169',
+    accentTeal: '#319795',
+    dangerRed: '#c53030',
+    warningOrange: '#dd6b20',
+    neutral700: '#4a5568',
+    neutral300: '#e2e8f0',
+    white: '#ffffff'
   };
 
-  // Color palette matching the design system
-  const disasterColors = {
-    'Earthquake': '#ed8936',
-    'Storm': '#3182ce',
-    'Flood': '#2b6cb0',
-    'Drought': '#f6ad55',
-    'Cyclone': '#1a365d',
-    'Wildfire': '#38a169',
-    'Tsunami': '#319795',
-    'Volcanic activity': '#fbd38d',
-    'Landslide': '#4a5568',
-    'Epidemic': '#718096',
-    'Extreme temperature': '#a0aec0',
-    'Mass movement (dry)': '#cbd5e0',
-    'Insect infestation': '#e2e8f0'
-  };
-
-  const createChart = (data) => {
-    if (!canvasRef.current) return;
-
-    const ctx = canvasRef.current.getContext('2d');
-
-    if (chartRef.current) {
-      chartRef.current.destroy();
-    }
-
-    // Process data to get country-disaster type matrix and human loss
-    const countryData = {};
-    const allDisasterTypes = new Set();
-
-    data.forEach(d => {
-      const country = d['Country'];
-      const disasterType = d['Disaster Type'];
-      const deaths = parseInt(d['Total Deaths']) || 0;
-      const affected = parseInt(d['Total Affected']) || 0;
-      const damage = parseFloat(d["'Total Damage (''000 US$)'"]) || 0;
-      
-      // Use both people and economic indicators from climate data
-      const peopleAffectedClimate = d.peopleAffectedClimate || 0;
-      const economicLossClimate = d.economicLossGDP || 0;
-      const hasClimateData = d.hasClimateData || false;
-
-      if (country && disasterType && (deaths > 0 || affected > 0 || damage > 0)) {
-        if (!countryData[country]) {
-          countryData[country] = {
-            disasters: {},
-            totalDeaths: 0,
-            totalAffected: 0,
-            totalDamage: 0,
-            climateHumanLoss: 0,
-            climateEconomicLoss: 0,
-            hasClimateData: false
-          };
-        }
-
-        allDisasterTypes.add(disasterType);
-        countryData[country].disasters[disasterType] = 
-          (countryData[country].disasters[disasterType] || 0) + 1;
-        countryData[country].totalDeaths += deaths;
-        countryData[country].totalAffected += affected;
-        countryData[country].totalDamage += damage;
-        countryData[country].peopleAffectedClimate = Math.max(countryData[country].peopleAffectedClimate, peopleAffectedClimate);
-        countryData[country].economicLossGDP = Math.max(countryData[country].economicLossGDP, economicLossClimate);
-        countryData[country].hasClimateData = countryData[country].hasClimateData || (peopleAffectedClimate > 0 || economicLossClimate > 0);
+  const loadCSVFile = async (filename) => {
+    try {
+      if (window.fs && window.fs.readFile) {
+        return await window.fs.readFile(filename, { encoding: 'utf8' });
+      } else {
+        const response = await fetch(filename);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.text();
       }
-    });
-
-    // Sort countries by total disasters (ascending order, top 12)
-    const sortedCountries = Object.keys(countryData)
-      .sort((a, b) => {
-        const totalA = Object.values(countryData[a].disasters).reduce((sum, val) => sum + val, 0);
-        const totalB = Object.values(countryData[b].disasters).reduce((sum, val) => sum + val, 0);
-        return totalA - totalB; // Changed from totalB - totalA for ascending order
-      })
-      .slice(0, 12);
-
-    // Sort disaster types by frequency (top 8)
-    const disasterTypeFrequency = {};
-    Array.from(allDisasterTypes).forEach(type => {
-      disasterTypeFrequency[type] = 0;
-      sortedCountries.forEach(country => {
-        disasterTypeFrequency[type] += countryData[country].disasters[type] || 0;
-      });
-    });
-
-    const sortedDisasterTypes = Object.entries(disasterTypeFrequency)
-      .sort(([,a], [,b]) => b - a)
-      .map(([type]) => type)
-      .slice(0, 8);
-
-    // Create datasets for each disaster type with NEGATIVE values to mirror
-    const datasets = sortedDisasterTypes.map(disasterType => {
-      const data = sortedCountries.map(country => 
-        -(countryData[country].disasters[disasterType] || 0) // Negative values for mirroring
-      );
-
-      return {
-        label: disasterType,
-        data: data,
-        backgroundColor: disasterColors[disasterType] || '#718096',
-        borderWidth: 0,
-        borderRadius: 4,
-        maxBarThickness: 30
-      };
-    });
-
-    chartRef.current = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: sortedCountries,
-        datasets: datasets
-      },
-      options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: {
-          padding: {
-            top: 200,
-            bottom: 20,
-            left: 20,
-            right: 200 // Back to right side for true mirroring
-          }
-        },
-        plugins: {
-          legend: {
-            display: true,
-            position: 'top',
-            labels: {
-              boxWidth: 12,
-              boxHeight: 12,
-              padding: 15,
-              font: {
-                size: 11,
-                weight: '500'
-              },
-              color: '#ffffff'
-            }
-          },
-          tooltip: {
-            backgroundColor: 'rgba(255, 255, 255, 0.98)',
-            titleColor: '#1a365d',
-            bodyColor: '#2d3748',
-            borderColor: 'rgba(255, 255, 255, 0.2)',
-            borderWidth: 1,
-            cornerRadius: 8,
-            padding: 12,
-            titleFont: { size: 13, weight: '600' },
-            bodyFont: { size: 12 },
-            callbacks: {
-              title: function(context) {
-                const country = context[0].label;
-                const humanLoss = countryData[country];
-                return `${country}`;
-              },
-              afterTitle: function(context) {
-                const country = context[0].label;
-                const countryInfo = countryData[country];
-                
-                let lines = [
-                  `Total Affected: ${countryInfo.totalAffected.toLocaleString()}`,
-                  `Damage: ${(countryInfo.totalDamage / 1000).toFixed(1)}M USD`
-                ];
-                
-                if (countryInfo.hasEconomicData) {
-                  lines.push('--- Economic Impact (Climate Data) ---');
-                  lines.push(`GDP Loss: ${countryInfo.economicLossGDP.toFixed(2)}% of GDP`);
-                }
-                
-                return lines;
-              },
-              label: function(context) {
-                const disasterType = context.dataset.label;
-                const count = Math.abs(context.parsed.x); // Show positive value in tooltip
-                return count > 0 ? `${disasterType}: ${count} disasters` : null;
-              }
-            },
-            filter: function(tooltipItem) {
-              return Math.abs(tooltipItem.parsed.x) > 0;
-            }
-          }
-        },
-        scales: {
-          x: {
-            display: false,  // This hides the entire x-axis including ticks and labels
-            stacked: true,
-            beginAtZero: true,
-            max: 0, // Set maximum to 0 so bars extend leftward
-            ticks: {
-              stepSize: 1,
-              font: { size: 10, weight: '500' },
-              color: '#e2e8f0',
-              callback: function(value) {
-                return Math.abs(value); // Show positive values on axis
-              }
-            },
-            grid: {
-              display: true,
-              color: 'rgba(255, 255, 255, 0.1)'
-            },
-            border: { display: false },
-            title: {
-              display: false,
-              text: 'Number of Disasters',
-              color: '#ffffff',
-              font: { size: 12, weight: '600' },
-              padding: { top: 10 }
-            }
-          },
-          y: {
-            stacked: true,
-            ticks: {
-              font: { size: 11, weight: '500' },
-              color: '#ffffff'
-            },
-            grid: {
-              display: false
-            },
-            border: { display: false }
-          }
-        },
-        animation: {
-          duration: 1200,
-          easing: 'easeOutQuart'
-        },
-        onHover: (event, activeElements) => {
-          event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
-        }
-      },
-      plugins: [{
-        id: 'humanLossLabels',
-        afterDatasetsDraw: function(chart) {
-          const ctx = chart.ctx;
-          
-          chart.data.labels.forEach((country, index) => {
-            // Calculate the minimum x position (leftmost bar end) for this country
-            let minX = Infinity;
-            let hasData = false;
-            chart.data.datasets.forEach((dataset, datasetIndex) => {
-              const meta = chart.getDatasetMeta(datasetIndex);
-              const bar = meta.data[index];
-              if (bar && Math.abs(dataset.data[index]) > 0) {
-                minX = Math.min(minX, bar.x);
-                hasData = true;
-              }
-            });
-            
-            if (hasData) {
-              const countryInfo = countryData[country];
-              const x = chart.chartArea.right + 15; // Position labels to the right of chart area
-              const meta = chart.getDatasetMeta(0);
-              const bar = meta.data[index];
-              const y = bar.y;
-              
-              // Display economic impact data
-              const hasEconomicData = countryInfo.hasEconomicData;
-              
-              // Draw economic loss as % of GDP
-              if (hasEconomicData) {
-                ctx.fillStyle = '#dc2626';
-                ctx.font = 'bold 10px Arial';
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(`📊 ${countryInfo.economicLossGDP.toFixed(2)}% GDP`, x, y - 8);
-              }
-              
-              // Draw total damage in USD
-              ctx.fillStyle = hasEconomicData ? '#dc6a02' : '#ea580c';
-              ctx.font = '10px Arial';
-              ctx.fillText(`💰 ${(countryInfo.totalDamage / 1000).toFixed(1)}M`, x, y + 8);
-            }
-          });
-        }
-      }]
-    });
+    } catch (error) {
+      throw new Error(`Failed to load ${filename}: ${error.message}`);
+    }
   };
 
   useEffect(() => {
@@ -328,118 +50,131 @@ const SimplifiedDisasterChart = () => {
       try {
         setLoading(true);
         setError(null);
-
-        // Try to read both CSV files
-        let disasterCsvText = '';
-        let climateCsvText = '';
-        let disasterDataLoaded = false;
-        let climateDataLoaded = false;
-
-        // Load disasters_overview.csv
+        
+        console.log('Starting data load process...');
+        
+        let climateData, disastersData;
+        
         try {
-          disasterCsvText = await window.fs.readFile('/data/disasters_overview.csv', { encoding: 'utf8' });
-          disasterDataLoaded = true;
-        } catch (fsError) {
-          try {
-            const response = await fetch('/data/disasters_overview.csv');
-            if (response.ok) {
-              disasterCsvText = await response.text();
-              disasterDataLoaded = true;
-            }
-          } catch (fetchError) {
-            console.log('Could not load disasters_overview.csv with either method');
-          }
-        }
-
-        // Load climate.csv
-        try {
-          climateCsvText = await window.fs.readFile('/data/climate.csv', { encoding: 'utf8' });
-          climateDataLoaded = true;
-        } catch (fsError) {
-          try {
-            const response = await fetch('/data/climate.csv');
-            if (response.ok) {
-              climateCsvText = await response.text();
-              climateDataLoaded = true;
-            }
-          } catch (fetchError) {
-            console.log('Could not load climate.csv with either method');
-          }
-        }
-
-        if (disasterDataLoaded) {
-          // Parse disaster CSV data
-          const disasterParsed = Papa.parse(disasterCsvText, {
+          const climateText = await loadCSVFile('/data/climate.csv');
+          const disastersText = await loadCSVFile('/data/disasters_overview.csv');
+          
+          const parsedClimate = Papa.parse(climateText, {
             header: true,
             dynamicTyping: true,
             skipEmptyLines: true,
             delimitersToGuess: [',', '\t', '|', ';']
           });
+          
+          const parsedDisasters = Papa.parse(disastersText, {
+            header: true,
+            dynamicTyping: true,
+            skipEmptyLines: true,
+            delimitersToGuess: ['\t', ',', '|', ';']
+          });
 
-          let combinedData = disasterParsed.data;
+          console.log('Loaded climate data:', parsedClimate.data.length, 'rows');
+          console.log('Loaded disaster data:', parsedDisasters.data.length, 'rows');
+          
+          climateData = parsedClimate.data;
+          disastersData = parsedDisasters.data;
+          
+        } catch (loadError) {
+          console.error('Error loading CSV files:', loadError);
+          throw loadError;
+        }
 
-          // If climate data is available, process it for specific indicators
-          if (climateDataLoaded) {
-            const climateParsed = Papa.parse(climateCsvText, {
-              header: true,
-              dynamicTyping: true,
-              skipEmptyLines: true,
-              delimitersToGuess: [',', '\t', '|', ';']
-            });
-
-            setClimateData(climateParsed.data);
-
-            // Create climate indicators lookup by country
-            const climateByCountry = {};
-            climateParsed.data.forEach(row => {
-              if (row.GEO_PICT && row.INDICATOR && row.value) {
-                const country = row.GEO_PICT;
-                const indicator = row.INDICATOR;
-                const value = parseFloat(row.value) || 0;
-                
-                if (!climateByCountry[country]) {
-                  climateByCountry[country] = {};
-                }
-                
-                if (!climateByCountry[country][indicator]) {
-                  climateByCountry[country][indicator] = [];
-                }
-                
-                climateByCountry[country][indicator].push(value);
-              }
-            });
-
-            // Enhance disaster data with both people and economic indicators from climate data
-            combinedData = disasterParsed.data.map(disaster => {
-              const country = disaster.Country;
-              const climateCountryData = climateByCountry[country] || climateByCountry[COUNTRY_CODES[country]] || {};
-              
-              // Get people affected from climate data (VC_DSR_AFFCT)
-              const peopleAffectedClimate = climateCountryData[PEOPLE_INDICATOR] ? 
-                Math.max(...climateCountryData[PEOPLE_INDICATOR]) : 0;
-              
-              // Get economic loss from climate data (VC_DSR_LSGP) - as % of GDP
-              const economicLossClimate = climateCountryData[ECONOMIC_INDICATOR] ? 
-                Math.max(...climateCountryData[ECONOMIC_INDICATOR]) : 0;
-              
-              return {
-                ...disaster,
-                peopleAffectedClimate: peopleAffectedClimate,
-                economicLossGDP: economicLossClimate,
-                hasClimateData: peopleAffectedClimate > 0 || economicLossClimate > 0
+        const disastersByCountry = _.groupBy(disastersData, (row) => {
+          // Handle special case for Micronesia
+          if (row.Country === 'Micronesia (Federated States of)') {
+            return 'Micronesia';
+          }
+          return row.Country;
+        });
+        
+        const disasterAffectedData = {};
+        climateData
+          .filter(row => row.INDICATOR === 'VC_DSR_AFFCT' && row.GEO_PICT && row.value !== null && row.value !== undefined)
+          .forEach(row => {
+            const countryCode = row.GEO_PICT;
+            const value = parseFloat(row.value) || 0;
+            const year = parseInt(row.TIME_PERIOD) || null;
+            
+            if (!disasterAffectedData[countryCode]) {
+              disasterAffectedData[countryCode] = {
+                totalValue: 0,
+                years: [],
+                yearCount: 0,
+                minYear: year,
+                maxYear: year
               };
+            }
+            
+            disasterAffectedData[countryCode].totalValue += value;
+            disasterAffectedData[countryCode].years.push({ year, value });
+            disasterAffectedData[countryCode].yearCount++;
+            disasterAffectedData[countryCode].minYear = Math.min(disasterAffectedData[countryCode].minYear, year);
+            disasterAffectedData[countryCode].maxYear = Math.max(disasterAffectedData[countryCode].maxYear, year);
+          });
+
+        const combinedData = [];
+        
+        Object.keys(countryMapping).forEach(countryCode => {
+          const countryName = countryMapping[countryCode];
+          const disasters = disastersByCountry[countryName] || [];
+          
+          const climateAffected = disasterAffectedData[countryCode]?.totalValue || 0;
+          const climateAffectedYearRange = disasterAffectedData[countryCode] ? 
+            `${disasterAffectedData[countryCode].minYear}-${disasterAffectedData[countryCode].maxYear}` : null;
+          const climateAffectedYearCount = disasterAffectedData[countryCode]?.yearCount || 0;
+          
+          const historicalAffected = _.sumBy(disasters, row => Number(row['Total Affected']) || 0);
+          const totalDeaths = _.sumBy(disasters, row => Number(row['Total Deaths']) || 0);
+          
+          const disasterTypes = [...new Set(disasters
+            .map(d => d['Disaster Type'])
+            .filter(Boolean)
+          )];
+
+          const finalAffected = climateAffected || historicalAffected;
+          
+          console.log(`Processing ${countryName} (${countryCode}): climate=${climateAffected}, historical=${historicalAffected}, final=${finalAffected}`);
+          
+          if (finalAffected > 0 || disasters.length > 0) {
+            combinedData.push({
+              country: countryName,
+              countryCode: countryCode,
+              totalAffected: finalAffected,
+              climateDataYearRange: climateAffectedYearRange,
+              climateAffectedYears: climateAffectedYearCount,
+              disasterFrequency: disasters.length,
+              totalDeaths: totalDeaths,
+              historicalAffected: historicalAffected,
+              mainDisasters: disasterTypes.slice(0, 3),
+              dataSource: climateAffected > 0 ? 'climate_indicators' : 'historical_records'
             });
           }
+        });
 
-          setAllData(combinedData);
-        } else {
-          throw new Error('Could not load disaster data file');
-        }
+        const filteredData = combinedData.filter(item => item.totalAffected > 0);
+
+        console.log('Combined data for', filteredData.length, 'countries');
+        console.log('All countries processed:');
+        combinedData.forEach(item => {
+          console.log(`- ${item.country}: ${item.totalAffected} affected (climate: ${item.climateDataYearRange ? 'YES' : 'NO'}, historical: ${item.historicalAffected})`);
+        });
+        console.log('Filtered data:');
+        filteredData.forEach(item => {
+          console.log(`- ${item.country}: ${item.totalAffected} affected`);
+        });
+        setData(filteredData);
         
-      } catch (err) {
-        setError(`Error loading data: ${err.message}`);
-        console.error('Error loading data:', err);
+        // Also set the raw disasters data for the disaster types chart
+        setRawDisasters(disastersData);
         
+      } catch (error) {
+        setError(error);
+        console.error('Error loading data:', error);
       } finally {
         setLoading(false);
       }
@@ -448,76 +183,381 @@ const SimplifiedDisasterChart = () => {
     loadData();
   }, []);
 
-  useEffect(() => {
-    if (!loading && allData.length > 0) {
-      createChart(allData);
-    }
-  }, [allData, loading]);
-
-  useEffect(() => {
-    return () => {
-      if (chartRef.current) {
-        chartRef.current.destroy();
-      }
-    };
-  }, []);
-
   if (loading) {
     return (
-      <div className="w-full h-screen flex items-center justify-center" style={{
-        background: 'linear-gradient(135deg, #3182ce 0%, #60a5fa 50%, #93c5fd 100%)'
+      <div style={{ 
+        width: '1000px',
+        margin: '0 auto',
+        padding: '20px', 
+        textAlign: 'center', 
+        color: colors.primaryDeepBlue,
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
       }}>
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin mb-4 mx-auto"></div>
-          <p className="text-white font-medium">Loading disaster data...</p>
-        </div>
+        <div style={{
+          border: '3px solid rgba(26, 54, 93, 0.3)',
+          borderTop: `3px solid ${colors.primaryDeepBlue}`,
+          borderRadius: '50%',
+          width: '40px',
+          height: '40px',
+          animation: 'spin 1s linear infinite',
+          margin: '0 auto 20px auto'
+        }} />
+        <div>Loading Pacific Islands climate and disaster data...</div>
+        <style jsx>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
 
-  if (error) {
+  if (error || data.length === 0) {
     return (
-      <div className="w-full h-screen flex items-center justify-center" style={{
-        background: 'linear-gradient(135deg, #3182ce 0%, #60a5fa 50%, #93c5fd 100%)'
+      <div style={{ 
+        width: '900px',
+        margin: '0 auto',
+        padding: '40px', 
+        textAlign: 'center', 
+        color: colors.dangerRed,
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
       }}>
-        <div className="text-center">
-          <div className="text-lg text-white mb-2">Failed to load disaster data</div>
-          <div className="text-blue-200">{error}</div>
+        <div style={{
+          background: 'rgba(197, 48, 48, 0.1)',
+          padding: '20px',
+          borderRadius: '12px',
+          border: '1px solid rgba(197, 48, 48, 0.2)',
+          marginBottom: '20px'
+        }}>
+          <p><strong>Data Loading Error</strong></p>
+          <p>Could not load climate.csv and disasters_overview.csv files.</p>
+          <p>Please upload the required CSV files to use this visualization.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-screen p-6" style={{
-      background: 'linear-gradient(135deg, #3182ce 0%, #60a5fa 50%, #93c5fd 100%)'
+    <div style={{ 
+      width: '1000px',
+      margin: '0 auto',
+      padding: '5px', 
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      backgroundColor: 'transparent'
     }}>
       
-      {/* Chart Container */}
-      <div className="rounded-xl shadow-xl p-6 h-5/6" style={{
-        background: 'rgba(255, 255, 255, 0.1)',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        backdropFilter: 'blur(10px)'
+      <div style={{ 
+        display: 'flex',
+        gap: '5px'
       }}>
-        <div className="h-full">
-          <canvas ref={canvasRef} className="w-full h-full" />
+        {/* Left side - Two charts */}
+        <div style={{ 
+          flex: '1',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '5px'
+        }}>
+          <ButterflyChart data={data} colors={colors} />
+          <DisasterTypesChart data={data} rawDisasters={rawDisasters} colors={colors} />
         </div>
         
-        {/* Legend for climate data indicators */}
-        <div className="flex justify-center mt-4 space-x-6 text-sm text-blue-50">
-          <div className="flex items-center">
-            <span className="mr-1 text-green-400">👥</span>
-            <span>People Affected (* = Climate Data VC_DSR_AFFCT)</span>
+        {/* Right side - Top 3 Countries */}
+        <div style={{ width: '300px' }}>
+          <TopCountriesComparisonChart data={data} colors={colors} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Butterfly Chart combining People Affected and Disaster Frequency
+const ButterflyChart = ({ data, colors }) => {
+  // Get top 10 countries by people affected
+  const sortedByAffected = [...data].sort((a, b) => b.totalAffected - a.totalAffected).slice(0, 10);
+  const maxAffected = Math.max(...sortedByAffected.map(d => d.totalAffected));
+  const maxFreq = Math.max(...sortedByAffected.map(d => d.disasterFrequency));
+
+  return (
+    <div style={{ 
+      backgroundColor: 'transparent', 
+      border: '1px solid rgba(26, 54, 93, 0.2)',
+      padding: '20px', 
+      borderRadius: '8px', 
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+    }}>
+      <h3 style={{ color: colors.primaryDeepBlue, marginBottom: '20px', fontSize: '16px', textAlign: 'center' }}>
+        People Affected vs Disaster Frequency
+      </h3>
+      
+      {/* Headers */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: '1fr 140px 1fr',
+        marginBottom: '10px',
+        fontSize: '12px',
+        fontWeight: '600',
+        color: colors.neutral700
+      }}>
+        <div style={{ textAlign: 'right', paddingRight: '10px' }}>
+          People Affected
+        </div>
+        <div style={{ textAlign: 'center' }}>Country</div>
+        <div style={{ paddingLeft: '10px' }}>
+          Disaster Events
+        </div>
+      </div>
+
+      {/* Data rows */}
+      {sortedByAffected.map((item, index) => (
+        <div key={index} style={{ 
+          display: 'grid', 
+          gridTemplateColumns: '1fr 140px 1fr',
+          alignItems: 'center',
+          marginBottom: '8px',
+          height: '24px'
+        }}>
+          {/* Left side - People Affected */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', paddingRight: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '10px', color: colors.neutral700, minWidth: '35px', textAlign: 'right' }}>
+                {item.totalAffected >= 1000 ? `${(item.totalAffected / 1000).toFixed(0)}k` : item.totalAffected}
+              </span>
+              <div
+                style={{
+                  height: '20px',
+                  width: `${(item.totalAffected / maxAffected) * 180}px`,
+                  backgroundColor: colors.primaryOcean,
+                  borderRadius: '10px 0 0 10px',
+                  transition: 'width 0.3s ease'
+                }}
+              />
+            </div>
           </div>
-          <div className="flex items-center">
-            <span className="mr-1 text-red-400">📊</span>
-            <span>Economic Loss (* = Climate Data % of GDP)</span>
+
+          {/* Center - Country name */}
+          <div style={{ 
+            minWidth: '140px',
+            width: '140px',
+            textAlign: 'center',
+            fontSize: '12px',
+            fontWeight: '600',
+            color: colors.primaryDeepBlue,
+            padding: '4px 8px',
+            backgroundColor: 'rgba(248, 250, 252, 0.7)',
+            borderRadius: '6px',
+            border: '1px solid rgba(226, 232, 240, 0.5)',
+            flexShrink: 0
+          }}>
+            {item.country}
           </div>
-          <div className="flex items-center">
-            <span className="mr-1 text-orange-400">💰</span>
-            <span>Total Damage (Million USD)</span>
+
+          {/* Right side - Disaster Frequency */}
+          <div style={{ paddingLeft: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div
+                style={{
+                  height: '20px',
+                  width: `${(item.disasterFrequency / maxFreq) * 180}px`,
+                  backgroundColor: colors.accentCoral,
+                  borderRadius: '0 10px 10px 0',
+                  transition: 'width 0.3s ease'
+                }}
+              />
+              <span style={{ fontSize: '10px', color: colors.neutral700 }}>
+                {item.disasterFrequency} events
+              </span>
+            </div>
           </div>
         </div>
+      ))}
+    </div>
+  );
+};
+
+// Chart 3: Disaster Types Distribution
+const DisasterTypesChart = ({ data, rawDisasters, colors }) => {
+  // Count disaster types from raw disasters data
+  const disasterTypeCounts = {};
+  
+  // Check if rawDisasters exists and has data
+  if (rawDisasters && rawDisasters.length > 0) {
+    rawDisasters.forEach(disaster => {
+      const disasterType = disaster['Disaster Type'];
+      if (disasterType) {
+        disasterTypeCounts[disasterType] = (disasterTypeCounts[disasterType] || 0) + 1;
+      }
+    });
+  }
+  
+  // Sort by count descending
+  const sortedDisasters = Object.entries(disasterTypeCounts)
+    .sort(([,a], [,b]) => b - a);
+  
+  const maxCount = sortedDisasters.length > 0 ? Math.max(...Object.values(disasterTypeCounts)) : 1;
+  const disasterColors = [
+    colors.primaryOcean, colors.accentCoral, colors.accentGreen, colors.warningOrange,
+    colors.accentTeal, colors.primaryLight, colors.accentWarm, colors.dangerRed
+  ];
+
+  // Debug logging
+  console.log('Raw disasters count:', rawDisasters?.length);
+  console.log('Disaster type counts:', disasterTypeCounts);
+
+  return (
+    <div style={{ 
+      backgroundColor: 'transparent', 
+      border: '1px solid rgba(56, 161, 105, 0.2)',
+      padding: '15px', 
+      borderRadius: '8px', 
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+    }}>
+      <h3 style={{ color: colors.primaryDeepBlue, marginBottom: '15px', fontSize: '16px' }}>
+        Most Common Disaster Types
+      </h3>
+      <div>
+        {sortedDisasters.length === 0 ? (
+          <div style={{ fontSize: '12px', color: colors.neutral700 }}>
+            No disaster type data available
+          </div>
+        ) : (
+          sortedDisasters.map(([disaster, count], index) => (
+            <div key={index} style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              marginBottom: '6px',
+              gap: '8px'
+            }}>
+              <div style={{ 
+                minWidth: '140px', 
+                fontSize: '11px', 
+                fontWeight: '600',
+                color: colors.neutral700
+              }}>
+                {disaster}
+              </div>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div
+                  style={{
+                    height: '20px',
+                    width: `${(count / maxCount) * 140}px`,
+                    minWidth: '30px',
+                    backgroundColor: disasterColors[index % disasterColors.length],
+                    borderRadius: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: colors.white,
+                    fontSize: '10px',
+                    fontWeight: '600'
+                  }}
+                >
+                  {count}
+                </div>
+                <span style={{ fontSize: '10px', color: colors.neutral700 }}>occurrences</span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Top 3 Countries Comparison (Right panel)
+const TopCountriesComparisonChart = ({ data, colors }) => {
+  const topCountries = [...data].sort((a, b) => b.totalAffected - a.totalAffected).slice(0, 3);
+
+  return (
+    <div style={{ 
+      backgroundColor: 'transparent', 
+      border: '1px solid rgba(49, 151, 149, 0.2)',
+      padding: '15px', 
+      borderRadius: '8px', 
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+      height: '100%'
+    }}>
+      <h3 style={{ color: colors.primaryDeepBlue, marginBottom: '15px', fontSize: '16px' }}>
+        Top 3 Countries - Multi-Metric
+      </h3>
+      <div>
+        {topCountries.map((item, index) => (
+          <div key={index} style={{ 
+            marginBottom: '15px',
+            padding: '12px',
+            backgroundColor: 'rgba(248, 250, 252, 0.5)',
+            borderRadius: '8px',
+            border: '1px solid rgba(226, 232, 240, 0.7)'
+          }}>
+            <div style={{ 
+              fontSize: '14px', 
+              fontWeight: '700',
+              color: colors.primaryDeepBlue,
+              marginBottom: '10px'
+            }}>
+              {index + 1}. {item.country}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <strong style={{ color: colors.neutral700 }}>People Affected:</strong>
+                <div style={{ 
+                  color: colors.white, 
+                  backgroundColor: colors.primaryOcean,
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontWeight: '600' 
+                }}>
+                  {item.totalAffected >= 1000 ? `${(item.totalAffected/1000).toFixed(0)}k` : item.totalAffected}
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <strong style={{ color: colors.neutral700 }}>Disaster Events:</strong>
+                <div style={{ 
+                  color: colors.white,
+                  backgroundColor: colors.accentCoral,
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontWeight: '600' 
+                }}>
+                  {item.disasterFrequency}
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <strong style={{ color: colors.neutral700 }}>Total Deaths:</strong>
+                <div style={{ 
+                  color: colors.white,
+                  backgroundColor: colors.dangerRed,
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontWeight: '600' 
+                }}>
+                  {item.totalDeaths}
+                </div>
+              </div>
+              <div style={{ marginTop: '4px' }}>
+                <strong style={{ color: colors.neutral700 }}>Main Disaster Types:</strong>
+                <div style={{ 
+                  color: colors.accentGreen, 
+                  fontWeight: '600', 
+                  fontSize: '11px',
+                  marginTop: '4px' 
+                }}>
+                  {item.mainDisasters.length > 0 ? item.mainDisasters.join(', ') : 'No specific types recorded'}
+                </div>
+              </div>
+              {item.climateDataYearRange && (
+                <div style={{ 
+                  marginTop: '4px',
+                  fontSize: '10px',
+                  color: colors.neutral700,
+                  fontStyle: 'italic'
+                }}>
+                  Data period: {item.climateDataYearRange}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

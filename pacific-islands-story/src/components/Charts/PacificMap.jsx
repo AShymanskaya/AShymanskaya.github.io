@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 
 const PacificMap = ({ 
-  mapSource = "./images/pacific_ocean_complete_map.svg",
+  mapSource = "./images/pacific_ocean_complete_map_no_au.svg",
   title = "Pacific Map",
   className = "",
-  showLoading = true ,
+  showLoading = true,
   showTitle = false 
 }) => {
+  const [svgContent, setSvgContent] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -17,15 +18,21 @@ const PacificMap = ({
     return () => clearTimeout(timer);
   }, []);
 
-  const handleLoad = () => {
-    setIsLoaded(true);
-    setHasError(false);
-  };
-
-  const handleError = () => {
-    setHasError(true);
-    setIsLoaded(true);
-  };
+  useEffect(() => {
+    // Fetch the SVG content directly
+    fetch(mapSource)
+      .then(response => response.text())
+      .then(svgText => {
+        setSvgContent(svgText);
+        setIsLoaded(true);
+        setHasError(false);
+      })
+      .catch(error => {
+        console.error('Error loading map:', error);
+        setHasError(true);
+        setIsLoaded(true);
+      });
+  }, [mapSource]);
 
   return (
     <div className={`pacific-map-container ${className} ${isVisible ? 'visible' : ''}`}>
@@ -37,7 +44,7 @@ const PacificMap = ({
           display: flex;
           align-items: center;
           justify-content: center;
-          background: transparent;
+          background: linear-gradient(180deg, rgba(43,108,176, 0.5) 70%, rgba(255, 255, 255, 0.1) 100%);
           opacity: 0;
           transform: scale(0.9) translateY(30px);
           transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -54,22 +61,25 @@ const PacificMap = ({
           position: relative;
           overflow: hidden;
           border-radius: 12px;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-          background: radial-gradient(ellipse at center, rgba(45, 108, 176, 0.05) 0%, transparent 70%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
-        .map-iframe {
+        .svg-container {
           width: 100%;
           height: 100%;
-          border: none;
-          border-radius: 12px;
-          transition: all 0.3s ease;
-          background: transparent;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
-        .map-iframe:hover {
-          transform: scale(1.02);
-          box-shadow: 0 12px 40px rgba(45, 108, 176, 0.15);
+        .svg-container svg {
+          max-width: 100%;
+          max-height: 100%;
+          width: auto;
+          height: auto;
+          object-fit: contain;
         }
 
         .loading-overlay {
@@ -78,7 +88,6 @@ const PacificMap = ({
           left: 0;
           width: 100%;
           height: 100%;
-          background: rgba(255, 255, 255, 0.1);
           backdrop-filter: blur(10px);
           display: flex;
           flex-direction: column;
@@ -148,9 +157,6 @@ const PacificMap = ({
           position: absolute;
           top: 1rem;
           left: 1rem;
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(15px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 8px;
           padding: 0.75rem 1rem;
           color: white;
@@ -168,75 +174,9 @@ const PacificMap = ({
           transform: translateY(0);
         }
 
-        /* Floating islands effect */
-        .islands-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          pointer-events: none;
-          opacity: 0.6;
-        }
-
-        .floating-island {
-          position: absolute;
-          width: 4px;
-          height: 4px;
-          background: radial-gradient(circle, #f6ad55, transparent);
-          border-radius: 50%;
-          animation: float 6s ease-in-out infinite;
-        }
-
-        .floating-island:nth-child(1) {
-          top: 20%;
-          left: 15%;
-          animation-delay: 0s;
-        }
-
-        .floating-island:nth-child(2) {
-          top: 35%;
-          left: 25%;
-          animation-delay: 1s;
-        }
-
-        .floating-island:nth-child(3) {
-          top: 50%;
-          left: 70%;
-          animation-delay: 2s;
-        }
-
-        .floating-island:nth-child(4) {
-          top: 65%;
-          left: 45%;
-          animation-delay: 3s;
-        }
-
-        .floating-island:nth-child(5) {
-          top: 30%;
-          left: 80%;
-          animation-delay: 4s;
-        }
-
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px) scale(1);
-            opacity: 0.6;
-          }
-          50% {
-            transform: translateY(-8px) scale(1.2);
-            opacity: 1;
-          }
-        }
-
-        /* Responsive adjustments */
         @media (max-width: 768px) {
           .map-wrapper {
             border-radius: 8px;
-          }
-
-          .map-iframe:hover {
-            transform: none;
           }
 
           .map-overlay {
@@ -247,38 +187,24 @@ const PacificMap = ({
           .loading-text {
             font-size: 1rem;
           }
-
-          .floating-island {
-            width: 3px;
-            height: 3px;
-          }
         }
 
-        /* Accessibility */
         @media (prefers-reduced-motion: reduce) {
           .pacific-map-container,
-          .map-iframe,
-          .map-overlay,
-          .floating-island {
-            animation: none;
+          .map-overlay {
             transition: none;
           }
         }
       `}</style>
 
       <div className="map-wrapper">
-        {/* Main Map */}
-        {!hasError ? (
-          <iframe
-            className="map-iframe"
-            src={mapSource}
-            title={title}
-            onLoad={handleLoad}
-            onError={handleError}
-            loading="lazy"
+        {!hasError && svgContent ? (
+          <div 
+            className="svg-container"
+            dangerouslySetInnerHTML={{ __html: svgContent }}
             aria-label="Interactive map of the Pacific Ocean showing island nations"
           />
-        ) : (
+        ) : hasError ? (
           <div className="error-state">
             <div className="error-icon">🗺️</div>
             <div className="error-title">Map Unavailable</div>
@@ -287,7 +213,7 @@ const PacificMap = ({
               Please check your connection and try again.
             </div>
           </div>
-        )}
+        ) : null}
 
         {/* Loading Overlay */}
         {showLoading && !hasError && (
@@ -296,22 +222,12 @@ const PacificMap = ({
             <div className="loading-text">Loading Pacific Ocean Map...</div>
           </div>
         )}
+
         {showTitle && (
-        <div className="map-overlay">
+          <div className="map-overlay">
             {title}
-        </div>
+          </div>
         )}
-
-        
-
-        {/* Floating Islands Animation */}
-        <div className="islands-overlay">
-          <div className="floating-island" />
-          <div className="floating-island" />
-          <div className="floating-island" />
-          <div className="floating-island" />
-          <div className="floating-island" />
-        </div>
       </div>
     </div>
   );

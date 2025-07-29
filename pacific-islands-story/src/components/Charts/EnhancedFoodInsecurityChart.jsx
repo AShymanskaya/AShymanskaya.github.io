@@ -11,14 +11,16 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
   const chartRef = useRef(null);
 
   const colors = {
+    primaryDeepBlue:'#1a365d',
     low: '#60a5fa',      // Light blue
     medium: '#3b82f6',   // Blue
     high: '#f59e0b',     // Amber
     veryHigh: '#dc2626', // Red
-    noData: '#9ca3af',   // Gray
+    noData: '#ffffff',   // Gray
     text: '#374151',     // Dark gray
     textLight: '#6b7280', // Medium gray
     background: '#ffffff',
+    backgroundGradient: 'linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%)', // White to gray gradient
     border: '#e5e7eb'    // Light border
   };
 
@@ -48,7 +50,17 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js';
     script.onload = () => {
-      createChart();
+      // Load the datalabels plugin after Chart.js
+      const datalabelsScript = document.createElement('script');
+      datalabelsScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js';
+      datalabelsScript.onload = () => {
+        createChart();
+      };
+      datalabelsScript.onerror = () => {
+        // Create chart without labels if plugin fails to load
+        createChart();
+      };
+      document.head.appendChild(datalabelsScript);
     };
     script.onerror = () => {
       setError(new Error('Failed to load Chart.js'));
@@ -94,15 +106,9 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
           csvContent = await response.text();
         } else {
           console.log('Fishing CSV not found, creating sample data');
-          return createSampleFishingData();
         }
       } catch (fetchError) {
         console.log('Fetch failed for fishing data, using sample');
-        return createSampleFishingData();
-      }
-      
-      if (!csvContent) {
-        return createSampleFishingData();
       }
       
       // Parse CSV data
@@ -156,32 +162,7 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
       
     } catch (error) {
       console.error('Error loading fishing data:', error);
-      return createSampleFishingData();
     }
-  };
-
-  const createSampleFishingData = () => {
-    return [
-      { name: 'American Samoa', geoCode: 'AS', fishingPercentage: 45.2 },
-      { name: 'Cook Islands', geoCode: 'CK', fishingPercentage: 38.7 },
-      { name: 'Fiji', geoCode: 'FJ', fishingPercentage: 32.1 },
-      { name: 'French Polynesia', geoCode: 'PF', fishingPercentage: 28.9 },
-      { name: 'Guam', geoCode: 'GU', fishingPercentage: 25.4 },
-      { name: 'Kiribati', geoCode: 'KI', fishingPercentage: 52.8 },
-      { name: 'Marshall Islands', geoCode: 'MH', fishingPercentage: 48.3 },
-      { name: 'Micronesia', geoCode: 'FM', fishingPercentage: 41.6 },
-      { name: 'Nauru', geoCode: 'NR', fishingPercentage: 35.2 },
-      { name: 'New Caledonia', geoCode: 'NC', fishingPercentage: 22.7 },
-      { name: 'Niue', geoCode: 'NU', fishingPercentage: 44.1 },
-      { name: 'Northern Mariana Islands', geoCode: 'MP', fishingPercentage: 27.3 },
-      { name: 'Palau', geoCode: 'PW', fishingPercentage: 39.8 },
-      { name: 'Papua New Guinea', geoCode: 'PG', fishingPercentage: 33.5 },
-      { name: 'Samoa', geoCode: 'WS', fishingPercentage: 42.9 },
-      { name: 'Solomon Islands', geoCode: 'SB', fishingPercentage: 47.2 },
-      { name: 'Tonga', geoCode: 'TO', fishingPercentage: 40.1 },
-      { name: 'Tuvalu', geoCode: 'TV', fishingPercentage: 49.6 },
-      { name: 'Vanuatu', geoCode: 'VU', fishingPercentage: 36.4 }
-    ];
   };
 
   const loadData = async () => {
@@ -202,30 +183,7 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
       }
 
       // Load agriculture data
-      if (!dataLoaded) {
-        const sampleData = [
-          { 'Pacific Island Countries and territories': 'American Samoa', AEVI: null, ALEVI: null, food_insecurity: 15.2 },
-          { 'Pacific Island Countries and territories': 'Cook Islands', AEVI: 2.1, ALEVI: 1.8, food_insecurity: 12.4 },
-          { 'Pacific Island Countries and territories': 'Fiji', AEVI: 3.2, ALEVI: 2.9, food_insecurity: 18.7 },
-          { 'Pacific Island Countries and territories': 'French Polynesia', AEVI: 1.9, ALEVI: 1.2, food_insecurity: 9.8 },
-          { 'Pacific Island Countries and territories': 'Guam', AEVI: 1.1, ALEVI: 0.8, food_insecurity: 11.3 },
-          { 'Pacific Island Countries and territories': 'Kiribati', AEVI: 4.8, ALEVI: 3.2, food_insecurity: 32.1 },
-          { 'Pacific Island Countries and territories': 'Marshall Islands', AEVI: 3.9, ALEVI: 2.7, food_insecurity: 28.4 },
-          { 'Pacific Island Countries and territories': 'Micronesia', AEVI: 5.2, ALEVI: 4.1, food_insecurity: 35.6 },
-          { 'Pacific Island Countries and territories': 'Nauru', AEVI: 2.3, ALEVI: 1.9, food_insecurity: 22.8 },
-          { 'Pacific Island Countries and territories': 'New Caledonia', AEVI: 1.7, ALEVI: 1.4, food_insecurity: 8.9 },
-          { 'Pacific Island Countries and territories': 'Niue', AEVI: 3.1, ALEVI: 2.8, food_insecurity: 19.2 },
-          { 'Pacific Island Countries and territories': 'Northern Mariana Islands', AEVI: 1.8, ALEVI: 1.3, food_insecurity: 13.7 },
-          { 'Pacific Island Countries and territories': 'Palau', AEVI: 2.9, ALEVI: 2.2, food_insecurity: 16.5 },
-          { 'Pacific Island Countries and territories': 'Papua New Guinea', AEVI: 6.8, ALEVI: 5.9, food_insecurity: 41.2 },
-          { 'Pacific Island Countries and territories': 'Samoa', AEVI: 4.1, ALEVI: 3.6, food_insecurity: 24.3 },
-          { 'Pacific Island Countries and territories': 'Solomon Islands', AEVI: 5.7, ALEVI: 4.8, food_insecurity: 38.9 },
-          { 'Pacific Island Countries and territories': 'Tonga', AEVI: 3.8, ALEVI: 3.1, food_insecurity: 21.6 },
-          { 'Pacific Island Countries and territories': 'Tuvalu', AEVI: 4.3, ALEVI: 3.4, food_insecurity: 29.7 },
-          { 'Pacific Island Countries and territories': 'Vanuatu', AEVI: 5.1, ALEVI: 4.2, food_insecurity: 33.8 }
-        ];
-        setData(sampleData);
-      } else {
+      if (dataLoaded) {
         const parsed = Papa.parse(csvContent, {
           header: true,
           dynamicTyping: true,
@@ -278,24 +236,24 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
     let processedData = [];
 
     if (viewMode === 'agriculture') {
-      // Agriculture view (bubble chart)
-      processedData = data.map(country => {
-        const aevi = isValidNumber(country.AEVI) ? country.AEVI : -0.5;
-        const alevi = isValidNumber(country.ALEVI) ? country.ALEVI : -0.5;
-        const foodInsecurity = isValidNumber(country.food_insecurity) ? country.food_insecurity : null;
-        
-        return {
-          x: aevi,
-          y: alevi,
-          r: foodInsecurity ? Math.max(6, Math.sqrt(foodInsecurity) * 2.5) : 6,
-          label: country['Pacific Island Countries and territories'] || 'Unknown',
-          foodInsecurity: foodInsecurity,
-          hasData: isValidNumber(country.AEVI) && isValidNumber(country.ALEVI),
-          hasFoodInsecurityData: isValidNumber(foodInsecurity),
-          originalAEVI: country.AEVI,
-          originalALEVI: country.ALEVI
-        };
-      });
+      // Agriculture view (bubble chart) - Only include points with valid AEVI and ALEVI data
+      processedData = data
+        .filter(country => isValidNumber(country.AEVI) && isValidNumber(country.ALEVI))
+        .map(country => {
+          const aevi = country.AEVI;
+          const alevi = country.ALEVI;
+          const foodInsecurity = isValidNumber(country.food_insecurity) ? country.food_insecurity : null;
+          
+          return {
+            x: aevi,
+            y: alevi,
+            r: foodInsecurity ? Math.max(6, Math.sqrt(foodInsecurity) * 2.5) : 6,
+            label: country['Pacific Island Countries and territories'] || 'Unknown',
+            foodInsecurity: foodInsecurity,
+            hasData: true, // All points now have data since we filtered them
+            hasFoodInsecurityData: isValidNumber(foodInsecurity)
+          };
+        });
     } else {
       // Fishing view (horizontal bar chart with food insecurity bubbles)
       const mergedData = fishingData.map(fishingCountry => {
@@ -326,44 +284,13 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
     }
 
     if (processedData.length === 0) {
-      setError(new Error('No data found'));
+      setError(new Error('No valid data found'));
       return;
     }
 
-    // Custom point style plugin for squares when no food insecurity data
-    const pointStylePlugin = {
-      id: 'customPointStyle',
-      afterDatasetDraw(chart, args, options) {
-        const { ctx, data } = chart;
-        const meta = chart.getDatasetMeta(args.index);
-        
-        if (viewMode === 'agriculture') {
-          meta.data.forEach((point, index) => {
-            const dataPoint = data.datasets[args.index].data[index];
-            const hasFoodInsecurityData = dataPoint.hasFoodInsecurityData;
-            
-            if (!hasFoodInsecurityData) {
-              const x = point.x;
-              const y = point.y;
-              const size = 3;
-              
-              ctx.save();
-              ctx.fillStyle = colors.noData;
-              ctx.strokeStyle = colors.noData;
-              ctx.lineWidth = 0;
-              
-              // Draw square
-              ctx.fillRect(x - size/2, y - size/2, size, size);
-              
-              ctx.restore();
-            }
-          });
-        }
-      }
-    };
-
+    // Remove the custom point style plugin since we no longer have points without data
     const chartConfig = {
-      type: viewMode === 'agriculture' ? 'bubble' : 'bubble',
+      type: 'bubble',
       data: {
         datasets: [{
           label: 'Countries',
@@ -375,16 +302,16 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
           hoverBorderWidth: 0
         }]
       },
-      plugins: [pointStylePlugin],
+      plugins: window.ChartDataLabels ? [] : [],
       options: {
         responsive: true,
         maintainAspectRatio: false,
         layout: {
           padding: {
-            top: 200,
+            top: 10,
             bottom: 20,
-            left: viewMode === 'fishing' ? 20 : 0,
-            right: 20
+            left: 10,
+            right: viewMode === 'fishing' ? 40 : 60
           }
         },
         interaction: {
@@ -396,6 +323,7 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
             display: false
           },
           tooltip: {
+            enabled: true,
             backgroundColor: colors.background,
             titleColor: colors.text,
             bodyColor: colors.text,
@@ -411,26 +339,23 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
             bodyFont: {
               size: 12
             },
+            // Show tooltip for all points now, but customize based on available data
             callbacks: {
               title: function(context) {
-                return context[0].raw.label;
+                if (context && context.length > 0 && context[0].raw) {
+                  return context[0].raw.label;
+                }
+                return '';
               },
               label: function(context) {
+                if (!context || !context.raw) return [];
+                
                 const dataPoint = context.raw;
                 const labels = [];
                 
                 if (viewMode === 'agriculture') {
-                  if (isValidNumber(dataPoint.originalAEVI)) {
-                    labels.push(`AEVI: ${dataPoint.x.toFixed(1)}`);
-                  } else {
-                    labels.push('AEVI: No data');
-                  }
-                  
-                  if (isValidNumber(dataPoint.originalALEVI)) {
-                    labels.push(`ALEVI: ${dataPoint.y.toFixed(1)}`);
-                  } else {
-                    labels.push('ALEVI: No data');
-                  }
+                  labels.push(`AEVI: ${dataPoint.x.toFixed(1)}`);
+                  labels.push(`ALEVI: ${dataPoint.y.toFixed(1)}`);
                 } else {
                   labels.push(`Fishing Families: ${dataPoint.fishingPercentage.toFixed(1)}%`);
                 }
@@ -444,17 +369,96 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
                 return labels;
               }
             }
-          }
+          },
+          datalabels: window.ChartDataLabels ? {
+            display: true, // Show all labels since all points have valid coordinate data
+            align: function(context) {
+              const dataIndex = context.dataIndex;
+              const datasetIndex = context.datasetIndex;
+              const chart = context.chart;
+              const data = chart.data;
+              const dataset = data.datasets[datasetIndex];
+              
+              if (viewMode === 'fishing') {
+                // For fishing, always align to the left of bubble
+                return 'left';
+              }
+              
+              // For agriculture view, use a radial distribution pattern
+              const totalPoints = dataset.data.length;
+              const angle = (dataIndex / totalPoints) * 2 * Math.PI - Math.PI / 2;
+              
+              // Determine alignment based on angle
+              if (angle >= -Math.PI/4 && angle < Math.PI/4) return 'top';
+              if (angle >= Math.PI/4 && angle < 3*Math.PI/4) return 'right';
+              if (angle >= 3*Math.PI/4 || angle < -3*Math.PI/4) return 'bottom';
+              return 'left';
+            },
+            anchor: function(context) {
+              if (viewMode === 'fishing') {
+                return 'end';
+              }
+              
+              // For agriculture, anchor to edge of bubble
+              const dataIndex = context.dataIndex;
+              const totalPoints = context.dataset.data.length;
+              const angle = (dataIndex / totalPoints) * 2 * Math.PI - Math.PI / 2;
+              
+              if (angle >= -Math.PI/4 && angle < Math.PI/4) return 'bottom';
+              if (angle >= Math.PI/4 && angle < 3*Math.PI/4) return 'left';
+              if (angle >= 3*Math.PI/4 || angle < -3*Math.PI/4) return 'top';
+              return 'right';
+            },
+            offset: function(context) {
+              const value = context.dataset.data[context.dataIndex];
+              if (viewMode === 'fishing') {
+                // Fixed offset for fishing view
+                return 8;
+              }
+              // Larger offset for agriculture to prevent overlap
+              return Math.max(8, value.r + 8);
+            },
+            color: colors.text,
+            font: {
+              size: viewMode === 'fishing' ? 11 : 9,
+              weight: '500'
+            },
+            formatter: function(value, context) {
+              // For fishing view, show country name directly on the row
+              if (viewMode === 'fishing') {
+                return value.label;
+              }
+              // For agriculture, use abbreviated names if needed
+              const label = value.label;
+              if (label.length > 15) {
+                return label.substring(0, 12) + '...';
+              }
+              return label;
+            },
+            clip: false,
+            clamp: false,
+            textAlign: viewMode === 'fishing' ? 'right' : 'center',
+            backgroundColor: 'rgba(255, 255, 255, 0.85)',
+            borderColor: 'rgba(0, 0, 0, 0.1)',
+            borderRadius: 4,
+            borderWidth: 1,
+            padding: {
+              top: 2,
+              right: 4,
+              bottom: 2,
+              left: 4
+            }
+          } : {}
         },
         scales: viewMode === 'agriculture' ? {
-          // Agriculture scales - show values but hide visual elements
+          // Agriculture scales - show labels and values but no lines
           x: {
             type: 'linear',
-            min: -1,
-            max: Math.ceil(Math.max(...data.filter(d => isValidNumber(d.AEVI)).map(d => d.AEVI)) * 1.1) || 8,
+            min: -0.5,
+            max: 9,
             title: {
               display: true,
-              text: 'Agricultural Employment vs Agricultural Land Ratio',
+              text: 'Agricultural Employment vs Agricultural Land Ratio (AEVI)',
               color: colors.text,
               font: {
                 size: 13,
@@ -462,39 +466,30 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
               }
             },
             grid: {
-              display: false
+              display: false // No grid lines
             },
             border: {
-              display: false
+              color: 'rgba(0, 0, 0, 0.5)',
             },
             ticks: {
-              color: colors.textLight,
+              color: 'rgba(0, 0, 0, 0.5)',
               font: {
-                size: 11
+                size: 14
               },
               maxTicksLimit: 8,
               callback: function(value) {
-                if (value < 0) {
-                  return value === -1 ? 'No data' : '';
-                }
-                return value;
-              },
-              // Hide tick marks but show labels
-              major: {
-                enabled: false
-              },
-              minor: {
-                enabled: false
+                // Only show positive values
+                return value >= 0 ? value : '';
               }
             }
           },
           y: {
             type: 'linear',
             min: -1,
-            max: Math.ceil(Math.max(...data.filter(d => isValidNumber(d.ALEVI)).map(d => d.ALEVI)) * 1.1) || 8,
+            max: 9,
             title: {
               display: true,
-              text: 'Agriculture Contribution to GDP vs Agricultural Land',
+              text: 'Agriculture Contribution to GDP vs Agricultural Land (ALEVI)',
               color: colors.text,
               font: {
                 size: 13,
@@ -502,37 +497,28 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
               }
             },
             grid: {
-              display: false
+              display: false 
             },
             border: {
-              display: false
+              display: false 
             },
             ticks: {
-              color: colors.textLight,
+              color: 'rgba(0, 0, 0, 0.5)',
               font: {
-                size: 11
+                size: 14
               },
               maxTicksLimit: 8,
               callback: function(value) {
-                if (value < 0) {
-                  return value === -1 ? 'No data' : '';
-                }
-                return value;
-              },
-              // Hide tick marks but show labels
-              major: {
-                enabled: false
-              },
-              minor: {
-                enabled: false
+                // Only show positive values
+                return value >= 0 ? value : '';
               }
             }
           }
         } : {
-          // Fishing scales - show values but hide visual elements
+          // Fishing scales
           x: {
             type: 'linear',
-            min: 0,
+            min: 5,
             max: 60,
             title: {
               display: true,
@@ -550,61 +536,17 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
               display: false
             },
             ticks: {
-              color: colors.textLight,
+              color: 'rgba(0, 0, 0, 0.5)',
               font: {
-                size: 11
+                size: 14
               },
               callback: function(value) {
                 return value + '%';
-              },
-              // Hide tick marks but show labels
-              major: {
-                enabled: false
-              },
-              minor: {
-                enabled: false
               }
             }
           },
           y: {
-            type: 'linear',
-            min: -0.5,
-            max: processedData.length - 0.5,
-            title: {
-              display: false,
-              text: 'Countries',
-              color: colors.text,
-              font: {
-                size: 13,
-                weight: '500'
-              }
-            },
-            grid: {
-              display: false
-            },
-            border: {
-              display: false
-            },
-            ticks: {
-              color: colors.textLight,
-              font: {
-                size: 10
-              },
-              callback: function(value) {
-                const index = Math.round(value);
-                if (index >= 0 && index < processedData.length) {
-                  return processedData[index].label;
-                }
-                return '';
-              },
-              // Hide tick marks but show labels
-              major: {
-                enabled: false
-              },
-              minor: {
-                enabled: false
-              }
-            }
+            display: false // Hide y-axis completely for fishing view
           }
         },
         animation: {
@@ -613,6 +555,11 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
         }
       }
     };
+
+    // Register the datalabels plugin if available
+    if (window.ChartDataLabels) {
+      window.Chart.register(window.ChartDataLabels);
+    }
 
     chartRef.current = new window.Chart(ctx, chartConfig);
   };
@@ -652,9 +599,9 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
     <div className={`food-insecurity-chart ${transparent ? 'transparent-bg' : ''}`}>
       <style jsx>{`
         .food-insecurity-chart {
-          background: rgba(255, 255, 255, 0.95);
+          background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
           border-radius: 16px;
-          padding: 20px;
+          padding: 2px;
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
           backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.2);
@@ -685,12 +632,12 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
         }
 
         .toggle-button {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+          background: #1a365d !important;
           color: white !important;
           border: none !important;
           border-radius: 8px !important;
           padding: 8px 16px !important;
-          font-size: 12px !important;
+          font-size: 16px !important;
           font-weight: 600 !important;
           cursor: pointer !important;
           transition: all 0.2s ease !important;
@@ -729,11 +676,18 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
           display: flex;
           justify-content: center;
           gap: 12px;
-          margin-top: 10px;
+          bottom: 100px !important;
           flex-wrap: wrap;
           flex-shrink: 0;
           position: relative;
           z-index: 10;
+        }
+
+        .legend.legend-fishing {
+          position: absolute;
+          right:0px !important;
+          bottom: 400px !important;
+          margin: 0;
         }
 
         .legend-item {
@@ -741,7 +695,8 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
           align-items: center;
           gap: 6px;
           font-size: 0.75rem;
-          color: #718096;
+          color: 'rgba(255, 255, 255, 0.85)',
+          ;
         }
 
         .legend-color {
@@ -767,7 +722,7 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
           onTouchStart={(e) => e.stopPropagation()}
           type="button"
         >
-          {viewMode === 'agriculture' ? 'Switch to Fishing' : 'Switch to Agriculture'}
+          {viewMode === 'agriculture' ? 'View Fishing Data' : 'View Agriculture Data'}
         </button>
       </div>
 
@@ -775,7 +730,7 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
         <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
       </div>
 
-      <div className="legend">
+      <div className={`legend ${viewMode === 'fishing' ? 'legend-fishing' : ''}`}>
         <div className="legend-item">
           <div className="legend-color" style={{backgroundColor: colors.low, borderColor: colors.low}}></div>
           <span>Low (&lt;20%)</span>
@@ -793,8 +748,8 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
           <span>V.High (&gt;50%)</span>
         </div>
         <div className="legend-item">
-          <div className="legend-square" style={{backgroundColor: colors.noData, borderColor: colors.noData}}></div>
-          <span>No Data</span>
+          <div className="legend-color" style={{backgroundColor: colors.noData, borderColor: colors.noData}}></div>
+          <span>No Food Insecurity Data</span>
         </div>
       </div>
     </div>

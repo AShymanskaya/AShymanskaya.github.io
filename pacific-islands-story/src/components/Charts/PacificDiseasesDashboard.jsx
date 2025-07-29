@@ -1,8 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Papa from 'papaparse';
 
+// Disease indicators mapping - moved outside component to avoid dependency issues
+const diseaseIndicators = {
+  'HIV': 'Number of new HIV infections per 1,000 uninfected population',
+  'Malaria': 'Malaria incidence per 1,000 population at risk',
+  'Tuberculosis': 'Tuberculosis incidence',
+  'Cardiovascular': 'Mortality rate attributed to cardiovascular disease, cancer,\n            diabetes or chronic respiratory disease',
+  'Water & Sanitation': 'Mortality rate attributed to unsafe water, unsafe sanitation\n            and lack of hygiene'
+};
+
 const PacificDiseasesDashboard = ({ 
-  dataFile = '/data/health_data.csv'
+  dataFile = '/data/health_data.csv',
+  transparent = true
 }) => {
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(true);
@@ -10,17 +20,8 @@ const PacificDiseasesDashboard = ({
   const [availableCountries, setAvailableCountries] = useState([]);
   const [error, setError] = useState(null);
   const [tooltip, setTooltip] = useState({ visible: false, data: null, position: { x: 0, y: 0 } });
+  const containerRef = useRef(null);
 
-  // Disease indicators mapping
-  const diseaseIndicators = {
-    'HIV': 'Number of new HIV infections per 1,000 uninfected population',
-    'Malaria': 'Malaria incidence per 1,000 population at risk',
-    'Tuberculosis': 'Tuberculosis incidence',
-    'Cardiovascular': 'Mortality rate attributed to cardiovascular disease, cancer,\n            diabetes or chronic respiratory disease',
-    'Water & Sanitation': 'Mortality rate attributed to unsafe water, unsafe sanitation\n            and lack of hygiene'
-  };
-
-  // Your app's color palette
   const colors = {
     primary: {
       deep: '#1a365d',
@@ -48,27 +49,92 @@ const PacificDiseasesDashboard = ({
     }
   };
 
-  // Country color assignments
-  const getCountryColor = (index) => {
-    const colorPalette = [
-      colors.primary.ocean,
-      colors.accent.coral,
-      colors.accent.green,
-      colors.accent.teal,
-      colors.primary.light,
-      colors.accent.warm,
-      colors.neutral,
-      '#9f7aea',
-      '#f56565',
-      '#4fd1c7',
-      '#68d391',
-      '#f6e05e',
-      '#fc8181',
-      '#63b3ed',
-      '#f093fb',
-      '#fbb6ce'
-    ];
-    return colorPalette[index % colorPalette.length];
+  // Regional groupings - you may need to adjust based on your specific countries
+  const pacificRegions = {
+    polynesia: [
+      'Samoa', 'Tonga', 'Tuvalu', 'Cook Islands', 'French Polynesia', 
+      'Niue', 'Tokelau', 'American Samoa', 'Wallis and Futuna'
+    ],
+    micronesia: [
+      'Federated States of Micronesia', 'Kiribati', 'Marshall Islands', 
+      'Nauru', 'Palau', 'Guam', 'Northern Mariana Islands'
+    ],
+    melanesia: [
+      'Fiji', 'Papua New Guinea', 'Solomon Islands', 'Vanuatu', 
+      'New Caledonia'
+    ]
+  };
+
+  // Regional color palettes - distinct families with variations
+  const regionalColors = {
+    polynesia: {
+      base: '#2b6cb0',  // Ocean blue family
+      shades: [
+        '#1a4d8b',  // Deep ocean
+        '#2b6cb0',  // Primary ocean
+        '#3182ce',  // Bright ocean
+        '#4299e1',  // Sky blue
+        '#63b3ed',  // Light sky
+        '#90cdf4',  // Pale sky
+      ]
+    },
+    micronesia: {
+      base: '#38a169',  // Green/teal family
+      shades: [
+        '#22543d',  // Deep forest
+        '#276749',  // Forest green
+        '#38a169',  // Primary green
+        '#48bb78',  // Bright green
+        '#68d391',  // Light green
+        '#9ae6b4',  // Pale green
+      ]
+    },
+    melanesia: {
+      base: '#ed8936',  // Coral/warm family
+      shades: [
+        '#c05621',  // Deep coral
+        '#dd6b20',  // Burnt orange
+        '#ed8936',  // Primary coral
+        '#f6ad55',  // Warm orange
+        '#fbd38d',  // Light peach
+        '#fed7aa',  // Pale peach
+      ]
+    },
+    other: {
+      base: '#9f7aea',  // Purple family for unclassified
+      shades: [
+        '#6b46c1',  // Deep purple
+        '#805ad5',  // Royal purple
+        '#9f7aea',  // Primary purple
+        '#b794f4',  // Bright purple
+        '#d6bcfa',  // Light purple
+        '#e9d8fd',  // Pale purple
+      ]
+    }
+  };
+
+  // Get the region for a country
+  const getCountryRegion = (country) => {
+    for (const [region, countries] of Object.entries(pacificRegions)) {
+      if (countries.some(c => country.toLowerCase().includes(c.toLowerCase()) || 
+                              c.toLowerCase().includes(country.toLowerCase()))) {
+        return region;
+      }
+    }
+    return 'other';
+  };
+
+  // Country color assignments based on region
+  const getCountryColor = (index, country) => {
+    const region = getCountryRegion(country);
+    const colorShades = regionalColors[region].shades;
+    
+    // Get countries in the same region
+    const regionCountries = availableCountries.filter(c => getCountryRegion(c) === region);
+    const regionIndex = regionCountries.indexOf(country);
+    
+    // Return a color from the region's palette
+    return colorShades[regionIndex % colorShades.length];
   };
 
   useEffect(() => {
@@ -132,7 +198,7 @@ const PacificDiseasesDashboard = ({
 
           const countries = Array.from(countriesSet).sort();
           setAvailableCountries(countries);
-          setSelectedCountries(countries.slice(0, 8)); // Select first 8 by default
+          setSelectedCountries(countries.slice(0, 16)); // Select first 16 by default
           setData(processedData);
         } else {
           setError('Could not load or parse data');
@@ -221,10 +287,16 @@ const PacificDiseasesDashboard = ({
     const maxValue = Math.max(...stackedData.map(d => d.total));
     if (maxValue === 0) return <div className="no-data">No data values</div>;
 
-    // Chart dimensions 
-    const margin = { top: 15, right: 25, bottom: 25, left: 45 }; // Reduced margins
-    const width = 200 - margin.left - margin.right; // Reduced from 320
-    const height = 100 - margin.top - margin.bottom; // Reduced from 240
+    // Responsive chart dimensions
+    const isMobile = window.innerWidth < 768;
+    const margin = { 
+      top: isMobile ? 8 : 10, 
+      right: isMobile ? 12 : 20, 
+      bottom: isMobile ? 15 : 20, 
+      left: isMobile ? 25 : 35 
+    };
+    const width = (isMobile ? 220 : 280) - margin.left - margin.right;
+    const height = (isMobile ? 120 : 160) - margin.top - margin.bottom;
     
     // Create area path for each country
     const createAreaPath = (country) => {
@@ -282,9 +354,9 @@ const PacificDiseasesDashboard = ({
                 <path
                   key={country}
                   d={pathData.path}
-                  fill={getCountryColor(countryIndex)}
+                  fill={getCountryColor(countryIndex, country)}
                   opacity="0.8"
-                  stroke={getCountryColor(countryIndex)}
+                  stroke={getCountryColor(countryIndex, country)}
                   strokeWidth="0.5"
                   className="area-path"
                   onMouseMove={(e) => {
@@ -304,7 +376,7 @@ const PacificDiseasesDashboard = ({
             })}
             
             {/* Y-axis labels */}
-            {[0, 0.25, 0.5, 0.75, 1].map(ratio => (
+            {[0, 0.5, 1].map(ratio => (
               <g key={ratio}>
                 <line 
                   x1="-5" 
@@ -317,7 +389,7 @@ const PacificDiseasesDashboard = ({
                   x="-8" 
                   y={height - (ratio * height) + 3} 
                   textAnchor="end" 
-                  fontSize="8" 
+                  fontSize={isMobile ? "7" : "8"} 
                   fill={colors.neutral[600]}
                 >
                   {maxValue < 9 ? (maxValue * ratio).toFixed(1) : Math.round(maxValue * ratio)}
@@ -326,7 +398,7 @@ const PacificDiseasesDashboard = ({
             ))}
             
             {/* X-axis labels */}
-            {stackedData.filter((_, i) => i % Math.ceil(stackedData.length / 5) === 0).map(d => {
+            {stackedData.filter((_, i) => i % Math.ceil(stackedData.length / 3) === 0).map(d => {
               const x = ((d.year - stackedData[0].year) / (stackedData[stackedData.length - 1].year - stackedData[0].year)) * width;
               return (
                 <g key={d.year}>
@@ -339,9 +411,9 @@ const PacificDiseasesDashboard = ({
                   />
                   <text 
                     x={x} 
-                    y={height + 18} 
+                    y={height + 15} 
                     textAnchor="middle" 
-                    fontSize="8" 
+                    fontSize={isMobile ? "7" : "8"} 
                     fill={colors.neutral[600]}
                   >
                     {d.year}
@@ -357,156 +429,196 @@ const PacificDiseasesDashboard = ({
 
   if (loading) {
     return (
-      <div className="dashboard loading">
-        <div className="spinner"></div>
+      <div 
+        ref={containerRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          minHeight: '400px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'transparent',
+          borderRadius: '0',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          color: colors.neutral[800]
+        }}
+      >
+        <div style={{
+          border: `3px solid ${colors.neutral[300]}`,
+          borderTop: `3px solid ${colors.primary.ocean}`,
+          borderRadius: '50%',
+          width: '40px',
+          height: '40px',
+          animation: 'spin 1s linear infinite',
+          marginBottom: '16px'
+        }} />
         <p>Loading health data...</p>
+        <style jsx>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="dashboard error">
+      <div 
+        ref={containerRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          minHeight: '400px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'transparent',
+          borderRadius: '0',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          color: colors.neutral[800]
+        }}
+      >
         <h2>Error Loading Data</h2>
         <p>{error}</p>
       </div>
     );
   }
 
+  const isMobile = window.innerWidth < 768;
+
   return (
-    <div className="dashboard">
+    <div 
+      ref={containerRef}
+      style={{
+        width: '100%',
+        height: '100%',
+        minHeight: '400px',
+        background: 'transparent',
+        borderRadius: '0',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        color: colors.neutral[800],
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative'
+      }}
+    >
       <style jsx>{`
-        .dashboard {
-          width: 100vw;
-          height: 100vh;
-          background: ${colors.neutral[50]};
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          color: ${colors.neutral[800]};
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-        }
-
-        .dashboard.loading, .dashboard.error {
-          justify-content: center;
-          align-items: center;
-          text-align: center;
-        }
-
-        .spinner {
-          border: 3px solid ${colors.neutral[300]};
-          border-top: 3px solid ${colors.primary.ocean};
-          border-radius: 50%;
-          width: 40px;
-          height: 40px;
-          animation: spin 1s linear infinite;
-          margin-bottom: 16px;
-        }
-
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        
-
-        .title {
-          font-size: 24px;
-          font-weight: 700;
-          color: ${colors.primary.deep};
-          margin: 0;
-        }
-
         .main-content {
           flex: 1;
           display: flex;
           overflow: hidden;
+          flex-direction: ${isMobile ? 'column' : 'row'};
         }
 
         .country-selector {
-          width: 310px;
-          background: white;
-          border-right: 1px solid ${colors.neutral[300]};
-          padding: 180px 20px 20px 20px;
+          width: ${isMobile ? '100%' : '180px'};
+          max-height: ${isMobile ? '100px' : 'none'};
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          border-right: ${isMobile ? 'none' : `1px solid rgba(255, 255, 255, 0.2)`};
+          border-bottom: ${isMobile ? `1px solid rgba(255, 255, 255, 0.2)` : 'none'};
+          padding: ${isMobile ? '6px' : '12px'};
           overflow-y: auto;
           flex-shrink: 0;
         }
 
-        
+        .region-section {
+          margin-bottom: 10px;
+        }
+
+        .region-title {
+          font-size: ${isMobile ? '10px' : '12px'};
+          font-weight: 600;
+          color: ${colors.neutral[700]};
+          margin-bottom: 4px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
 
         .country-buttons {
           display: flex;
-          flex-direction: column;
-          gap: 2px;
+          flex-direction: ${isMobile ? 'row' : 'column'};
+          flex-wrap: ${isMobile ? 'wrap' : 'nowrap'};
+          gap: ${isMobile ? '2px' : '3px'};
         }
 
         .country-button {
-          padding: 8px 10px;
-          border-radius: 6px;
-          border: 1px solid ${colors.neutral[300]};
-          background: white;
+          padding: ${isMobile ? '2px 6px' : '4px 8px'};
+          border-radius: 4px;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(5px);
           color: ${colors.neutral[700]};
           cursor: pointer;
-          font-size: 12px;
+          font-size: ${isMobile ? '9px' : '11px'};
           font-weight: 500;
           transition: all 0.2s ease;
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 4px;
           text-align: left;
         }
 
         .country-button:hover {
-          border-color: ${colors.primary.light};
-          background: ${colors.neutral[50]};
+          border-color: rgba(49, 130, 206, 0.5);
+          background: rgba(255, 255, 255, 0.2);
         }
 
         .country-button.selected {
-          background: ${colors.primary.ocean};
-          border-color: ${colors.primary.ocean};
+          background: rgba(43, 108, 176, 0.8);
+          border-color: rgba(43, 108, 176, 0.8);
           color: white;
         }
 
         .country-dot {
-          width: 8px;
-          height: 8px;
+          width: ${isMobile ? '6px' : '8px'};
+          height: ${isMobile ? '6px' : '8px'};
           border-radius: 50%;
           flex-shrink: 0;
         }
 
         .charts-container {
           flex: 1;
-          padding: 100px 24px 24px 24px;
+          padding: ${isMobile ? '10px' : '20px'};
           overflow: auto;
-          background: ${colors.neutral[200]};
+          background: transparent;
         }
 
         .charts-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-          gap: 5px;
+          grid-template-columns: ${isMobile ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))'};
+          gap: ${isMobile ? '10px' : '20px'};
           height: fit-content;
         }
 
         .chart-card {
-          background: 'transparent';
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 12px;
-          padding: 5px;
+          padding: ${isMobile ? '10px' : '16px'};
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .chart-title {
-          font-size: 18px;
+          font-size: ${isMobile ? '14px' : '18px'};
           font-weight: 700;
           color: ${colors.primary.deep};
-          margin-bottom: 1px;
+          margin-bottom: 4px;
           text-align: left;
         }
 
         .chart-subtitle {
-          font-size: 13px;
-          color: ${colors.neutral[600]};
+          font-size: ${isMobile ? '11px' : '13px'};
+          color: ${colors.primary.deep};
           text-align: left;
-          margin-bottom: 2px;
+          margin-bottom: ${isMobile ? '8px' : '12px'};
         }
 
         .chart-area {
@@ -514,7 +626,7 @@ const PacificDiseasesDashboard = ({
           display: flex;
           justify-content: center;
           align-items: center;
-          min-height: 200px;
+          min-height: ${isMobile ? '120px' : '160px'};
         }
 
         .chart-wrapper {
@@ -527,7 +639,7 @@ const PacificDiseasesDashboard = ({
           color: ${colors.neutral[500]};
           font-style: italic;
           text-align: center;
-          font-size: 14px;
+          font-size: ${isMobile ? '12px' : '14px'};
         }
 
         .area-path {
@@ -539,52 +651,30 @@ const PacificDiseasesDashboard = ({
           opacity: 1 !important;
         }
 
-        .legend {
-          margin-top: 2px;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 12px;
-          justify-content: center;
-        }
-
-        .legend-item {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 12px;
-          color: ${colors.neutral[700]};
-        }
-
-        .legend-color {
-          width: 10px;
-          height: 10px;
-          border-radius: 2px;
-        }
-
         .tooltip {
           position: fixed;
           background: rgba(26, 54, 93, 0.95);
           border: 1px solid rgba(255, 255, 255, 0.2);
-          border-radius: 8px;
-          padding: 12px;
+          border-radius: 6px;
+          padding: 8px;
           color: white;
-          font-size: 12px;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+          font-size: 11px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
           backdrop-filter: blur(10px);
           pointer-events: none;
           z-index: 1000;
-          max-width: 200px;
+          max-width: 180px;
         }
 
         .tooltip-title {
           font-weight: 700;
-          margin-bottom: 6px;
+          margin-bottom: 4px;
         }
 
         .tooltip-row {
           display: flex;
           justify-content: space-between;
-          margin: 3px 0;
+          margin: 2px 0;
         }
 
         .tooltip-label {
@@ -595,57 +685,106 @@ const PacificDiseasesDashboard = ({
           font-weight: 600;
         }
 
-        @media (max-width: 1200px) {
-          .charts-grid {
-            grid-template-columns: 1fr;
-          }
+        /* Scrollbar styles */
+        .country-selector::-webkit-scrollbar,
+        .charts-container::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
         }
 
-        @media (max-width: 768px) {
-          .main-content {
-            flex-direction: column;
-          }
-          
-          .country-selector {
-            width: 100%;
-            max-height: 150px;
-            padding: 5px;
-          }
-          
-          .country-buttons {
-            flex-direction: row;
-            flex-wrap: wrap;
-          }
-          
-          .charts-container {
-            padding: 5px;
-          }
-          
-          .header {
-            padding: 20px 16px 16px 16px;
-          }
+        .country-selector::-webkit-scrollbar-track,
+        .charts-container::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.05);
+          border-radius: 3px;
+        }
+
+        .country-selector::-webkit-scrollbar-thumb,
+        .charts-container::-webkit-scrollbar-thumb {
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 3px;
+        }
+
+        .country-selector::-webkit-scrollbar-thumb:hover,
+        .charts-container::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
       `}</style>
 
-      
-
       <div className="main-content">
         <div className="country-selector">
-          <div className="country-buttons">
-            {availableCountries.map((country, index) => (
-              <button
-                key={country}
-                className={`country-button ${selectedCountries.includes(country) ? 'selected' : ''}`}
-                onClick={() => toggleCountry(country)}
-              >
-                <div 
-                  className="country-dot" 
-                  style={{ backgroundColor: getCountryColor(index) }}
-                />
-                {country}
-              </button>
-            ))}
-          </div>
+          {/* Group countries by region */}
+          {Object.entries(pacificRegions).map(([region, regionCountries]) => {
+            const availableRegionCountries = availableCountries.filter(country => 
+              regionCountries.some(rc => 
+                country.toLowerCase().includes(rc.toLowerCase()) || 
+                rc.toLowerCase().includes(country.toLowerCase())
+              )
+            );
+            
+            if (availableRegionCountries.length === 0) return null;
+            
+            return (
+              <div key={region} className="region-section">
+                <div className="region-title">{region}</div>
+                <div className="country-buttons">
+                  {availableRegionCountries.map((country, index) => {
+                    const countryIndex = availableCountries.indexOf(country);
+                    return (
+                      <button
+                        key={country}
+                        className={`country-button ${selectedCountries.includes(country) ? 'selected' : ''}`}
+                        onClick={() => toggleCountry(country)}
+                      >
+                        <div 
+                          className="country-dot" 
+                          style={{ backgroundColor: getCountryColor(countryIndex, country) }}
+                        />
+                        {isMobile ? country.substring(0, 3) : country}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+          
+          {/* Other/unclassified countries */}
+          {(() => {
+            const otherCountries = availableCountries.filter(country => 
+              getCountryRegion(country) === 'other'
+            );
+            
+            if (otherCountries.length === 0) return null;
+            
+            return (
+              <div className="region-section">
+                <div className="region-title">Other</div>
+                <div className="country-buttons">
+                  {otherCountries.map((country, index) => {
+                    const countryIndex = availableCountries.indexOf(country);
+                    return (
+                      <button
+                        key={country}
+                        className={`country-button ${selectedCountries.includes(country) ? 'selected' : ''}`}
+                        onClick={() => toggleCountry(country)}
+                      >
+                        <div 
+                          className="country-dot" 
+                          style={{ backgroundColor: getCountryColor(countryIndex, country) }}
+                        />
+                        {isMobile ? country.substring(0, 3) : country}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         <div className="charts-container">
@@ -662,25 +801,6 @@ const PacificDiseasesDashboard = ({
                 </div>
                 <div className="chart-area">
                   {renderStackedAreaChart(disease)}
-                </div>
-                
-                {/* Legend */}
-                <div className="legend">
-                  {selectedCountries.filter(country => {
-                    const diseaseData = data[disease] || {};
-                    return Object.keys(diseaseData).some(year => diseaseData[year] && diseaseData[year][country]);
-                  }).map((country, index) => {
-                    const countryIndex = availableCountries.indexOf(country);
-                    return (
-                      <div key={country} className="legend-item">
-                        <div 
-                          className="legend-color" 
-                          style={{ backgroundColor: getCountryColor(countryIndex) }}
-                        />
-                        <span>{country}</span>
-                      </div>
-                    );
-                  })}
                 </div>
               </div>
             ))}

@@ -6,14 +6,9 @@ const HelpFisheriesChart = ({ transparent = false }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [comparisonData, setComparisonData] = useState({});
-  const [stats, setStats] = useState({
-    avgChange: '--',
-    countriesCount: '--',
-    topGainer: '--',
-    dataSpan: '--'
-  });
   const [insights, setInsights] = useState('Analyzing marine protection trends across Pacific Island countries...');
   const svgRef = useRef(null);
+  const containerRef = useRef(null);
 
   // Define the same color palette as the renewable energy chart
   const colors = {
@@ -48,6 +43,14 @@ const HelpFisheriesChart = ({ transparent = false }) => {
   useEffect(() => {
     if (!loading && !error && Object.keys(comparisonData).length > 0) {
       createClevelandPlot(comparisonData);
+      
+      // Add resize listener
+      const handleResize = () => {
+        createClevelandPlot(comparisonData);
+      };
+      
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
     }
   }, [loading, error, comparisonData]);
 
@@ -95,7 +98,6 @@ const HelpFisheriesChart = ({ transparent = false }) => {
       setComparisonData(processedData);
       
       // Update stats
-      updateStats(processedData);
       updateInsights(processedData);
       
       setLoading(false);
@@ -156,37 +158,58 @@ const HelpFisheriesChart = ({ transparent = false }) => {
       if (sortedData.length >= 2) {
         const firstYear = sortedData[0];
         const lastYear = sortedData[sortedData.length - 1];
-        
-        comparisonData[geoCode] = {
-          name: country.name,
-          geoCode: geoCode,
-          firstYear: firstYear,
-          lastYear: lastYear,
-          change: lastYear.value - firstYear.value,
-          percentChange: ((lastYear.value - firstYear.value) / firstYear.value) * 100
-        };
+        const change = lastYear.value - firstYear.value;
+
+        if (Math.abs(change) >= 0.5) {
+          comparisonData[geoCode] = {
+            name: country.name,
+            geoCode: geoCode,
+            firstYear: firstYear,
+            lastYear: lastYear,
+            change: change,
+            percentChange: ((lastYear.value - firstYear.value) / firstYear.value) * 100
+          };
+        }
       }
     });
-    
+  
     return comparisonData;
   };
 
   const createClevelandPlot = (data) => {
     const svgElement = svgRef.current;
     d3.select(svgElement).selectAll("*").remove();
-
-    const margin = { top: 20, right: 40, bottom: 50, left: 420 };
-    const width = 700 - margin.left - margin.right;
-    const height = 620 - margin.top - margin.bottom;
+    
+    // Get container dimensions
+    const containerRect = containerRef.current?.getBoundingClientRect();
+    const containerWidth = containerRect?.width || 600;
+    const containerHeight = containerRect?.height || 350;
+    const isMobile = window.innerWidth < 768;
+    
+    const margin = { 
+      top: 10, 
+      right: isMobile ? 10 : 20, 
+      bottom: 60, 
+      left: isMobile ? 80 : 110 
+    };
+    
+    // Calculate available space - account for title
+    const totalHeight = containerHeight - 40; // Account for title
+    const width = containerWidth - margin.left - margin.right;
+    const height = totalHeight - margin.top - margin.bottom;
 
     const svg = d3.select(svgElement)
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom);
+      .attr("width", containerWidth)
+      .attr("height", totalHeight)
+      .attr("viewBox", `0 0 ${containerWidth} ${totalHeight}`)
+      .attr("preserveAspectRatio", "xMidYMid meet");
 
     const g = svg.append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const countries = Object.values(data).sort((a, b) => b.change - a.change);
+    const countries = Object.values(data)
+      .sort((a, b) => b.change - a.change)
+      .slice(0, 8); // Limit to 8 countries
     
     if (countries.length === 0) return;
 
@@ -203,7 +226,7 @@ const HelpFisheriesChart = ({ transparent = false }) => {
     const yScale = d3.scaleBand()
       .domain(countries.map(d => d.name))
       .range([0, height])
-      .padding(0.25);
+      .padding(0.3);
 
     // Background grid lines
     g.selectAll(".grid-line")
@@ -225,7 +248,7 @@ const HelpFisheriesChart = ({ transparent = false }) => {
       .call(d3.axisBottom(xScale).ticks(6))
       .selectAll("text")
       .style("fill", colors.neutral600)
-      .style("font-size", "12px")
+      .style("font-size", isMobile ? "10px" : "12px")
       .style("font-family", "'Inter', sans-serif");
 
     g.selectAll(".domain")
@@ -239,15 +262,9 @@ const HelpFisheriesChart = ({ transparent = false }) => {
       .call(d3.axisLeft(yScale))
       .selectAll("text")
       .style("fill", colors.neutral700)
-      .style("font-size", "13px")
+      .style("font-size", isMobile ? "10px" : "12px")
       .style("font-weight", "500")
       .style("font-family", "'Inter', sans-serif");
-
-    g.selectAll(".domain")
-      .style("stroke", colors.neutral400);
-
-    g.selectAll(".tick line")
-      .style("stroke", colors.neutral400);
 
     // Lines connecting the dots
     g.selectAll(".connecting-line")
@@ -259,13 +276,13 @@ const HelpFisheriesChart = ({ transparent = false }) => {
       .attr("x2", d => xScale(d.lastYear.value))
       .attr("y1", d => yScale(d.name) + yScale.bandwidth() / 2)
       .attr("y2", d => yScale(d.name) + yScale.bandwidth() / 2)
-      .attr("stroke", d => d.change >= 0 ? colors.accentGreen : colors.accentCoral)
-      .attr("stroke-width", 2.5)
+      .attr("stroke", d => d.change >= 0 ? colors.primaryDeepBlue : colors.accentCoral)
+      .attr("stroke-width", 2)
       .attr("opacity", 0.7)
       .style("opacity", 0)
       .transition()
       .duration(800)
-      .delay((d, i) => i * 60)
+      .delay((d, i) => i * 50)
       .style("opacity", 0.7);
 
     // First year circles (baseline)
@@ -279,11 +296,11 @@ const HelpFisheriesChart = ({ transparent = false }) => {
       .attr("r", 0)
       .style("fill", colors.neutral500)
       .style("stroke", colors.neutral600)
-      .style("stroke-width", 2)
+      .style("stroke-width", 1.5)
       .transition()
       .duration(600)
-      .delay((d, i) => i * 60 + 300)
-      .attr("r", 6);
+      .delay((d, i) => i * 50 + 200)
+      .attr("r", isMobile ? 3 : 5);
 
     // Last year circles (current)
     g.selectAll(".circle-last")
@@ -296,11 +313,11 @@ const HelpFisheriesChart = ({ transparent = false }) => {
       .attr("r", 0)
       .style("fill", d => d.change >= 0 ? colors.primaryOcean : colors.accentCoral)
       .style("stroke", d => d.change >= 0 ? colors.primaryDeepBlue : colors.accentCoral)
-      .style("stroke-width", 2.5)
+      .style("stroke-width", 2)
       .transition()
       .duration(600)
-      .delay((d, i) => i * 60 + 500)
-      .attr("r", 8);
+      .delay((d, i) => i * 50 + 400)
+      .attr("r", isMobile ? 5 : 7);
 
     // Tooltips
     const tooltip = d3.select("body").append("div")
@@ -338,7 +355,7 @@ const HelpFisheriesChart = ({ transparent = false }) => {
         d3.select(this)
           .transition()
           .duration(200)
-          .attr("r", isFirst ? 8 : 10)
+          .attr("r", isFirst ? (isMobile ? 5 : 7) : (isMobile ? 7 : 9))
           .style("filter", "drop-shadow(0 4px 8px rgba(0,0,0,0.2))");
       })
       .on("mousemove", function(event) {
@@ -353,112 +370,90 @@ const HelpFisheriesChart = ({ transparent = false }) => {
         d3.select(this)
           .transition()
           .duration(200)
-          .attr("r", isFirst ? 6 : 8)
+          .attr("r", isFirst ? (isMobile ? 3 : 5) : (isMobile ? 5 : 7))
           .style("filter", "none");
       });
 
-    // Legend
-    const legend = g.append("g")
-      .attr("transform", `translate(${width + 25}, 30)`);
+    // Compact Legend
+    if (!isMobile && width > 250) {
+      const legend = g.append("g")
+        .attr("transform", `translate(${width - 70}, 5)`);
 
-    legend.append("rect")
-      .attr("x", -15)
-      .attr("y", -15)
-      .attr("width", 110)
-      .attr("height", 105)
-      .attr("fill", colors.glassBg)
-      .attr("stroke", colors.glassBorder)
-      .attr("stroke-width", 1)
-      .attr("rx", 8)
-      .style("backdrop-filter", "blur(10px)");
+      legend.append("rect")
+        .attr("x", -10)
+        .attr("y", -10)
+        .attr("width", 75)
+        .attr("height", 65)
+        .attr("fill", colors.glassBg)
+        .attr("stroke", colors.glassBorder)
+        .attr("stroke-width", 1)
+        .attr("rx", 6)
+        .style("backdrop-filter", "blur(10px)");
 
-    // Baseline circles
-    legend.append("circle")
-      .attr("cx", 0)
-      .attr("cy", 0)
-      .attr("r", 6)
-      .style("fill", colors.neutral500)
-      .style("stroke", colors.neutral600)
-      .style("stroke-width", 2);
+      // Baseline circles
+      legend.append("circle")
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .attr("r", 4)
+        .style("fill", colors.neutral500)
+        .style("stroke", colors.neutral600)
+        .style("stroke-width", 1.5);
 
-    legend.append("text")
-      .attr("x", 15)
-      .attr("y", 5)
-      .style("fill", colors.neutral700)
-      .style("font-size", "12px")
-      .style("font-weight", "500")
-      .style("font-family", "'Inter', sans-serif")
-      .text(`${firstYear} (baseline)`);
+      legend.append("text")
+        .attr("x", 10)
+        .attr("y", 3)
+        .style("fill", colors.neutral700)
+        .style("font-size", "10px")
+        .style("font-weight", "400")
+        .style("font-family", "'Inter', sans-serif")
+        .text(`${firstYear}`);
 
-    // Increase circles
-    legend.append("circle")
-      .attr("cx", 0)
-      .attr("cy", 25)
-      .attr("r", 8)
-      .style("fill", colors.primaryOcean)
-      .style("stroke", colors.primaryDeepBlue)
-      .style("stroke-width", 2.5);
+      // Increase circles
+      legend.append("circle")
+        .attr("cx", 0)
+        .attr("cy", 18)
+        .attr("r", 6)
+        .style("fill", colors.primaryOcean)
+        .style("stroke", colors.primaryDeepBlue)
+        .style("stroke-width", 2);
 
-    legend.append("text")
-      .attr("x", 15)
-      .attr("y", 30)
-      .style("fill", colors.neutral700)
-      .style("font-size", "12px")
-      .style("font-weight", "500")
-      .style("font-family", "'Inter', sans-serif")
-      .text(`${lastYear} (increase)`);
+      legend.append("text")
+        .attr("x", 10)
+        .attr("y", 21)
+        .style("fill", colors.neutral700)
+        .style("font-size", "10px")
+        .style("font-weight", "400")
+        .style("font-family", "'Inter', sans-serif")
+        .text(`${lastYear} ↑`);
 
-    // Decrease circles
-    legend.append("circle")
-      .attr("cx", 0)
-      .attr("cy", 50)
-      .attr("r", 8)
-      .style("fill", colors.accentCoral)
-      .style("stroke", colors.accentCoral)
-      .style("stroke-width", 2.5);
+      // Decrease circles
+      legend.append("circle")
+        .attr("cx", 0)
+        .attr("cy", 36)
+        .attr("r", 6)
+        .style("fill", colors.accentCoral)
+        .style("stroke", colors.accentCoral)
+        .style("stroke-width", 2);
 
-    legend.append("text")
-      .attr("x", 15)
-      .attr("y", 55)
-      .style("fill", colors.neutral700)
-      .style("font-size", "12px")
-      .style("font-weight", "500")
-      .style("font-family", "'Inter', sans-serif")
-      .text(`${lastYear} (decrease)`);
-
+      legend.append("text")
+        .attr("x", 10)
+        .attr("y", 39)
+        .style("fill", colors.neutral700)
+        .style("font-size", "10px")
+        .style("font-weight", "400")
+        .style("font-family", "'Inter', sans-serif")
+        .text(`${lastYear} ↓`);
+    }
+    
     // X-axis label
     g.append("text")
-      .attr("transform", `translate(${width / 2}, ${height + 40})`)
+      .attr("transform", `translate(${width / 2}, ${height + 45})`)
       .style("text-anchor", "middle")
       .style("fill", colors.neutral600)
-      .style("font-size", "14px")
+      .style("font-size", isMobile ? "11px" : "13px")
       .style("font-weight", "500")
       .style("font-family", "'Inter', sans-serif")
       .text('Marine Protected Area Coverage (%)');
-  };
-
-  const updateStats = (data) => {
-    const countries = Object.values(data);
-    
-    if (countries.length === 0) return;
-    
-    const changes = countries.map(country => country.change).filter(change => !isNaN(change) && isFinite(change));
-    const avgChange = changes.length > 0 ? changes.reduce((a, b) => a + b, 0) / changes.length : 0;
-    
-    const topGainer = countries.reduce((max, country) => 
-      country.change > max.change ? country : max, 
-      countries[0] || { name: '--', change: 0 }
-    );
-    
-    const allYears = countries.flatMap(country => [country.firstYear.year, country.lastYear.year]);
-    const yearSpan = countries.length > 0 ? `${Math.min(...allYears)}-${Math.max(...allYears)}` : '--';
-    
-    setStats({
-      avgChange: (avgChange > 0 ? '+' : '') + avgChange.toFixed(1) + 'pp',
-      countriesCount: countries.length,
-      topGainer: topGainer.name,
-      dataSpan: yearSpan
-    });
   };
 
   const updateInsights = (data) => {
@@ -495,10 +490,11 @@ const HelpFisheriesChart = ({ transparent = false }) => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        height: '500px',
-        background: `linear-gradient(135deg, ${colors.primaryDeepBlue} 0%, ${colors.primaryOcean} 100%)`,
+        width: '100%',
+        height: '100%',
+        background: transparent ? 'transparent' : `linear-gradient(135deg, ${colors.primaryDeepBlue} 0%, ${colors.primaryOcean} 100%)`,
         borderRadius: '20px',
-        border: `1px solid ${colors.neutral300}`,
+        border: transparent ? 'none' : `1px solid ${colors.neutral300}`,
         color: colors.white,
         fontFamily: "'Inter', sans-serif"
       }}>
@@ -522,10 +518,11 @@ const HelpFisheriesChart = ({ transparent = false }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        height: '500px',
-        background: `linear-gradient(135deg, ${colors.neutral100} 0%, ${colors.neutral50} 100%)`,
+        width: '100%',
+        height: '100%',
+        background: transparent ? 'transparent' : `linear-gradient(135deg, ${colors.neutral100} 0%, ${colors.neutral50} 100%)`,
         borderRadius: '20px',
-        border: `1px solid ${colors.neutral300}`,
+        border: transparent ? 'none' : `1px solid ${colors.neutral300}`,
         color: colors.accentCoral,
         fontSize: '16px',
         fontWeight: '500',
@@ -539,179 +536,52 @@ const HelpFisheriesChart = ({ transparent = false }) => {
   }
 
   return (
-    <div style={{
-      width: '100%',
-      minHeight: '700px',
-      background: 'transparent',
-      borderRadius: '20px',
-      padding: '32px',
-      fontFamily: "'Inter', sans-serif"
-    }}>
+    <div 
+      ref={containerRef}
+      style={{
+        width: '100%',
+        height: '100%',
+        background: 'transparent',
+        borderRadius: '20px',
+        padding: '0',
+        fontFamily: "'Inter', sans-serif",
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
       {/* Title Section */}
       <div style={{
         textAlign: 'center',
-        marginBottom: '32px'
+        marginBottom: '8px',
+        height: '40px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
       }}>
         <h3 style={{
-          fontSize: '2rem',
+          fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem',
           fontWeight: '700',
-          margin: '0 0 12px 0',
+          margin: '0',
           color: colors.neutral800,
           fontFamily: "'Space Grotesk', 'Inter', sans-serif"
         }}>
           Marine Protected Area Coverage Trends
         </h3>
-        <p style={{
-          fontSize: '16px',
-          margin: 0,
-          color: colors.neutral600,
-          fontWeight: '400',
-          lineHeight: '1.5'
-        }}>
-          Protected area coverage for marine Key Biodiversity Areas across Pacific Island countries (%)
-        </p>
       </div>
 
       {/* Chart Container */}
       <div style={{ 
+        flex: 1,
         display: 'flex', 
         justifyContent: 'center',
-        marginBottom: '32px',
-        background: `linear-gradient(135deg, ${colors.white} 0%, ${colors.neutral50} 100%)`,
+        alignItems: 'center',
+        background: 'transparent',
         borderRadius: '16px',
-        padding: '24px',
-        border: `1px solid ${colors.neutral200}`,
-        boxShadow: `0 4px 12px ${colors.glassShadow}`
+        width: '100%',
+        overflow: 'hidden'
       }}>
-        <svg ref={svgRef}></svg>
-      </div>
-
-      {/* Summary Stats */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '20px',
-        marginBottom: '32px'
-      }}>
-        <div style={{
-          textAlign: 'center',
-          padding: '24px 20px',
-          background: `linear-gradient(135deg, ${colors.white} 0%, ${colors.neutral50} 100%)`,
-          border: `1px solid ${colors.neutral200}`,
-          borderRadius: '16px',
-          boxShadow: `0 4px 12px ${colors.glassShadow}`
-        }}>
-          <div style={{
-            fontSize: '1.5rem',
-            fontWeight: '700',
-            color: colors.primaryOcean,
-            marginBottom: '8px',
-            fontFamily: "'Space Grotesk', 'Inter', sans-serif"
-          }}>{stats.avgChange}</div>
-          <div style={{
-            fontSize: '13px',
-            color: colors.neutral600,
-            textTransform: 'uppercase',
-            fontWeight: '600',
-            letterSpacing: '0.5px'
-          }}>Average Change</div>
-        </div>
-
-        <div style={{
-          textAlign: 'center',
-          padding: '24px 20px',
-          background: `linear-gradient(135deg, ${colors.white} 0%, ${colors.neutral50} 100%)`,
-          border: `1px solid ${colors.neutral200}`,
-          borderRadius: '16px',
-          boxShadow: `0 4px 12px ${colors.glassShadow}`
-        }}>
-          <div style={{
-            fontSize: '1.5rem',
-            fontWeight: '700',
-            color: colors.accentTeal,
-            marginBottom: '8px',
-            fontFamily: "'Space Grotesk', 'Inter', sans-serif"
-          }}>{stats.countriesCount}</div>
-          <div style={{
-            fontSize: '13px',
-            color: colors.neutral600,
-            textTransform: 'uppercase',
-            fontWeight: '600',
-            letterSpacing: '0.5px'
-          }}>Countries</div>
-        </div>
-
-        <div style={{
-          textAlign: 'center',
-          padding: '24px 20px',
-          background: `linear-gradient(135deg, ${colors.white} 0%, ${colors.neutral50} 100%)`,
-          border: `1px solid ${colors.neutral200}`,
-          borderRadius: '16px',
-          boxShadow: `0 4px 12px ${colors.glassShadow}`
-        }}>
-          <div style={{
-            fontSize: '1.125rem',
-            fontWeight: '700',
-            color: colors.accentGreen,
-            marginBottom: '8px',
-            lineHeight: '1.2',
-            fontFamily: "'Space Grotesk', 'Inter', sans-serif"
-          }}>{stats.topGainer}</div>
-          <div style={{
-            fontSize: '13px',
-            color: colors.neutral600,
-            textTransform: 'uppercase',
-            fontWeight: '600',
-            letterSpacing: '0.5px'
-          }}>Top Gainer</div>
-        </div>
-
-        <div style={{
-          textAlign: 'center',
-          padding: '24px 20px',
-          background: `linear-gradient(135deg, ${colors.white} 0%, ${colors.neutral50} 100%)`,
-          border: `1px solid ${colors.neutral200}`,
-          borderRadius: '16px',
-          boxShadow: `0 4px 12px ${colors.glassShadow}`
-        }}>
-          <div style={{
-            fontSize: '1.5rem',
-            fontWeight: '700',
-            color: colors.accentCoral,
-            marginBottom: '8px',
-            fontFamily: "'Space Grotesk', 'Inter', sans-serif"
-          }}>{stats.dataSpan}</div>
-          <div style={{
-            fontSize: '13px',
-            color: colors.neutral600,
-            textTransform: 'uppercase',
-            fontWeight: '600',
-            letterSpacing: '0.5px'
-          }}>Years Covered</div>
-        </div>
-      </div>
-
-      {/* Key Insights */}
-      <div style={{
-        background: `linear-gradient(135deg, ${colors.white} 0%, ${colors.neutral50} 100%)`,
-        border: `1px solid ${colors.neutral200}`,
-        borderRadius: '16px',
-        boxShadow: `0 4px 12px ${colors.glassShadow}`,
-        padding: '24px'
-      }}>
-        <div style={{
-          fontSize: '16px',
-          fontWeight: '600',
-          color: colors.neutral800,
-          marginBottom: '12px',
-          fontFamily: "'Inter', sans-serif"
-        }}>Key Insights</div>
-        <div style={{
-          fontSize: '14px',
-          color: colors.neutral600,
-          lineHeight: '1.6',
-          fontFamily: "'Inter', sans-serif"
-        }}>{insights}</div>
+        <svg ref={svgRef} style={{ maxWidth: '100%', height: 'auto' }}></svg>
       </div>
 
       <style>{`

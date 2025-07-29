@@ -1,0 +1,193 @@
+/* CSS Variables */
+:root {
+  --primary-deep-blue: #1a365d;
+  --primary-ocean: #2b6cb0;
+  --primary-light: #3182ce;
+  --accent-coral: #ed8936;
+  --accent-warm: #f6ad55;
+  --accent-light: #fbd38d;
+  --neutral-700: #4a5568;
+  --neutral-600: #718096;
+  --neutral-300: #e2e8f0;
+  --white: #ffffff;
+}
+
+/* Base Styles - Fix scrollbar issue */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Only vertical scroll on html */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.6;
+  color: var(--neutral-700);
+  background: #fafbfc;
+  /* IMPORTANT: Don't set overflow on body */
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* App Container - No overflow settings */
+.App {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  /* Don't set overflow here */
+}
+
+/* Hide all scrollbars except the main one */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* Show only the main scrollbar on html */
+html {
+  scrollbar-width: auto; /* Firefox */
+  -ms-overflow-style: auto; /* IE and Edge */
+}
+
+html::-webkit-scrollbar {
+  display: block;
+  width: 12px;
+}
+
+html::-webkit-scrollbar-track {
+  background: var(--neutral-300);
+}
+
+html::-webkit-scrollbar-thumb {
+  background: var(--primary-ocean);
+  border-radius: 6px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-deep-blue);
+}
+
+/* Typography */
+h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--primary-deep-blue);
+  margin-bottom: 1rem;
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--primary-deep-blue);
+  margin-bottom: 1rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--primary-deep-blue);
+  margin-bottom: 0.75rem;
+}
+
+p {
+  margin-bottom: 1rem;
+  line-height: 1.8;
+}
+
+a {
+  color: var(--primary-ocean);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--primary-deep-blue);
+}
+
+/* Narrative Transition */
+.narrative-transition {
+  padding: 120px 30px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(255,255,255,0.95));
+  text-align: center;
+  position: relative;
+}
+
+.narrative-transition p {
+  max-width: 800px;
+  margin: 0 auto;
+  font-size: 1.25rem;
+  line-height: 1.8;
+  color: var(--neutral-700);
+}
+
+/* Utility Classes */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Emergency fixes */
+.food-insecurity-chart {
+  isolation: isolate;
+}
+
+.food-insecurity-chart .chart-header {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Ensure sections don't create their own scroll contexts */
+.story-section,
+.story-section-fullscreen {
+  overflow: visible !important;
+}
+
+/* Ensure chart containers don't create scrollbars */
+.chart-layer,
+.background-chart-container {
+  overflow: hidden !important;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  h3 {
+    font-size: 1.25rem;
+  }
+  
+  .narrative-transition {
+    padding: 60px 20px;
+  }
+  
+  .narrative-transition p {
+    font-size: 1.125rem;
+  }
+}

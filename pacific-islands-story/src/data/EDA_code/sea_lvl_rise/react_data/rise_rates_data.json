@@ -1,0 +1,157 @@
+[
+  {
+    "island": "Samoa",
+    "rate": 9.88,
+    "confidence_interval": 0.7,
+    "r_squared": 0.6652,
+    "p_value": 2.8564253899847093e-93,
+    "significant": true,
+    "data_points": 386,
+    "start_year": 1993,
+    "end_year": 2025
+  },
+  {
+    "island": "Kiribati",
+    "rate": 3.49,
+    "confidence_interval": 0.71,
+    "r_squared": 0.1945,
+    "p_value": 1.3081069654200092e-19,
+    "significant": true,
+    "data_points": 382,
+    "start_year": 1992,
+    "end_year": 2025
+  },
+  {
+    "island": "Fiji",
+    "rate": 3.93,
+    "confidence_interval": 0.57,
+    "r_squared": 0.3176,
+    "p_value": 4.549527328594968e-34,
+    "significant": true,
+    "data_points": 390,
+    "start_year": 1992,
+    "end_year": 2025
+  },
+  {
+    "island": "Nauru",
+    "rate": 5.11,
+    "confidence_interval": 0.9,
+    "r_squared": 0.2541,
+    "p_value": 7.363072416193116e-25,
+    "significant": true,
+    "data_points": 364,
+    "start_year": 1993,
+    "end_year": 2025
+  },
+  {
+    "island": "Solomon",
+    "rate": 5.9,
+    "confidence_interval": 1.2,
+    "r_squared": 0.2052,
+    "p_value": 8.156158284132083e-20,
+    "significant": true,
+    "data_points": 364,
+    "start_year": 1994,
+    "end_year": 2025
+  },
+  {
+    "island": "Niue",
+    "rate": 10.23,
+    "confidence_interval": 7.11,
+    "r_squared": 0.1033,
+    "p_value": 0.006266313841392279,
+    "significant": true,
+    "data_points": 71,
+    "start_year": 2015,
+    "end_year": 2025
+  },
+  {
+    "island": "Tonga",
+    "rate": 7.22,
+    "confidence_interval": 0.66,
+    "r_squared": 0.5414,
+    "p_value": 2.5189647543363734e-67,
+    "significant": true,
+    "data_points": 388,
+    "start_year": 1993,
+    "end_year": 2025
+  },
+  {
+    "island": "Tuvalu",
+    "rate": 4.59,
+    "confidence_interval": 0.87,
+    "r_squared": 0.2207,
+    "p_value": 2.5660498575478655e-22,
+    "significant": true,
+    "data_points": 381,
+    "start_year": 1993,
+    "end_year": 2025
+  },
+  {
+    "island": "Papua",
+    "rate": 5.99,
+    "confidence_interval": 0.91,
+    "r_squared": 0.3251,
+    "p_value": 3.2032163648456834e-31,
+    "significant": true,
+    "data_points": 346,
+    "start_year": 1994,
+    "end_year": 2025
+  },
+  {
+    "island": "Marshall",
+    "rate": 4.39,
+    "confidence_interval": 0.78,
+    "r_squared": 0.2442,
+    "p_value": 1.3135708255066279e-24,
+    "significant": true,
+    "data_points": 377,
+    "start_year": 1993,
+    "end_year": 2025
+  },
+  {
+    "island": "Cook",
+    "rate": 4.65,
+    "confidence_interval": 0.62,
+    "r_squared": 0.3582,
+    "p_value": 1.1248493819414188e-38,
+    "significant": true,
+    "data_points": 384,
+    "start_year": 1993,
+    "end_year": 2025
+  },
+  {
+    "island": "Micronesia",
+    "rate": 6.57,
+    "confidence_interval": 1.58,
+    "r_squared": 0.2039,
+    "p_value": 1.4366539951630354e-14,
+    "significant": true,
+    "data_points": 262,
+    "start_year": 2001,
+    "end_year": 2025
+  },
+  {
+    "island": "Vanuatu",
+    "rate": 1.84,
+    "confidence_interval": 0.8,
+    "r_squared": 0.0511,
+    "p_value": 8.9941326962774e-06,
+    "significant": true,
+    "data_points": 378,
+    "start_year": 1993,
+    "end_year": 2025
+  },
+  {
+    "island": "Regional Average",
+    "rate": 5.68,
+    "confidence_interval": 0.6,
+    "r_squared": null,
+    "p_value": null,
+    "significant": null,
+    "data_points": 4473,
+    "start_year": 1992,
+    "end_year": 2025,
+    "is_average": true
+  }
+]
