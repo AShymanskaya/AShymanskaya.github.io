@@ -1,0 +1,12 @@
+{
+  "files": {
+    "main.css": "/pacific-data-viz-2025/storytime/static/css/main.d29c2f6e.css",
+    "main.js": "/pacific-data-viz-2025/storytime/static/js/main.e3f49984.js",
+    "static/js/685.abdd2744.chunk.js": "/pacific-data-viz-2025/storytime/static/js/685.abdd2744.chunk.js",
+    "index.html": "/pacific-data-viz-2025/storytime/index.html"
+  },
+  "entrypoints": [
+    "static/css/main.d29c2f6e.css",
+    "static/js/main.e3f49984.js"
+  ]
+}
