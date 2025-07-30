@@ -11,7 +11,7 @@ const diseaseIndicators = {
 };
 
 const PacificDiseasesDashboard = ({ 
-  dataFile = '/data/health_data.csv',
+  dataFile = '${process.env.PUBLIC_URL}/data/health_data.csv',
   transparent = true
 }) => {
   const [data, setData] = useState({});

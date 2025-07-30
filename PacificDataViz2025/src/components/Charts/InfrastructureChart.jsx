@@ -10,7 +10,7 @@ const InfrastructureChart = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const infrastructureDataFile = '/data/infrastructure.csv';
+        const infrastructureDataFile = '${process.env.PUBLIC_URL}/data/infrastructure.csv';
         const infrastructureResponse = await fetch(infrastructureDataFile);
         let csvContent = '';
         

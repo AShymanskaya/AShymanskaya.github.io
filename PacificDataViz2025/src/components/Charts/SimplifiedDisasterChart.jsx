@@ -56,8 +56,8 @@ const SimplifiedDisasterChart = () => {
         let climateData, disastersData;
         
         try {
-          const climateText = await loadCSVFile('/data/climate.csv');
-          const disastersText = await loadCSVFile('/data/disasters_overview.csv');
+          const climateText = await loadCSVFile('${process.env.PUBLIC_URL}/data/climate.csv');
+          const disastersText = await loadCSVFile('${process.env.PUBLIC_URL}/data/disasters_overview.csv');
           
           const parsedClimate = Papa.parse(climateText, {
             header: true,

@@ -43,8 +43,8 @@ const HealthcareSanitationChart = ({ transparent = false }) => {
       console.log('Loading data files...');
       
       // Load both infrastructure and water_sanitation data
-      const infrastructureDataFile = '/data/health_care_data.csv';
-      const waterSanitationDataFile = '/data/water_sanitation.csv';
+      const infrastructureDataFile = '${process.env.PUBLIC_URL}/data/health_care_data.csv';
+      const waterSanitationDataFile = '${process.env.PUBLIC_URL}/data/water_sanitation.csv';
       
       const [infrastructureResponse, waterSanitationResponse] = await Promise.all([
         fetch(infrastructureDataFile),

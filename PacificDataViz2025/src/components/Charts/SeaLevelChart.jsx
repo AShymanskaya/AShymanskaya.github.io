@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 const SeaLevelChart = ({ 
-  seaLevelDataFile = '/data/sea_lvl_rise_rates_data.json', 
-  populationDataFile = '/data/elevation_coast_population.json',
+  seaLevelDataFile = '${process.env.PUBLIC_URL}/data/sea_lvl_rise_rates_data.json', 
+  populationDataFile = '${process.env.PUBLIC_URL}/data/elevation_coast_population.json',
   transparent = false
 }) => {
   const [data, setData] = useState([]);

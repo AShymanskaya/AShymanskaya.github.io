@@ -52,7 +52,7 @@ const InternetElectricityChart = ({
         
         // Try to load internet CSV
         try {
-            const internetResponse = await fetch('/data/access_internet.csv');
+            const internetResponse = await fetch('${process.env.PUBLIC_URL}/data/access_internet.csv');
             if (internetResponse.ok) {
                 const csvText = await internetResponse.text();
                 internetData = parseCSV(csvText);
@@ -63,7 +63,7 @@ const InternetElectricityChart = ({
 
         // Try to load electricity CSV
         try {
-            const electricityResponse = await fetch('/data/access_electricity.csv');
+            const electricityResponse = await fetch('${process.env.PUBLIC_URL}/data/access_electricity.csv');
             if (electricityResponse.ok) {
                 const csvText = await electricityResponse.text();
                 electricityData = parseCSV(csvText);

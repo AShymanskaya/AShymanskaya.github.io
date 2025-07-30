@@ -98,8 +98,8 @@ const HealthcareChart = ({ transparent = false }) => {
     try {
       console.log('Loading healthcare CSV files...');
       
-      const healthcareDataFile = '/data/health_care_data.csv';
-      const womensHealthDataFile = '/data/womens_health.csv';
+      const healthcareDataFile = '${process.env.PUBLIC_URL}/data/health_care_data.csv';
+      const womensHealthDataFile = '${process.env.PUBLIC_URL}/data/womens_health.csv';
       
       // Use Promise.all to load both files simultaneously
       const [healthcareResponse, womensHealthResponse] = await Promise.all([

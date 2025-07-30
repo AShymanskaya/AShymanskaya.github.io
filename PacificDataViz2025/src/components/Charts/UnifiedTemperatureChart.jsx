@@ -266,7 +266,7 @@ const useTemperatureData = (dataFile) => {
 
         // Try to load real data
         try {
-          const response = await fetch(`/data/${dataFile}`);
+          const response = await fetch(`${process.env.PUBLIC_URL}/data/${dataFile}`);
           if (response.ok) {
             csvText = await response.text();
             dataLoaded = true;

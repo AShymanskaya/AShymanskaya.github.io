@@ -77,7 +77,7 @@ const RenewableEnergyChart = ({ transparent = false }) => {
       
       // Try to fetch the data file
       try {
-        const dataFile = './data/renewable_energy.csv';
+        const dataFile = '${process.env.PUBLIC_URL}/data/renewable_energy.csv';
         const response = await fetch(dataFile);
         if (response.ok) {
           csvContent = await response.text();

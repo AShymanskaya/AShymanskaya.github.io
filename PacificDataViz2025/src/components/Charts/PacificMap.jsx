@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 const PacificMap = ({ 
-  mapSource = "./images/pacific_ocean_complete_map_no_au.svg",
+  mapSource = "${process.env.PUBLIC_URL}/images/pacific_ocean_complete_map_no_au.svg",
   title = "Pacific Map",
   className = "",
   showLoading = true,

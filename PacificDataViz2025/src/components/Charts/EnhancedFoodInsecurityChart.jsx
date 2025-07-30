@@ -101,7 +101,7 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
       let csvContent = '';
       
       try {
-        const response = await fetch('/data/fishing_total.csv');
+        const response = await fetch('${process.env.PUBLIC_URL}/data/fishing_total.csv');
         if (response.ok) {
           csvContent = await response.text();
         } else {
@@ -173,7 +173,7 @@ const EnhancedFoodInsecurityChart = ({ transparent = false }) => {
 
       // Try to load real data first
       try {
-        const response = await fetch('/data/alevi.csv');
+        const response = await fetch('${process.env.PUBLIC_URL}/data/alevi.csv');
         if (response.ok) {
           csvContent = await response.text();
           dataLoaded = true;

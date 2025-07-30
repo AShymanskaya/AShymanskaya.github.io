@@ -352,7 +352,7 @@ export default function App() {
             onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
           >
             <img 
-              src="./images/favicon.ico" 
+              src="${process.env.PUBLIC_URL}/images/favicon.ico" 
               alt="Pacific Data Viz Challenge" 
               style={{ 
                 height: '65px',
@@ -571,7 +571,7 @@ Meanwhile, fishing families face empty nets since the fish move to cooler waters
               onMouseLeave={(e) => e.target.style.opacity = '0.8'}
             >
               <img 
-                src="/images/logo.webp" 
+                src="${process.env.PUBLIC_URL}/images/logo.webp" 
                 alt="Blue Pacific 2050" 
                 style={{ 
                   height: '80px',

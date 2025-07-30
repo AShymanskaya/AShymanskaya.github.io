@@ -61,7 +61,7 @@ const HelpFisheriesChart = ({ transparent = false }) => {
       let csvContent = '';
       let dataLoaded = false;
       try {
-        const response = await fetch('/data/helping_fisheries.csv');
+        const response = await fetch('${process.env.PUBLIC_URL}/data/helping_fisheries.csv');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

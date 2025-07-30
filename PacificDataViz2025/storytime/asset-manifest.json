@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/PacificDataViz2025/storytime/static/css/main.2f344692.css",
-    "main.js": "/PacificDataViz2025/storytime/static/js/main.ac3e79ae.js",
+    "main.js": "/PacificDataViz2025/storytime/static/js/main.67e6e753.js",
     "static/js/488.34708423.chunk.js": "/PacificDataViz2025/storytime/static/js/488.34708423.chunk.js",
     "index.html": "/PacificDataViz2025/storytime/index.html",
     "main.2f344692.css.map": "/PacificDataViz2025/storytime/static/css/main.2f344692.css.map",
-    "main.ac3e79ae.js.map": "/PacificDataViz2025/storytime/static/js/main.ac3e79ae.js.map",
+    "main.67e6e753.js.map": "/PacificDataViz2025/storytime/static/js/main.67e6e753.js.map",
     "488.34708423.chunk.js.map": "/PacificDataViz2025/storytime/static/js/488.34708423.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.2f344692.css",
-    "static/js/main.ac3e79ae.js"
+    "static/js/main.67e6e753.js"
   ]
 }
