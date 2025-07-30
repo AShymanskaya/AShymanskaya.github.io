@@ -1,0 +1,29 @@
+{
+  "export_date": "2025-07-06T15:38:23.646113",
+  "description": "Pacific Islands Sea Level Rise Analysis Data",
+  "islands_processed": [
+    "Samoa",
+    "Kiribati",
+    "Fiji",
+    "Nauru",
+    "Solomon",
+    "Niue",
+    "Tonga",
+    "Tuvalu",
+    "Papua",
+    "Marshall",
+    "Cook",
+    "Micronesia",
+    "Vanuatu"
+  ],
+  "total_data_points": 4473,
+  "date_range": {
+    "start": "1992-10-01",
+    "end": "2025-04-01"
+  },
+  "regional_average_rate": 5.68,
+  "rate_range": {
+    "min": 1.84,
+    "max": 10.23
+  }
+}
