@@ -200,7 +200,7 @@ export default function App() {
   return (
     <main style={{ 
       background: `linear-gradient(0deg, rgba(43,108,176, 0.5) 20%, rgba(26,54,93, 1) 100%), 
-      url('/images/hero_background.jpeg')`,
+      url('./images/hero_background.jpeg')`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed',
@@ -352,7 +352,7 @@ export default function App() {
             onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
           >
             <img 
-              src="/images/favicon.ico" 
+              src="./images/favicon.ico" 
               alt="Pacific Data Viz Challenge" 
               style={{ 
                 height: '65px',

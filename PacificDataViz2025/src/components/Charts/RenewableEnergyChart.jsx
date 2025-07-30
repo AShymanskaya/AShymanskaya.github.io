@@ -77,7 +77,7 @@ const RenewableEnergyChart = ({ transparent = false }) => {
       
       // Try to fetch the data file
       try {
-        const dataFile = '/data/renewable_energy.csv';
+        const dataFile = './data/renewable_energy.csv';
         const response = await fetch(dataFile);
         if (response.ok) {
           csvContent = await response.text();
@@ -89,7 +89,6 @@ const RenewableEnergyChart = ({ transparent = false }) => {
       }
       
       if (!dataLoaded) {
-        csvContent = generateDemoData();
         dataLoaded = true;
       }
       
@@ -130,27 +129,7 @@ const RenewableEnergyChart = ({ transparent = false }) => {
     }
   };
 
-  const generateDemoData = () => {
-    const countries = ['Fiji', 'Tonga', 'Samoa', 'Vanuatu', 'Solomon Islands', 'Kiribati', 'Palau', 'Marshall Islands', 'Cook Islands', 'Tuvalu'];
-    const years = [2018, 2019, 2020, 2021, 2022, 2023];
-    let csvData = 'INDICATOR,Pacific Island Countries and territories,GEO_PICT,TIME_PERIOD,OBS_VALUE,Unit of measure,Indicator\n';
-    
-    countries.forEach((country, countryIndex) => {
-      years.forEach((year, yearIndex) => {
-        const capacityBase = 50 + (countryIndex * 30) + Math.random() * 50;
-        const capacityTrend = yearIndex * (10 + Math.random() * 20);
-        const capacityValue = capacityBase + capacityTrend;
-        csvData += `SPC_7_b_1,"${country}",${country.substring(0, 3).toUpperCase()},${year},${capacityValue.toFixed(1)},Watts per capita,Renewable Energy Capacity\n`;
-        
-        const shareBase = 15 + (countryIndex * 5) + Math.random() * 20;
-        const shareTrend = yearIndex * (1 + Math.random() * 2);
-        const shareValue = Math.min(shareBase + shareTrend, 85);
-        csvData += `EG_FEC_RNEW,"${country}",${country.substring(0, 3).toUpperCase()},${year},${shareValue.toFixed(1)},Percentage,Renewable Energy Share\n`;
-      });
-    });
-    
-    return csvData;
-  };
+  
 
   const processDataForComparison = (data) => {
     const countryData = {};
