@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/pacific-challenge-2025/static/css/main.2f344692.css",
-    "main.js": "/pacific-challenge-2025/static/js/main.8413cf95.js",
+    "main.js": "/pacific-challenge-2025/static/js/main.e11dd2db.js",
     "static/js/488.34708423.chunk.js": "/pacific-challenge-2025/static/js/488.34708423.chunk.js",
     "index.html": "/pacific-challenge-2025/index.html",
     "main.2f344692.css.map": "/pacific-challenge-2025/static/css/main.2f344692.css.map",
-    "main.8413cf95.js.map": "/pacific-challenge-2025/static/js/main.8413cf95.js.map",
+    "main.e11dd2db.js.map": "/pacific-challenge-2025/static/js/main.e11dd2db.js.map",
     "488.34708423.chunk.js.map": "/pacific-challenge-2025/static/js/488.34708423.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.2f344692.css",
-    "static/js/main.8413cf95.js"
+    "static/js/main.e11dd2db.js"
   ]
 }
