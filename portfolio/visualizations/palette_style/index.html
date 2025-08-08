@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Data Visualization Style Guide</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        /* Theme Variables */
+        :root[data-theme="dark"] {
+            --bg-primary: #232323;
+            --bg-secondary: #2A2928;
+            --bg-tertiary: #353332;
+            --border-primary: #3D3A39;
+            --border-secondary: #4A4746;
+            --text-primary: #F3F4EF;
+            --text-secondary: #D4D6CC;
+            --text-muted: #A8AA9F;
+            
+            --data-green: #3D7B5B;
+            --data-pink: #E784A9;
+            --data-brown: #7A724C;
+            --data-sage: #6B9D7E;
+            --data-rose: #F0A5C1;
+            --data-olive: #8C8462;
+            --data-mint: #4FA675;
+            --data-blush: #F5B5D0;
+            --data-blue: #5B8FA8;
+            --data-amber: #D4A574;
+            --data-purple: #9D7B9D;
+            --data-teal: #5BA89D;
+            
+            --toggle-bg: #374151;
+            --toggle-active: #3D7B5B;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --code-bg: #1A1A1A;
+            --dropdown-bg: #2A2928;
+            --dropdown-hover: #353332;
+            --glow: rgba(61, 123, 91, 0.3);
+            --accent-glow: rgba(231, 132, 169, 0.3);
+        }
+        
+        :root[data-theme="light"] {
+            --bg-primary: #F3F4EF;
+            --bg-secondary: #FAFBF7;
+            --bg-tertiary: #FFFFFF;
+            --border-primary: #E2E4DC;
+            --border-secondary: #D4D6CC;
+            --text-primary: #232323;
+            --text-secondary: #7A724C;
+            --text-muted: #9D9780;
+            
+            --data-green: #3D7B5B;
+            --data-pink: #E784A9;
+            --data-brown: #7A724C;
+            --data-sage: #5A8C6D;
+            --data-rose: #DC7198;
+            --data-olive: #6B6342;
+            --data-mint: #3E9564;
+            --data-blush: #E89BB4;
+            --data-blue: #4A7E97;
+            --data-amber: #C39463;
+            --data-purple: #8C6A8C;
+            --data-teal: #4A978C;
+            
+            --toggle-bg: #3D7B5B;
+            --toggle-active: #E784A9;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --code-bg: #FFFFFF;
+            --dropdown-bg: #FFFFFF;
+            --dropdown-hover: #F3F4EF;
+            --glow: rgba(231, 132, 169, 0.2);
+            --accent-glow: rgba(61, 123, 91, 0.2);
+        }
+        
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 40px 20px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            font-weight: 400;
+            letter-spacing: 0.01em;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* Interactive Controls Bar */
+        .controls-bar {
+            position: sticky;
+            top: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 3rem;
+            z-index: 100;
+            box-shadow: var(--card-shadow);
+            backdrop-filter: blur(10px);
+        }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .control-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+        
+        /* Scenario Selector */
+        .scenario-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .scenario-pill {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-primary);
+            border-radius: 24px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-primary);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .scenario-pill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, var(--glow));
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+        
+        .scenario-pill:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .scenario-pill:hover::before {
+            transform: translateX(100%);
+        }
+        
+        .scenario-pill.active {
+            background: var(--toggle-active);
+            color: white;
+            border-color: var(--toggle-active);
+            box-shadow: 0 0 20px var(--glow);
+        }
+        
+        /* Chart Type Selector */
+        .chart-types {
+            display: flex;
+            width: 170px;
+            gap: 4px;
+            background: var(--bg-tertiary);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--border-primary);
+        }
+        
+        .chart-type-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .chart-type-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        .chart-type-btn.active {
+            background: var(--toggle-active);
+            color: white;
+        }
+        
+        .chart-type-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+        
+        /* Theme Toggle */
+        .theme-toggle {
+            display: flex;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-primary);
+            border-radius: 50px;
+            padding: 4px;
+            gap: 4px;
+        }
+        
+        .theme-option {
+            padding: 8px 12px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+        }
+        
+        .theme-option.active {
+            background: var(--toggle-active);
+            color: white;
+        }
+        
+        .theme-option svg {
+            width: 16px;
+            height: 16px;
+        }
+        
+        /* Typography */
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+        }
+        
+        h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.25rem;
+            font-weight: 500;
+            margin: 3rem 0 1.5rem;
+            letter-spacing: -0.01em;
+        }
+        
+        h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin: 2rem 0 1rem;
+            color: var(--text-primary);
+        }
+        
+        .section {
+            margin-bottom: 4rem;
+        }
+        
+        /* Live Preview Panel */
+        .preview-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        /* Dynamic Palette Display */
+        .palette-preview {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .palette-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .palette-badge {
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            background: var(--toggle-active);
+            color: white;
+            border-radius: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .active-colors {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 12px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .color-tile {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            overflow: hidden;
+        }
+        
+        .color-tile::after {
+            content: attr(data-color);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px;
+            font-size: 0.7rem;
+            font-family: 'JetBrains Mono', monospace;
+            text-align: center;
+            transform: translateY(100%);
+            transition: transform 0.2s ease;
+        }
+        
+        .color-tile:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            border-color: var(--border-secondary);
+        }
+        
+        .color-tile:hover::after {
+            transform: translateY(0);
+        }
+        
+        .color-tile.selected {
+            border-color: var(--text-primary);
+            box-shadow: 0 0 24px var(--accent-glow);
+        }
+        
+        /* Live Chart Preview */
+        .chart-preview {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .chart-container {
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        /* Chart Styles */
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 200px;
+            width: 100%;
+            gap: 12px;
+            padding: 0 20px;
+        }
+        
+        .bar {
+            flex: 1;
+            max-width: 50px;
+            border-radius: 4px 4px 0 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .bar:hover {
+            transform: translateY(-8px);
+            filter: brightness(1.2);
+            opacity: 1 !important;
+        }
+        
+        .bar-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            white-space: nowrap;
+        }
+        
+        .bar:hover .bar-label {
+            opacity: 1;
+        }
+        
+        .line-chart svg,
+        .pie-chart svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .line-chart path {
+            fill: none;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        
+        .line-chart circle {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .line-chart circle:hover {
+            r: 8;
+        }
+        
+        .pie-slice {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            stroke-width: 0;
+        }
+        
+        .pie-slice:hover {
+            stroke-width: 3;
+            stroke: var(--bg-primary);
+            filter: brightness(1.1);
+        }
+        
+        /* Typography Preview */
+        .typography-showcase {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .font-demo {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-primary);
+        }
+        
+        .font-demo:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .font-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        /* Complete Palette Grid */
+        .palette-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .color-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+            box-shadow: var(--card-shadow);
+            cursor: pointer;
+        }
+        
+        .color-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-secondary);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .color-swatch {
+            width: 100%;
+            height: 80px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-primary);
+        }
+        
+        .color-info {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+        }
+        
+        .color-name {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+        }
+        
+        .color-value {
+            color: var(--text-secondary);
+            font-size: 0.813rem;
+        }
+        
+        /* Export Section */
+        .export-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 3rem;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .export-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .export-title {
+            font-weight: 600;
+            font-size: 1.125rem;
+            font-family: 'Cormorant Garamond', serif;
+        }
+        
+        .language-tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 2px solid var(--border-primary);
+            margin-bottom: 1rem;
+        }
+        
+        .lang-tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .lang-tab:hover {
+            color: var(--text-primary);
+        }
+        
+        .lang-tab.active {
+            color: var(--toggle-active);
+        }
+        
+        .lang-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--toggle-active);
+        }
+        
+        .code-export {
+            background: var(--code-bg);
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: none;
+            position: relative;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .code-export.show {
+            display: block;
+        }
+        
+        .code-export pre {
+            margin: 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            white-space: pre;
+            overflow-x: auto;
+        }
+        
+        .copy-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-primary);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        
+        .copy-button:hover {
+            background: var(--dropdown-hover);
+            color: var(--text-primary);
+        }
+        
+        .copy-button.copied {
+            background: var(--data-green);
+            color: white;
+        }
+        
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-primary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-secondary);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .controls-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .preview-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 15px;
+            }
+            
+            .scenario-pills {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .chart-types {
+                flex-direction: column;
+            }
+            
+            .language-tabs {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+            }
+            
+            .palette-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1); 
+            }
+            50% { 
+                transform: scale(1.05); 
+            }
+        }
+        
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Interactive Controls Bar -->
+        <div class="controls-bar">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <div class="control-label">Scenario</div>
+                    <div class="scenario-pills">
+                        <button class="scenario-pill active" onclick="setScenario('brand')">Brand</button>
+                        <button class="scenario-pill" onclick="setScenario('financial')">Financial</button>
+                        <button class="scenario-pill" onclick="setScenario('healthcare')">Healthcare</button>
+                        <button class="scenario-pill" onclick="setScenario('environmental')">Environmental</button>
+                        <button class="scenario-pill" onclick="setScenario('social')">Social</button>
+                        <button class="scenario-pill" onclick="setScenario('earth')">Earth Tones</button>
+                        <button class="scenario-pill" onclick="setScenario('cool')">Cool Neutrals</button>
+                        <button class="scenario-pill" onclick="setScenario('historical')">Historical</button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">Visualization</div>
+                    <div class="chart-types">
+                        <button class="chart-type-btn active" onclick="setChartType('bar')">
+                            <svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="8" width="3" height="8"/><rect x="6.5" y="4" width="3" height="12"/><rect x="11" y="6" width="3" height="10"/></svg>
+                            Bar
+                        </button>
+                        <button class="chart-type-btn" onclick="setChartType('line')">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12L6 8L10 10L14 4"/></svg>
+                            Line
+                        </button>
+                        
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">Theme</div>
+                    <div class="theme-toggle">
+                        <div class="theme-option" id="light-theme" onclick="setTheme('light')">
+                            <svg fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="theme-option active" id="dark-theme" onclick="setTheme('dark')">
+                            <svg fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <h1>Interactive Data Visualization Style Guide</h1>
+        <p class="subtitle">Explore dynamic palettes and scenarios with real-time previews</p>
+        
+        <!-- Live Preview Panel -->
+        <div class="preview-panel">
+            <div class="palette-preview">
+                <h3 class="palette-title">
+                    <span id="paletteName">Brand Colors</span>
+                    <span class="palette-badge" id="scenarioBadge">ACTIVE</span>
+                </h3>
+                <div class="active-colors" id="activeColors">
+                    <!-- Dynamically populated -->
+                </div>
+                <p style="font-size: 0.875rem; color: var(--text-secondary);" id="paletteDescription">
+                    Primary brand palette optimized for data visualization
+                </p>
+            </div>
+            
+            <div class="chart-preview">
+                <h3 class="palette-title" id="chartTitle">Revenue Analysis</h3>
+                <div class="chart-container" id="chartContainer">
+                    <!-- Chart rendered here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Typography Showcase -->
+        <section class="section">
+            <h2>Typography System</h2>
+            <div class="typography-showcase">
+                <div class="font-demo">
+                    <div class="font-label">Display · Cormorant Garamond</div>
+                    <h1 style="font-family: 'Cormorant Garamond', serif; margin: 0.5rem 0;" id="displayText">
+                        Show me your data and I will tell you a story
+                    </h1>
+                </div>
+                <div class="font-demo">
+                    <div class="font-label">Body · Roboto</div>
+                    <p style="font-family: 'Roboto', sans-serif; margin: 0.5rem 0; line-height: 1.6;" id="bodyText">
+                        Roboto is a geometric yet friendly sans-serif, offering excellent readability for body text, data labels, and UI elements. Its open curves and natural reading rhythm make it perfect for extended reading and data annotations.
+                    </p>
+                </div>
+                <div class="font-demo">
+                    <div class="font-label">Data · JetBrains Mono</div>
+                    <p style="font-family: 'JetBrains Mono', monospace; margin: 0.5rem 0;" id="dataText">
+                        2024-12-15 | $1,234,567.89 | +12.5% | Target: $1,100,000 ✓
+                    </p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Complete Color Library -->
+        <section class="section">
+            <h2>Complete Color Palette</h2>
+            
+            <h3>Primary Brand Colors</h3>
+            <div class="palette-grid" id="primaryColors">
+                <!-- Populated by JavaScript -->
+            </div>
+            
+            <h3>Extended Data Visualization Palette</h3>
+            <div class="palette-grid" id="extendedColors">
+                <!-- Populated by JavaScript -->
+            </div>
+            
+            <h3>All Scenario Palettes
+
+            </h3>
+            <div class="scenario-palettes-dropdown" id="scenarioPalettesDropdown">
+                <div class="scenario-palette-group" id="scenarioColors">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+        
+        <!-- Export Section -->
+        <section class="section">
+            <div class="export-section">
+                <div class="export-header">
+                    <div class="export-title">Export Current Configuration</div>
+                </div>
+                
+                <div class="language-tabs">
+                    <button class="lang-tab active" onclick="showCode('python')">Python</button>
+                    <button class="lang-tab" onclick="showCode('html')">HTML/CSS</button>
+                    <button class="lang-tab" onclick="showCode('r')">R</button>
+                    <button class="lang-tab" onclick="showCode('d3')">D3.js</button>
+                    <button class="lang-tab" onclick="showCode('tableau')">Tableau</button>
+                    <button class="lang-tab" onclick="showCode('figma')">Figma</button>
+                </div>
+                
+                <div class="code-export show" id="python-code">
+                    <button class="copy-button" onclick="copyCode('python')">Copy</button>
+                    <pre id="pythonContent"></pre>
+                </div>
+                
+                <div class="code-export" id="html-code">
+                    <button class="copy-button" onclick="copyCode('html')">Copy</button>
+                    <pre id="htmlContent"></pre>
+                </div>
+                
+                <div class="code-export" id="r-code">
+                    <button class="copy-button" onclick="copyCode('r')">Copy</button>
+                    <pre id="rContent"></pre>
+                </div>
+                
+                <div class="code-export" id="d3-code">
+                    <button class="copy-button" onclick="copyCode('d3')">Copy</button>
+                    <pre id="d3Content"></pre>
+                </div>
+                
+                <div class="code-export" id="tableau-code">
+                    <button class="copy-button" onclick="copyCode('tableau')">Copy</button>
+                    <pre id="tableauContent"></pre>
+                </div>
+                
+                <div class="code-export" id="figma-code">
+                    <button class="copy-button" onclick="copyCode('figma')">Copy</button>
+                    <pre id="figmaContent"></pre>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <script>
+        // Comprehensive Color Palette Database
+        const palettes = {
+            brand: {
+                name: 'Brand Colors',
+                description: 'Primary brand palette optimized for data visualization',
+                colors: ['#3D7B5B', '#E784A9', '#7A724C', '#6B9D7E', '#F0A5C1', '#8C8462'],
+                titles: ['Brand Performance', 'Market Analysis', 'Growth Metrics'],
+                data: [72, 58, 81, 67, 90, 75]
+            },
+            financial: {
+                name: 'Financial',
+                description: 'Professional and trustworthy palette for financial data',
+                colors: ['#2C3E50', '#4A6FA5', '#52B788', '#E76F51', '#E9C46A', '#95A3B3'],
+                titles: ['Revenue Analysis', 'Portfolio Performance', 'Market Trends'],
+                data: [45, 72, 58, 81, 67, 90]
+            },
+            healthcare: {
+                name: 'Healthcare',
+                description: 'Calming and accessible palette for healthcare data',
+                colors: ['#4ECDC4', '#52B788', '#95A3B3', '#DDA5B6', '#F7CAD0', '#A8DADC'],
+                titles: ['Patient Outcomes', 'Treatment Efficacy', 'Health Metrics'],
+                data: [62, 78, 45, 89, 71, 55]
+            },
+            environmental: {
+                name: 'Environmental',
+                description: 'Natural and organic feel for environmental data',
+                colors: ['#3D7B5B', '#6B9D7E', '#4FA675', '#7A724C', '#8C8462', '#52B788'],
+                titles: ['Carbon Emissions', 'Biodiversity Index', 'Sustainability Score'],
+                data: [35, 68, 82, 47, 73, 91]
+            },
+            social: {
+                name: 'Social',
+                description: 'Warm and approachable palette for social data',
+                colors: ['#E784A9', '#F0A5C1', '#F5B5D0', '#9D7B9D', '#5B8FA8', '#D4A574'],
+                titles: ['Community Engagement', 'Social Impact', 'User Satisfaction'],
+                data: [78, 65, 88, 52, 74, 69]
+            },
+            earth: {
+                name: 'Earth Tones',
+                description: 'Warm earth tones for organic, grounded visualizations',
+                colors: ['#B08D74', '#C4A68A', '#D4B896', '#9FA68F', '#ADB5A3', '#8B8680'],
+                titles: ['Historical Trends', 'Agricultural Data', 'Geographic Analysis'],
+                data: [55, 70, 48, 83, 61, 77]
+            },
+            cool: {
+                name: 'Cool Neutrals',
+                description: 'Professional cool neutrals for corporate data',
+                colors: ['#697A89', '#7F8C9A', '#95A3B3', '#AAB5C6', '#BCC5D3', '#D4DAE1'],
+                titles: ['Corporate Metrics', 'Performance KPIs', 'Business Intelligence'],
+                data: [66, 54, 79, 43, 87, 58]
+            },
+            historical: {
+                name: 'Historical',
+                description: 'Aged and timeless feel for historical data',
+                colors: ['#8B7355', '#A67B5B', '#4F6D7A', '#736F6E', '#C4A68A', '#95A3B3'],
+                titles: ['Historical Analysis', 'Timeline Visualization', 'Archive Data'],
+                data: [71, 56, 84, 49, 68, 77]
+            }
+        };
+        
+        // Primary and Extended Colors
+        const primaryColors = [
+            { name: 'Forest Green', value: '#3D7B5B' },
+            { name: 'Rose Pink', value: '#E784A9' },
+            { name: 'Earth Brown', value: '#7A724C' },
+            { name: 'Charcoal', value: '#232323' },
+            { name: 'Cream', value: '#F3F4EF' }
+        ];
+        
+        const extendedColors = [
+            { name: 'Sage', value: '#6B9D7E' },
+            { name: 'Light Rose', value: '#F0A5C1' },
+            { name: 'Olive', value: '#8C8462' },
+            { name: 'Mint', value: '#4FA675' },
+            { name: 'Blush', value: '#F5B5D0' },
+            { name: 'Dusty Blue', value: '#5B8FA8' },
+            { name: 'Warm Amber', value: '#D4A574' },
+            { name: 'Purple', value: '#9D7B9D' },
+            { name: 'Teal', value: '#5BA89D' }
+        ];
+        
+        // State Management
+        let currentScenario = 'brand';
+        let currentChartType = 'bar';
+        let currentTheme = 'dark';
+        let selectedColor = null;
+        
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            // First populate all static content
+            populateAllColors();
+            
+            // Set initial theme
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            const themeBtn = document.getElementById(`${savedTheme}-theme`);
+            if (themeBtn) themeBtn.classList.add('active');
+            currentTheme = savedTheme;
+            
+            // Initialize scenario to 'brand'
+            currentScenario = 'brand';
+            const brandPalette = palettes.brand;
+            
+            // Update palette display
+            const paletteNameEl = document.getElementById('paletteName');
+            const paletteDescEl = document.getElementById('paletteDescription');
+            if (paletteNameEl) paletteNameEl.textContent = brandPalette.name;
+            if (paletteDescEl) paletteDescEl.textContent = brandPalette.description;
+            
+            // Display active colors
+            updateActivePalette(brandPalette);
+            
+            // Set initial chart type and render
+            currentChartType = 'bar';
+            updateChart();
+            
+            // Update text samples
+            updateTextSamples('brand');
+            
+            // Generate export code
+            updateExportCode();
+            
+            // Set first buttons as active
+            const firstScenarioPill = document.querySelector('.scenario-pill');
+            if (firstScenarioPill) {
+                firstScenarioPill.classList.add('active');
+            }
+            
+            const firstChartBtn = document.querySelector('.chart-type-btn');
+            if (firstChartBtn) {
+                firstChartBtn.classList.add('active');
+            }
+        });
+        
+        // Theme Management
+        function setTheme(theme) {
+            currentTheme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            
+            document.querySelectorAll('.theme-option').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`${theme}-theme`).classList.add('active');
+            
+            updateChart();
+        }
+        
+        // Scenario Management
+        function setScenario(scenario) {
+            currentScenario = scenario;
+            const palette = palettes[scenario];
+            
+            // Update buttons only if event exists
+            if (event && event.target) {
+                document.querySelectorAll('.scenario-pill').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+            }
+            
+            // Update palette display
+            document.getElementById('paletteName').textContent = palette.name;
+            document.getElementById('paletteDescription').textContent = palette.description;
+            updateActivePalette(palette);
+            
+            // Update chart
+            updateChart();
+            
+            // Update text samples
+            updateTextSamples(scenario);
+            
+            // Update export code
+            updateExportCode();
+        }
+        
+        function updateActivePalette(palette) {
+            const container = document.getElementById('activeColors');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            palette.colors.forEach((color, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'color-tile fade-in';
+                tile.style.background = color;
+                tile.style.animationDelay = `${index * 0.05}s`;
+                tile.setAttribute('data-color', color);
+                tile.onclick = () => selectColor(color);
+                container.appendChild(tile);
+            });
+        }
+        
+        function selectColor(color) {
+            selectedColor = color;
+            document.querySelectorAll('.color-tile').forEach(tile => {
+                tile.classList.remove('selected');
+                if (tile.getAttribute('data-color') === color) {
+                    tile.classList.add('selected');
+                }
+            });
+        }
+        
+        // Chart Management
+        function setChartType(type) {
+            currentChartType = type;
+            
+            // Update buttons only if event exists
+            if (event && event.target) {
+                document.querySelectorAll('.chart-type-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+            }
+            
+            updateChart();
+        }
+        
+        function updateChart() {
+            const container = document.getElementById('chartContainer');
+            if (!container) return;
+            
+            const palette = palettes[currentScenario];
+            const titleEl = document.getElementById('chartTitle');
+            if (titleEl) {
+                titleEl.textContent = palette.titles[Math.floor(Math.random() * palette.titles.length)];
+            }
+            
+            container.innerHTML = '';
+            container.style.opacity = '0';
+            
+            setTimeout(() => {
+                container.style.transition = 'opacity 0.3s ease';
+                container.style.opacity = '1';
+                
+                switch(currentChartType) {
+                    case 'bar':
+                        renderBarChart(container, palette);
+                        break;
+                    case 'line':
+                        renderLineChart(container, palette);
+                        break;
+                }
+            }, 100);
+        }
+        
+        function renderBarChart(container, palette) {
+            const chart = document.createElement('div');
+            chart.className = 'bar-chart';
+            
+            // Find the highest value for highlighting
+            const maxValue = Math.max(...palette.data);
+            const maxIndex = palette.data.indexOf(maxValue);
+            
+            palette.data.forEach((value, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = `${value}%`;
+                
+                // Use dominant color for highest bar, muted for others
+                if (index === maxIndex) {
+                    bar.style.background = palette.colors[0]; // Primary color
+                    bar.style.opacity = '1';
+                } else {
+                    bar.style.background = palette.colors[0]; // Same color but will be muted
+                    bar.style.opacity = '0.3';
+                }
+                
+                const label = document.createElement('div');
+                label.className = 'bar-label';
+                label.textContent = `${value}%`;
+                bar.appendChild(label);
+                
+                chart.appendChild(bar);
+                
+                setTimeout(() => {
+                    bar.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                }, index * 50);
+            });
+            
+            container.appendChild(chart);
+        }
+        
+        function renderLineChart(container, palette) {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            const width = container.offsetWidth || 400;
+            const height = 200;
+            const padding = 40;
+            
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            
+            // Create points
+            const points = palette.data.map((value, index) => {
+                const x = (index / (palette.data.length - 1)) * (width - 2 * padding) + padding;
+                const y = height - (value / 100) * (height - 2 * padding) - padding;
+                return { x, y, value };
+            });
+            
+            // Find the highest value for highlighting
+            const maxValue = Math.max(...palette.data);
+            const maxIndex = palette.data.findIndex(v => v === maxValue);
+            
+            const pathData = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+            
+            // Draw line with muted color
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', pathData);
+            path.setAttribute('stroke', palette.colors[0]);
+            path.setAttribute('stroke-width', '2');
+            path.setAttribute('stroke-opacity', '0.3');
+            path.setAttribute('fill', 'none');
+            path.style.strokeDasharray = '1000';
+            path.style.strokeDashoffset = '1000';
+            svg.appendChild(path);
+            
+            // Animate path
+            setTimeout(() => {
+                path.style.transition = 'stroke-dashoffset 1s ease';
+                path.style.strokeDashoffset = '0';
+            }, 100);
+            
+            // Add points - highlight only the highest
+            points.forEach((point, index) => {
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', point.x);
+                circle.setAttribute('cy', point.y);
+                
+                if (index === maxIndex) {
+                    circle.setAttribute('r', '6');
+                    circle.setAttribute('fill', palette.colors[0]);
+                    circle.setAttribute('fill-opacity', '1');
+                } else {
+                    circle.setAttribute('r', '4');
+                    circle.setAttribute('fill', palette.colors[0]);
+                    circle.setAttribute('fill-opacity', '0.3');
+                }
+                
+                circle.style.opacity = '0';
+                svg.appendChild(circle);
+                
+                setTimeout(() => {
+                    circle.style.transition = 'opacity 0.3s ease';
+                    circle.style.opacity = '1';
+                }, 1000 + index * 100);
+            });
+            
+            container.appendChild(svg);
+        }
+        
+        // Update text samples based on scenario
+        function updateTextSamples(scenario) {
+            const samples = {
+                brand: {
+                    display: 'Show me your data and I will tell you a story',
+                    data: '2024 Q4: $1,234,567 (+12.5%) | Target: $1,100,000 ✓'
+                },
+                financial: {
+                    display: 'Financial performance drives decision making',
+                    data: 'NYSE: AAPL $189.25 (+2.3%) | Volume: 52.8M'
+                },
+                healthcare: {
+                    display: 'Better health outcomes through data insights',
+                    data: 'Patient Recovery: 87% | Satisfaction: 4.8/5.0'
+                },
+                environmental: {
+                    display: 'Sustainable futures powered by green data',
+                    data: 'CO₂ Reduction: -23% | Energy Saved: 1.2GWh'
+                },
+                social: {
+                    display: 'Building communities through shared insights',
+                    data: 'Engagement Rate: 6.7% | Reach: 2.3M users'
+                },
+                earth: {
+                    display: 'Natural patterns reveal timeless truths',
+                    data: 'Soil pH: 6.8 | Moisture: 42% | Temp: 22°C'
+                },
+                cool: {
+                    display: 'Corporate excellence through analytics',
+                    data: 'KPI Score: 94/100 | Efficiency: +18%'
+                },
+                historical: {
+                    display: 'Learning from the past to shape the future',
+                    data: '1924-2024 | 100 Years | 50,000+ Records'
+                }
+            };
+            
+            const sample = samples[scenario] || samples.brand;
+            const displayEl = document.getElementById('displayText');
+            const dataEl = document.getElementById('dataText');
+            
+            if (displayEl) displayEl.textContent = sample.display;
+            if (dataEl) dataEl.textContent = sample.data;
+        }
+        
+        // Populate all color sections
+        function populateAllColors() {
+            // Primary Colors
+            const primaryGrid = document.getElementById('primaryColors');
+            if (primaryGrid) {
+                primaryGrid.innerHTML = ''; // Clear first
+                primaryColors.forEach(color => {
+                    primaryGrid.appendChild(createColorCard(color));
+                });
+            }
+            
+            // Extended Colors
+            const extendedGrid = document.getElementById('extendedColors');
+            if (extendedGrid) {
+                extendedGrid.innerHTML = ''; // Clear first
+                extendedColors.forEach(color => {
+                    extendedGrid.appendChild(createColorCard(color));
+                });
+            }
+            
+            // All Scenario Colors - organized by scenario
+            const scenarioGrid = document.getElementById('scenarioColors');
+            if (scenarioGrid) {
+                scenarioGrid.innerHTML = ''; // Clear first
+                Object.entries(palettes).forEach(([key, palette]) => {
+                    // Create a section for each scenario
+                    const scenarioSection = document.createElement('div');
+                    scenarioSection.style.gridColumn = '1 / -1';
+                    scenarioSection.style.marginTop = '1rem';
+                    
+                    const scenarioTitle = document.createElement('h4');
+                    scenarioTitle.style.fontSize = '1rem';
+                    scenarioTitle.style.color = 'var(--text-secondary)';
+                    scenarioTitle.style.marginBottom = '0.5rem';
+                    scenarioTitle.textContent = palette.name;
+                    scenarioSection.appendChild(scenarioTitle);
+                    
+                    const colorRow = document.createElement('div');
+                    colorRow.style.display = 'grid';
+                    colorRow.style.gridTemplateColumns = 'repeat(auto-fill, minmax(120px, 1fr))';
+                    colorRow.style.gap = '0.5rem';
+                    colorRow.style.marginBottom = '1rem';
+                    
+                    palette.colors.forEach((color, index) => {
+                        const miniCard = createColorCard({
+                            name: `${index + 1}`,
+                            value: color
+                        });
+                        miniCard.style.padding = '0.75rem';
+                        colorRow.appendChild(miniCard);
+                    });
+                    
+                    scenarioSection.appendChild(colorRow);
+                    scenarioGrid.appendChild(scenarioSection);
+                });
+            }
+        }
+        
+        function createColorCard(color) {
+            const card = document.createElement('div');
+            card.className = 'color-card';
+            card.onclick = () => selectColor(color.value);
+            
+            const swatch = document.createElement('div');
+            swatch.className = 'color-swatch';
+            swatch.style.background = color.value;
+            
+            const name = document.createElement('div');
+            name.className = 'color-name';
+            name.textContent = color.name;
+            
+            const value = document.createElement('div');
+            value.className = 'color-value';
+            value.textContent = color.value;
+            
+            card.appendChild(swatch);
+            card.appendChild(name);
+            card.appendChild(value);
+            
+            return card;
+        }
+        
+        // Export Code Generation
+        function showCode(language) {
+            document.querySelectorAll('.lang-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('.code-export').forEach(block => {
+                block.classList.remove('show');
+            });
+            document.getElementById(`${language}-code`).classList.add('show');
+            
+            updateExportCode();
+        }
+        
+        function updateExportCode() {
+            const palette = palettes[currentScenario];
+            
+            document.getElementById('pythonContent').textContent = generatePythonCode(palette);
+            document.getElementById('htmlContent').textContent = generateCSSCode(palette);
+            document.getElementById('rContent').textContent = generateRCode(palette);
+            document.getElementById('d3Content').textContent = generateD3Code(palette);
+            document.getElementById('tableauContent').textContent = generateTableauCode(palette);
+            document.getElementById('figmaContent').textContent = generateFigmaCode(palette);
+        }
+        
+        function generatePythonCode(palette) {
+            return `# ${palette.name} Color Palette for Python
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Color palette
+colors = [${palette.colors.map(c => `'${c}'`).join(', ')}]
+
+# Set as default color cycle
+plt.rcParams['axes.prop_cycle'] = plt.cycler(color=colors)
+
+# Typography settings with brand fonts
+plt.rcParams['font.family'] = ['sans-serif']
+plt.rcParams['font.sans-serif'] = ['Roboto', 'DejaVu Sans', 'sans-serif']
+plt.rcParams['font.size'] = 11
+plt.rcParams['axes.titlesize'] = 18
+plt.rcParams['axes.labelsize'] = 12
+
+# Seaborn configuration
+sns.set_palette(colors)
+sns.set_style("whitegrid" if "${currentTheme}" == "light" else "darkgrid", {
+    "axes.facecolor": "${currentTheme === 'light' ? '#F3F4EF' : '#232323'}",
+    "figure.facecolor": "${currentTheme === 'light' ? '#F3F4EF' : '#232323'}",
+    "grid.color": "${currentTheme === 'light' ? '#E2E4DC' : '#3D3A39'}",
+    "text.color": "${currentTheme === 'light' ? '#232323' : '#F3F4EF'}"
+})
+
+# Example usage
+import numpy as np
+data = np.array([${palette.data.join(', ')}])
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.bar(range(len(data)), data, color=colors)
+ax.set_title('${palette.titles[0]}', fontsize=20, fontweight='bold')
+plt.show()`;
+        }
+        
+        function generateCSSCode(palette) {
+            return `/* ${palette.name} Color Palette CSS */
+
+/* Import Brand Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700&family=Roboto:ital,wght@0,300;0,400;0,500;0,700&display=swap');
+
+:root {
+  /* ${palette.name} Colors */
+${palette.colors.map((c, i) => `  --color-${i + 1}: ${c};`).join('\n')}
+  
+  /* Typography */
+  --font-display: 'Cormorant Garamond', serif;
+  --font-body: 'Roboto', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  /* Theme: ${currentTheme} */
+  --bg-primary: ${currentTheme === 'light' ? '#F3F4EF' : '#232323'};
+  --text-primary: ${currentTheme === 'light' ? '#232323' : '#F3F4EF'};
+}`;
+        }
+        
+        function generateRCode(palette) {
+            return `# ${palette.name} Color Palette for R
+library(ggplot2)
+library(showtext)
+
+# Add brand fonts
+font_add_google("Roboto", "roboto")
+font_add_google("Cormorant Garamond", "cormorant")
+showtext_auto()
+
+# Define palette
+${currentScenario}_colors <- c(${palette.colors.map(c => `"${c}"`).join(', ')})
+
+# Create theme
+theme_${currentScenario} <- function() {
+  theme_minimal() +
+    theme(
+      text = element_text(family = "roboto"),
+      plot.title = element_text(family = "cormorant", size = 20, face = "bold"),
+      panel.background = element_rect(fill = "${currentTheme === 'dark' ? '#232323' : '#F3F4EF'}"),
+      plot.background = element_rect(fill = "${currentTheme === 'dark' ? '#232323' : '#F3F4EF'}"),
+      text = element_text(color = "${currentTheme === 'dark' ? '#F3F4EF' : '#232323'}")
+    )
+}
+
+# Example
+data <- data.frame(
+  category = 1:${palette.data.length},
+  value = c(${palette.data.join(', ')})
+)
+
+ggplot(data, aes(x = category, y = value, fill = factor(category))) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = ${currentScenario}_colors) +
+  theme_${currentScenario}() +
+  labs(title = "${palette.titles[0]}")`;
+        }
+        
+        function generateD3Code(palette) {
+            return `// ${palette.name} Color Palette for D3.js
+
+const ${currentScenario}Palette = {
+  colors: [${palette.colors.map(c => `'${c}'`).join(', ')}],
+  
+  scale: d3.scaleOrdinal()
+    .range([${palette.colors.map(c => `'${c}'`).join(', ')}]),
+  
+  theme: {
+    mode: '${currentTheme}',
+    background: '${currentTheme === 'dark' ? '#232323' : '#F3F4EF'}',
+    text: '${currentTheme === 'dark' ? '#F3F4EF' : '#232323'}',
+    fonts: {
+      display: 'Cormorant Garamond, serif',
+      body: 'Roboto, sans-serif',
+      mono: 'JetBrains Mono, monospace'
+    }
+  }
+};
+
+// Example usage
+const svg = d3.select('#chart')
+  .append('svg')
+  .attr('width', 600)
+  .attr('height', 400);
+
+const data = [${palette.data.join(', ')}];
+
+svg.selectAll('rect')
+  .data(data)
+  .enter().append('rect')
+  .attr('x', (d, i) => i * 80)
+  .attr('y', d => 400 - d * 4)
+  .attr('width', 60)
+  .attr('height', d => d * 4)
+  .attr('fill', (d, i) => ${currentScenario}Palette.colors[i]);`;
+        }
+        
+        function generateTableauCode(palette) {
+            return `<?xml version='1.0'?>
+<!-- ${palette.name} Palette for Tableau -->
+<workbook>
+  <preferences>
+    <color-palette name="${palette.name}" type="regular">
+${palette.colors.map(c => `      <color>${c}</color>`).join('\n')}
+    </color-palette>
+  </preferences>
+</workbook>
+
+<!-- Installation:
+1. Save as: ${currentScenario}-palette.tps
+2. Copy to: Documents/My Tableau Repository/Preferences
+3. Restart Tableau
+4. Access: Marks Card > Color > Edit Colors > Select Palette
+-->`;
+        }
+        
+        function generateFigmaCode(palette) {
+            return `// ${palette.name} Color Styles for Figma
+
+// Color Tokens
+${palette.colors.map((c, i) => `const color${i + 1} = "${c}";`).join('\n')}
+
+// Figma Plugin API
+const colors = [
+${palette.colors.map((c, i) => `  { name: "${palette.name} ${i + 1}", hex: "${c}" }`).join(',\n')}
+];
+
+// Create color styles
+colors.forEach(color => {
+  const style = figma.createPaintStyle();
+  style.name = color.name;
+  style.paints = [{
+    type: 'SOLID',
+    color: hexToRgb(color.hex)
+  }];
+});
+
+// Typography styles
+const fonts = {
+  display: { family: "Cormorant Garamond", size: 48, weight: 600 },
+  body: { family: "Roboto", size: 14, weight: 400 },
+  data: { family: "JetBrains Mono", size: 12, weight: 400 }
+};
+
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16) / 255,
+    g: parseInt(result[2], 16) / 255,
+    b: parseInt(result[3], 16) / 255
+  } : null;
+}`;
+        }
+        
+        function copyCode(language) {
+            const codeBlock = document.getElementById(`${language}-code`);
+            const code = codeBlock.querySelector('pre').textContent;
+            const button = codeBlock.querySelector('.copy-button');
+            
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                button.classList.add('copied');
+                
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+        
+        // Toggle Scenario Palettes Dropdown
+        function toggleScenarioPalettes() {
+            const dropdown = document.getElementById('scenarioPalettesDropdown');
+            const toggle = document.getElementById('scenarioToggle');
+            
+            if (dropdown && toggle) {
+                dropdown.classList.toggle('expanded');
+                toggle.classList.toggle('expanded');
+            }
+        }
+    </script>
+</body>
+</html>
