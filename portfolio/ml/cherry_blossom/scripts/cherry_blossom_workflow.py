@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Cherry Blossom Prediction Workflow - Updated for 2026 Predictions
+Cherry Blossom Prediction Workflow - Updated for 2026 Predictions with XGBoost
 
 This script provides a complete workflow for:
-1. Training a model on historical data from 2015-2025
-2. Fetching daily weather updates via API
+1. Training a model on historical data from 2015-2025 using XGBoost
+2. Fetching daily weather updates via Meteostat API
 3. Making daily updated predictions for 2026 using the trained model
 4. Handling bloom confirmations and model retraining when needed
 
@@ -26,8 +26,9 @@ import argparse
 from datetime import datetime, timedelta
 import logging
 from pathlib import Path
-from sklearn.ensemble import RandomForestRegressor
+import xgboost as xgb
 from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.model_selection import cross_val_score, KFold
 
 # Try to import python-dotenv for local development
 try:
@@ -690,7 +691,7 @@ def add_cherry_blossom_data(df):
         2022: {'start': '2022-04-07', 'end': '2022-04-22'},  
         2023: {'start': '2023-04-11', 'end': '2023-04-26'},
         2024: {'start': '2024-03-30', 'end': '2024-04-10'},
-        2025: {'start': '2025-04-05', 'end': '2025-04-18'},  # PLACEHOLDER - Update with actual 2025 data
+        2025: {'start': '2025-04-05', 'end': '2025-04-15'},  
     }
     
     # Check for bloom confirmations and update bloom_data
@@ -759,10 +760,10 @@ def add_cherry_blossom_data(df):
 
 def train_prediction_model(training_data):
     """
-    Train a prediction model for cherry blossom start date using historical data.
+    Train a prediction model for cherry blossom start date using XGBoost.
     Updated to include 2025 data in training.
     """
-    logger.info("Training cherry blossom prediction model with 2015-2025 data...")
+    logger.info("Training cherry blossom prediction model with XGBoost (2015-2025 data)...")
     
     # Prepare features for each year
     yearly_features = []
@@ -870,9 +871,24 @@ def train_prediction_model(training_data):
     X = yearly_df[feature_cols]
     y = yearly_df['bloom_start_doy']
     
-    # Train a model with more trees for better performance
-    model = RandomForestRegressor(n_estimators=200, max_depth=10, random_state=42)
-    model.fit(X, y)
+    # Train XGBoost model with optimized hyperparameters
+    model = xgb.XGBRegressor(
+        n_estimators=300,
+        max_depth=6,
+        learning_rate=0.05,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        min_child_weight=1,
+        gamma=0.1,
+        reg_alpha=0.05,
+        reg_lambda=1,
+        random_state=42,
+        objective='reg:squarederror'
+    )
+    
+    model.fit(X, y, 
+              eval_set=[(X, y)],
+              verbose=False)
     
     # Get feature importance
     feature_importance = pd.DataFrame({
@@ -880,7 +896,7 @@ def train_prediction_model(training_data):
         'Importance': model.feature_importances_
     }).sort_values('Importance', ascending=False)
     
-    logger.info("Top 10 Feature Importance:")
+    logger.info("Top 10 Feature Importance (XGBoost):")
     for i, (feature, importance) in enumerate(zip(feature_importance['Feature'].head(10), 
                                               feature_importance['Importance'].head(10))):
         logger.info(f"  {i+1}. {feature}: {importance:.4f}")
@@ -892,8 +908,14 @@ def train_prediction_model(training_data):
     mae = mean_absolute_error(y, y_pred)
     rmse = np.sqrt(mean_squared_error(y, y_pred))
     
-    logger.info(f"Model Performance:")
+    # Perform cross-validation for better error estimate
+    kfold = KFold(n_splits=min(5, len(X)), shuffle=True, random_state=42)
+    cv_scores = cross_val_score(model, X, y, cv=kfold, scoring='neg_mean_absolute_error')
+    cv_mae = -cv_scores.mean()
+    
+    logger.info(f"XGBoost Model Performance:")
     logger.info(f"  Mean Absolute Error: {mae:.2f} days")
+    logger.info(f"  Cross-Validation MAE: {cv_mae:.2f} days")
     logger.info(f"  Root Mean Squared Error: {rmse:.2f} days")
     
     # Save actual vs predicted for training years
@@ -917,7 +939,7 @@ def train_prediction_model(training_data):
         axis=1
     )
     
-    logger.info("Training Results:")
+    logger.info("Training Results (XGBoost):")
     for _, row in results_df.iterrows():
         logger.info(f"  {int(row['year'])}: Actual {row['actual_bloom_date'].strftime('%Y-%m-%d')}, "
                    f"Predicted {row['predicted_bloom_date'].strftime('%Y-%m-%d')}, "
@@ -929,20 +951,21 @@ def train_prediction_model(training_data):
     logger.info(f"Training results saved to {results_file}")
     
     # Save the model and feature columns
-    save_model(model, feature_cols, mae)
+    # Use cross-validation MAE for reporting as it's more robust
+    save_model(model, feature_cols, cv_mae)
     
     return model, feature_cols
 
 def save_model(model, feature_cols, mae=None):
     """
-    Save the trained model and associated metadata to files
+    Save the trained XGBoost model and associated metadata to files
     """
     # Create model directory if it doesn't exist
     os.makedirs(CONFIG['model_dir'], exist_ok=True)
     
     # Save model with timestamp to keep version history
     timestamp = datetime.now().strftime('%Y%m%d')
-    model_path = os.path.join(CONFIG['model_dir'], f'cherry_blossom_model_{timestamp}.pkl')
+    model_path = os.path.join(CONFIG['model_dir'], f'cherry_blossom_xgboost_{timestamp}.pkl')
     
     # Also save as latest model for easy reference
     latest_model_path = os.path.join(CONFIG['model_dir'], 'cherry_blossom_model_latest.pkl')
@@ -961,12 +984,13 @@ def save_model(model, feature_cols, mae=None):
     
     # Save metadata including training date
     metadata = {
+        'model_type': 'XGBoost',
         'training_date': datetime.now().strftime('%Y-%m-%d'),
         'feature_count': len(feature_cols),
         'model_file': os.path.basename(model_path),
         'training_years': '2015-2025',
         'prediction_year': 2026,
-        'model_mae': float(mae) if mae else None,
+        'model_mae': round(float(mae), 2) if mae else None,  # Round to 2 decimal places
         'top_features': list(zip(
             [c for c, _ in sorted(zip(feature_cols, model.feature_importances_), 
                                   key=lambda x: x[1], reverse=True)[:10]], 
@@ -978,7 +1002,7 @@ def save_model(model, feature_cols, mae=None):
     with open(metadata_path, 'w') as f:
         json.dump(metadata, f, indent=2)
     
-    logger.info(f"Model saved to {model_path} and {latest_model_path}")
+    logger.info(f"XGBoost model saved to {model_path} and {latest_model_path}")
     return model_path
 
 def load_model():
@@ -1014,7 +1038,7 @@ def make_daily_prediction(model, feature_cols, data, target_date, year=None):
     Make a prediction for a specific date using daily-updated features
     
     Parameters:
-    - model: Trained RandomForest model
+    - model: Trained XGBoost model
     - feature_cols: List of feature columns used by the model
     - data: Complete DataFrame with all available data
     - target_date: Date to make prediction for
@@ -1138,11 +1162,14 @@ def save_prediction_json(prediction):
     try:
         # Load model metadata for MAE
         metadata_path = os.path.join(CONFIG['model_dir'], 'model_metadata.json')
-        model_mae = 1.4  # Default value
+        model_mae = 1.40  # Default value
         if os.path.exists(metadata_path):
             with open(metadata_path, 'r') as f:
                 metadata = json.load(f)
-                model_mae = metadata.get('model_mae', 1.4)
+                model_mae = metadata.get('model_mae', 1.40)
+        
+        # Ensure MAE is rounded to 2 decimal places
+        model_mae = round(float(model_mae), 2)
         
         # Enhance prediction data for web display
         enhanced_prediction = prediction.copy()
@@ -1227,44 +1254,6 @@ def save_all_predictions_json():
     except Exception as e:
         logger.error(f"Error saving all predictions JSON: {str(e)}")
         return False
-
-def create_prediction_summary(df):
-    """
-    Create a summary JSON with statistics about predictions over time
-    """
-    try:
-        summary = {
-            'total_predictions': len(df),
-            'date_range': {
-                'start': df['prediction_date'].min(),
-                'end': df['prediction_date'].max()
-            },
-            'bloom_date_variance': {
-                'earliest': df['predicted_bloom_start'].min(),
-                'latest': df['predicted_bloom_start'].max(),
-                'most_common': df['predicted_bloom_start'].mode()[0] if len(df['predicted_bloom_start'].mode()) > 0 else None
-            },
-            'confidence_progression': [],
-            'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
-        
-        # Track confidence progression over time
-        for _, row in df.iterrows():
-            summary['confidence_progression'].append({
-                'date': row['prediction_date'],
-                'confidence': row.get('confidence', 'unknown'),
-                'days_until': row.get('days_until_bloom', None)
-            })
-        
-        # Save summary
-        summary_file = os.path.join(CONFIG['output_dir'], 'prediction_summary.json')
-        with open(summary_file, 'w') as f:
-            json.dump(summary, f, indent=2)
-        
-        logger.info(f"Saved prediction summary to {summary_file}")
-        
-    except Exception as e:
-        logger.error(f"Error creating prediction summary: {str(e)}")
 
 def record_bloom_confirmation(year, bloom_date, source="user", notes=""):
     """
@@ -1390,6 +1379,7 @@ def make_and_display_prediction(model, feature_cols, data, prediction_date=None,
         print(f"\n⏰ Days Until Bloom: {pred['days_until_bloom']} days")
         print(f"📊 Confidence Level: {pred['confidence'].replace('_', ' ').upper()}")
         print(f"📈 Day of Year: {pred['predicted_bloom_doy']:.0f}")
+        print(f"🤖 Model: XGBoost")
         
         # Add interpretation
         print("\n💡 Interpretation:")
@@ -1431,7 +1421,7 @@ def main():
     Main function to run the cherry blossom prediction workflow
     """
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description='Cherry Blossom Prediction Workflow')
+    parser = argparse.ArgumentParser(description='Cherry Blossom Prediction Workflow with XGBoost')
     parser.add_argument('--setup', action='store_true', help='Run initial setup')
     parser.add_argument('--update', action='store_true', help='Update prediction with latest data')
     parser.add_argument('--retrain', action='store_true', help='Force model retraining')
@@ -1481,7 +1471,7 @@ def main():
             historical_data = blossom_data[blossom_data['year'] <= CONFIG['max_historical_year']]
             model, feature_cols = train_prediction_model(historical_data)
             
-            logger.info("Initial setup completed")
+            logger.info("Initial setup completed with XGBoost model")
             
         # Force immediate prediction
         if args.predict:
@@ -1525,7 +1515,7 @@ def main():
             # Load or train model
             model, feature_cols = load_model()
             if model is None:
-                logger.info("Model not found, training new model...")
+                logger.info("Model not found, training new XGBoost model...")
                 harmonized_data = harmonize_historical_data()
                 features_df = generate_features(harmonized_data)
                 blossom_data = add_cherry_blossom_data(features_df)
@@ -1601,7 +1591,7 @@ def main():
                 save_daily_predictions([pred])
                 logger.info(f"Prediction saved for {today.strftime('%Y-%m-%d')}")
             
-            logger.info("Daily prediction completed successfully")
+            logger.info("Daily prediction completed successfully with XGBoost")
         
     except Exception as e:
         logger.error(f"Error in workflow: {str(e)}")
