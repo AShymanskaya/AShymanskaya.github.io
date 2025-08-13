@@ -6,6 +6,8 @@ on:
   workflow_dispatch:      # Manual trigger
   push:
     branches: [main]
+    paths:
+      - 'portfolio/ml/cherry_blossom/**'
 
 jobs:
   update-prediction:
@@ -24,18 +26,18 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('scripts/requirements.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('portfolio/ml/cherry_blossom/scripts/requirements.txt') }}
     
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r scripts/requirements.txt
+        pip install -r portfolio/ml/cherry_blossom/scripts/requirements.txt
     
     - name: Run prediction update
       env:
         RAPID_API_KEY: ${{ secrets.RAPID_API_KEY }}
+      working-directory: portfolio/ml/cherry_blossom/scripts
       run: |
-        cd scripts
         python cherry_blossom_workflow.py --update
         
         # Weekly full prediction generation
@@ -44,16 +46,15 @@ jobs:
           python cherry_blossom_workflow.py --daily
         fi
     
-    - name: Copy predictions to docs
+    - name: Verify JSON files were created
       run: |
-        mkdir -p docs
-        cp -f data/output/cherry_blossom_prediction.json docs/ || echo "No prediction file yet"
-        cp -f data/output/all_predictions_2026.json docs/ || echo "No all predictions file yet"
+        ls -la portfolio/ml/cherry_blossom/*.json || echo "No JSON files yet"
     
     - name: Commit and push if changed
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add docs/*.json
-        git diff --staged --quiet || git commit -m "🌸 Update predictions - $(date +'%Y-%m-%d')"
+        git add portfolio/ml/cherry_blossom/*.json
+        git add portfolio/ml/cherry_blossom/data/output/*.csv || true
+        git diff --staged --quiet || git commit -m "🌸 Update cherry blossom predictions - $(date +'%Y-%m-%d')"
         git push || echo "No changes to push"

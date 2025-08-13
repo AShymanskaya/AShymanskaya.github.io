@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Real-time cherry blossom predictions for Bonn, Germany using machine learning and weather data">
+    <title>Bonn Cherry Blossom Forecast 2025-2026</title>
+    
+    <!-- Import Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700&family=Roboto:ital,wght@0,300;0,400;0,500;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --color-1: #3D7B5B;
+            --color-2: #E784A9;
+            --color-3: #7A724C;
+            --color-4: #6B9D7E;
+            --color-5: #F0A5C1;
+            --color-6: #8C8462;
+            --font-display: 'Cormorant Garamond', serif;
+            --font-body: 'Roboto', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --bg-primary: #F3F4EF;
+            --text-primary: #232323;
+            --text-secondary: #5A5A5A;
+            --border-light: rgba(61, 123, 91, 0.15);
+            --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 8px 30px rgba(231, 132, 169, 0.15);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: 16px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Loading State */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+            color: var(--color-6);
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid var(--border-light);
+            border-top: 3px solid var(--color-2);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 3rem 0 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--color-5), var(--color-2), var(--color-5));
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        
+        h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 300;
+            color: var(--color-1);
+            margin-bottom: 0.5rem;
+            letter-spacing: -1px;
+        }
+        
+        .subtitle {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            color: var(--color-6);
+            font-style: italic;
+        }
+        
+        .update-badge {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(107, 157, 126, 0.1);
+            border-radius: 12px;
+            font-size: 0.875rem;
+            color: var(--color-4);
+            font-family: var(--font-mono);
+        }
+        
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+        
+        .card-header {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            color: var(--color-1);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        /* Prediction Display */
+        .prediction-main {
+            text-align: center;
+            padding: 2rem 0;
+        }
+        
+        .bloom-date {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 4vw, 2.5rem);
+            color: var(--color-2);
+            margin: 1rem 0;
+            font-weight: 500;
+        }
+        
+        .countdown {
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            color: var(--color-4);
+            background: linear-gradient(135deg, rgba(107, 157, 126, 0.1), rgba(240, 165, 193, 0.1));
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            display: inline-block;
+            margin: 1rem 0;
+            transition: all 0.3s ease;
+        }
+        
+        .countdown.blooming {
+            background: linear-gradient(135deg, rgba(231, 132, 169, 0.2), rgba(240, 165, 193, 0.2));
+            color: var(--color-2);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(61, 123, 91, 0.05), rgba(231, 132, 169, 0.05));
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-light);
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            color: var(--color-6);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            color: var(--color-1);
+            font-weight: 500;
+        }
+        
+        /* Confidence Bar */
+        .confidence-container {
+            margin: 2rem auto;
+            max-width: 500px;
+        }
+        
+        .confidence-bar {
+            height: 8px;
+            background: rgba(140, 132, 98, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-4), var(--color-2));
+            border-radius: 4px;
+            transition: width 1.5s ease;
+            position: relative;
+        }
+        
+        .confidence-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: slide 2s infinite;
+        }
+        
+        @keyframes slide {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .confidence-label {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            font-family: var(--font-body);
+            padding: 0.875rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-1), var(--color-4));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(61, 123, 91, 0.3);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: var(--color-1);
+            border: 2px solid var(--color-1);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--color-1);
+            color: white;
+        }
+        
+        /* Info Panel */
+        .info-panel {
+            background: linear-gradient(135deg, rgba(240, 165, 193, 0.1), rgba(231, 132, 169, 0.1));
+            border-left: 4px solid var(--color-2);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+        }
+        
+        /* Error State */
+        .error-message {
+            display: none;
+            background: rgba(231, 132, 169, 0.1);
+            border-left: 4px solid var(--color-2);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+        }
+        
+        .error-message.active {
+            display: block;
+        }
+        
+        /* Petals Animation */
+        .petal {
+            position: fixed;
+            width: 15px;
+            height: 20px;
+            background: var(--color-5);
+            border-radius: 0 100% 100% 100%;
+            opacity: 0.8;
+            animation: fall linear infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) translateX(50px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
+            border-top: 1px solid var(--border-light);
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        .footer a {
+            color: var(--color-1);
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .countdown {
+                font-size: 1rem;
+                padding: 0.75rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Cherry Blossom Forecast</h1>
+            <p class="subtitle">Bonn, Germany · ML Predictions</p>
+            <div class="update-badge" id="last-updated">Loading...</div>
+        </header>
+        
+        <!-- Loading State -->
+        <div class="loading active" id="loading">
+            <div class="spinner"></div>
+            <p>Loading latest prediction data...</p>
+        </div>
+        
+        <!-- Error State -->
+        <div class="error-message" id="error-message">
+            <strong>Unable to load predictions</strong>
+            <p>The prediction data could not be loaded. Please try refreshing the page.</p>
+        </div>
+        
+        <!-- Main Prediction Card -->
+        <div class="card" id="prediction-card" style="display: none;">
+            <div class="prediction-main">
+                <p style="color: var(--color-6); margin-bottom: 0.5rem;">Predicted Bloom Start</p>
+                <div class="bloom-date" id="bloom-date">Loading...</div>
+                <div class="countdown" id="countdown">Calculating...</div>
+                
+                <div class="confidence-container">
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="confidence-fill" style="width: 0%;"></div>
+                    </div>
+                    <div class="confidence-label">
+                        <span id="confidence-text">Confidence: Loading</span>
+                        <span id="confidence-percent">0%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats Grid -->
+        <div class="stats-grid" id="stats-grid" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-label">Bloom Duration</div>
+                <div class="stat-value" id="duration">-- days</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Expected Peak</div>
+                <div class="stat-value" id="peak-date">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Model Accuracy</div>
+                <div class="stat-value" id="accuracy">-- days</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Data Points</div>
+                <div class="stat-value" id="data-points">--</div>
+            </div>
+        </div>
+        
+        <!-- Model Info Card -->
+        <div class="card" id="info-card" style="display: none;">
+            <h2 class="card-header">About This Forecast</h2>
+            <div class="info-panel">
+                <p>This prediction uses a Random Forest machine learning model trained on 11 years of historical weather and bloom data from Bonn (2015-2025). The model analyzes over 60 weather features including temperature patterns, chilling hours, and seasonal variations.</p>
+                <br>
+                <p><strong>Updated daily</strong> with the latest weather data from local weather stations.</p>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="button-group">
+            <button class="btn btn-primary" onclick="refreshPrediction()">
+                Refresh Data
+            </button>
+            <button class="btn btn-secondary" onclick="viewOnGitHub()">
+                View on GitHub
+            </button>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>Powered by machine learning and weather data · <a href="https://github.com/yourusername/cherry-blossom-forecast" target="_blank">GitHub</a></p>
+            <p style="margin-top: 0.5rem; opacity: 0.7;">© 2025 Cherry Blossom Forecast</p>
+        </div>
+    </div>
+    
+    <script>
+        let predictionData = null;
+        
+        // Load prediction data - use relative path that works on GitHub Pages
+        async function loadPrediction() {
+            try {
+                // Load from same directory as HTML (both in docs folder)
+                const response = await fetch(`cherry_blossom_prediction.json?t=${Date.now()}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch prediction data');
+                }
+                
+                predictionData = await response.json();
+                updateUI(predictionData);
+                hideLoading();
+                showContent();
+                
+            } catch (error) {
+                console.error('Error loading prediction:', error);
+                showError();
+            }
+        }
+        
+        // Update UI with prediction data
+        function updateUI(data) {
+            // Update bloom date
+            const bloomDate = new Date(data.predicted_bloom_start);
+            const options = { month: 'long', day: 'numeric', year: 'numeric' };
+            document.getElementById('bloom-date').textContent = 
+                bloomDate.toLocaleDateString('en-US', options);
+            
+            // Update countdown
+            const countdown = document.getElementById('countdown');
+            const daysUntil = data.days_until_bloom;
+            
+            if (daysUntil > 0) {
+                countdown.textContent = `${daysUntil} days remaining`;
+                countdown.classList.remove('blooming');
+            } else if (daysUntil >= -14) {
+                countdown.textContent = 'Currently blooming! 🌸';
+                countdown.classList.add('blooming');
+            } else {
+                countdown.textContent = 'Bloom season has ended';
+                countdown.classList.remove('blooming');
+            }
+            
+            // Update confidence
+            const confidenceFill = document.getElementById('confidence-fill');
+            const confidencePercent = data.confidence_percent || 50;
+            setTimeout(() => {
+                confidenceFill.style.width = `${confidencePercent}%`;
+            }, 100);
+            
+            document.getElementById('confidence-text').textContent = 
+                `Confidence: ${capitalizeFirst(data.confidence || 'low')}`;
+            document.getElementById('confidence-percent').textContent = 
+                `${confidencePercent}%`;
+            
+            // Update stats
+            document.getElementById('duration').textContent = 
+                `${data.estimated_duration || 14} days`;
+            
+            if (data.predicted_peak) {
+                const peakDate = new Date(data.predicted_peak);
+                document.getElementById('peak-date').textContent = 
+                    peakDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            } else {
+                document.getElementById('peak-date').textContent = 'Apr 15';
+            }
+            
+            document.getElementById('accuracy').textContent = 
+                `±${data.model_mae || 5.0} days`;
+            
+            document.getElementById('data-points').textContent = 
+                data.data_points || 'N/A';
+            
+            // Update last updated
+            const lastUpdated = new Date(data.last_updated);
+            document.getElementById('last-updated').textContent = 
+                `Updated: ${getTimeAgo(lastUpdated)}`;
+        }
+        
+        // Helper function to capitalize first letter
+        function capitalizeFirst(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+        
+        // Helper function for time ago
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            
+            if (seconds < 60) return 'just now';
+            
+            const intervals = {
+                year: 31536000,
+                month: 2592000,
+                week: 604800,
+                day: 86400,
+                hour: 3600,
+                minute: 60
+            };
+            
+            for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+                const interval = Math.floor(seconds / secondsInUnit);
+                if (interval >= 1) {
+                    return `${interval} ${unit}${interval > 1 ? 's' : ''} ago`;
+                }
+            }
+            
+            return 'just now';
+        }
+        
+        // UI state management
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('active');
+        }
+        
+        function showContent() {
+            document.getElementById('prediction-card').style.display = 'block';
+            document.getElementById('stats-grid').style.display = 'grid';
+            document.getElementById('info-card').style.display = 'block';
+            document.getElementById('error-message').classList.remove('active');
+        }
+        
+        function showError() {
+            hideLoading();
+            document.getElementById('error-message').classList.add('active');
+            document.getElementById('prediction-card').style.display = 'none';
+            document.getElementById('stats-grid').style.display = 'none';
+            document.getElementById('info-card').style.display = 'none';
+        }
+        
+        // Button actions
+        function refreshPrediction() {
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('error-message').classList.remove('active');
+            setTimeout(() => {
+                loadPrediction();
+            }, 500);
+        }
+        
+        function viewOnGitHub() {
+            // Replace with your actual GitHub repository URL
+            window.open('https://github.com/yourusername/cherry-blossom-forecast', '_blank');
+        }
+        
+        // Create falling petals effect
+        function createPetal() {
+            const petal = document.createElement('div');
+            petal.className = 'petal';
+            petal.style.left = Math.random() * 100 + '%';
+            petal.style.animationDuration = (Math.random() * 10 + 10) + 's';
+            petal.style.animationDelay = Math.random() * 5 + 's';
+            document.body.appendChild(petal);
+            
+            setTimeout(() => petal.remove(), 20000);
+        }
+        
+        // Initialize petals
+        for (let i = 0; i < 5; i++) {
+            setTimeout(createPetal, i * 2000);
+        }
+        setInterval(createPetal, 5000);
+        
+        // Auto-refresh every hour
+        setInterval(() => {
+            loadPrediction();
+        }, 3600000);
+        
+        // Load on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPrediction();
+        });
+    </script>
+</body>
+</html>

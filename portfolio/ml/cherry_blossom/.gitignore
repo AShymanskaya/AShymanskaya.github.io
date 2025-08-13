@@ -1,1 +1,22 @@
-See .gitignore content above
+# Environment variables
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.log
+
+# Model files (large)
+data/model/*.pkl
+data/model/*.json
+!data/model/.gitkeep
+
+# Output files (keep JSONs in root for web)
+data/output/*.csv
+data/output/*.json
+!data/output/.gitkeep
+
+# Keep the web JSON files
+!cherry_blossom_prediction.json
+!all_predictions_2026.json

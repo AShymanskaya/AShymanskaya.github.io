@@ -62,7 +62,7 @@ CONFIG = {
     'data_dir': str(BASE_DIR / 'data' / 'daily'),
     'output_dir': str(BASE_DIR / 'data' / 'output'),
     'model_dir': str(BASE_DIR / 'data' / 'model'),
-    'docs_dir': str(BASE_DIR / 'docs'),
+    'docs_dir': str(BASE_DIR),  
     'station_id': '10517',  # Bonn Friesdorf
     'historical_file': 'weather_2015_2023.csv',
     'recent_file': 'weather_2024_2025.csv',
@@ -1176,19 +1176,20 @@ def save_prediction_json(prediction):
         
         # Save to output directory
         output_file = os.path.join(CONFIG['output_dir'], 'cherry_blossom_prediction.json')
+        os.makedirs(CONFIG['output_dir'], exist_ok=True)
         with open(output_file, 'w') as f:
             json.dump(enhanced_prediction, f, indent=2)
         
         logger.info(f"Saved prediction to {output_file}")
         
         # Also save to docs directory for GitHub Pages
-        docs_file = os.path.join(CONFIG['docs_dir'], 'cherry_blossom_prediction.json')
-        with open(docs_file, 'w') as f:
+        web_file = BASE_DIR / 'cherry_blossom_prediction.json'
+        with open(web_file, 'w') as f:
             json.dump(enhanced_prediction, f, indent=2)
         
-        logger.info(f"Saved prediction to docs folder: {docs_file}")
+        logger.info(f"Saved prediction to {web_file}")
         
-        # Also save all predictions history as JSON
+        # Also save all predictions history
         save_all_predictions_json()
         
         return True
@@ -1205,13 +1206,8 @@ def save_all_predictions_json():
         csv_file = os.path.join(CONFIG['output_dir'], CONFIG['daily_predictions_file'])
         
         if os.path.exists(csv_file):
-            # Read CSV and convert to JSON
             df = pd.read_csv(csv_file)
-            
-            # Sort by prediction date
             df = df.sort_values('prediction_date')
-            
-            # Convert to list of dictionaries
             predictions_list = df.to_dict('records')
             
             # Save to output directory
@@ -1219,15 +1215,12 @@ def save_all_predictions_json():
             with open(output_file, 'w') as f:
                 json.dump(predictions_list, f, indent=2)
             
-            # Save to docs directory
-            docs_file = os.path.join(CONFIG['docs_dir'], 'all_predictions_2026.json')
-            with open(docs_file, 'w') as f:
+            # Save to cherry_blossom root for web access
+            web_file = BASE_DIR / 'all_predictions_2026.json'
+            with open(web_file, 'w') as f:
                 json.dump(predictions_list, f, indent=2)
             
             logger.info(f"Saved {len(predictions_list)} predictions to JSON files")
-            
-            # Also create a summary JSON with key statistics
-            create_prediction_summary(df)
             
         return True
         
