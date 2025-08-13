@@ -2,12 +2,13 @@ name: Daily Cherry Blossom Update
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # 6 AM UTC daily
-  workflow_dispatch:      # Manual trigger
+    - cron: '0 6 * * *'
+  workflow_dispatch:
   push:
     branches: [main]
-    paths:
-      - 'portfolio/ml/cherry_blossom/**'
+
+permissions:
+  contents: write  
 
 jobs:
   update-prediction:
@@ -16,17 +17,13 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}  
     
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
-    
-    - name: Cache pip packages
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('portfolio/ml/cherry_blossom/scripts/requirements.txt') }}
     
     - name: Install dependencies
       run: |
@@ -39,22 +36,17 @@ jobs:
       working-directory: portfolio/ml/cherry_blossom/scripts
       run: |
         python cherry_blossom_workflow.py --update
-        
-        # Weekly full prediction generation
-        if [ $(date +%u) -eq 1 ]; then
-          echo "Monday - generating full daily predictions"
-          python cherry_blossom_workflow.py --daily
-        fi
-    
-    - name: Verify JSON files were created
-      run: |
-        ls -la portfolio/ml/cherry_blossom/*.json || echo "No JSON files yet"
     
     - name: Commit and push if changed
       run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add portfolio/ml/cherry_blossom/*.json
-        git add portfolio/ml/cherry_blossom/data/output/*.csv || true
-        git diff --staged --quiet || git commit -m "🌸 Update cherry blossom predictions - $(date +'%Y-%m-%d')"
-        git push || echo "No changes to push"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "github-actions[bot]"
+        
+        git add portfolio/ml/cherry_blossom/*.json || true
+        
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "🌸 Update predictions - $(date +'%Y-%m-%d')"
+          git push
+        fi

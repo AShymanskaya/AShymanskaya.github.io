@@ -1,10 +1,10 @@
 # 🌸 Cherry Blossom Forecast - Bonn
 
-[![Daily Update](https://github.com/AShymanskaya/cherry-blossom-forecast/actions/workflows/daily-update.yml/badge.svg)](https://github.com/AShymanskaya/cherry-blossom-forecast/actions/workflows/daily-update.yml)
+[![Daily Update](https://github.com/AShymanskaya/AShymanskaya.github.io/blob/main/.github/workflows/cherry-bloom-daily-update.yaml badge.svg)](https://github.com/AShymanskaya/AShymanskaya.github.io/blob/main/.github/workflows/cherry-bloom-daily-update.yaml)
 
 Machine learning-powered cherry blossom predictions for Bonn, Germany.
 
-🌐 **Live Forecast**: [https://AShymanskaya.github.io/cherry-blossom-forecast/](https://AShymanskaya.github.io/cherry-blossom-forecast/)
+🌐 **Live Forecast**: [https://ashymanskaya.github.io/portfolio/ml/cherry_blossom/](https://ashymanskaya.github.io/portfolio/ml/cherry_blossom/)
 
 ## Features
 
