@@ -1,2 +1,0 @@
-year,predicted_bloom_doy,predicted_bloom_start,estimated_bloom_end,estimated_duration,days_until_bloom,last_updated,available_months,latest_weather_date,confidence,has_january_data,has_february_data,has_march_data,has_april_data
-2025,101.21,2025-04-11,2025-04-24,14.3,16,2025-04-09 11:03:14,"january,february,march,april",2025-03-26,medium-high,True,True,True,True

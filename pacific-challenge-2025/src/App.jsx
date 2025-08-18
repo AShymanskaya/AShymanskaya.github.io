@@ -393,7 +393,7 @@ export default function App() {
         <h2>The Blue Pacific Continent</h2>
         <p>
         Across 22 nations spanning 20% of Earth's ocean, communities that have thrived for millennia through deep knowledge of land and sea now face unprecedented change. Despite contributing just 1% of global emissions, these islands are heavily influenced by the climate change. 
-        The Pacific Islands form a vast maritime civilisation where ocean and land intertwine. For 14.2 million people, the sea provides food, connects communities, and shapes cultural identity. Traditional navigation, sustainable fishing practices, and coastal agriculture have sustained these societies for thousands of years. Today, this intricate relationship between people and place faces systematic disruption as warming seas and changing weather patterns rewrite the rules of island life.
+         For 14.2 million people, the sea provides food, connects communities, and shapes cultural identity. Traditional navigation, sustainable fishing practices, and coastal agriculture have sustained these societies for thousands of years. Today, this intricate relationship between people and place faces systematic disruption as warming seas and changing weather patterns rewrite the rules of island life.
                 </p>
         <div className="stats-grid" style={{
           display: 'grid',
@@ -415,7 +415,7 @@ export default function App() {
       <Section chapter="Chapter 1">
         <h2>When the Ocean Rises</h2>
         <p>
-        Across the Pacific, the ocean's advance transforms daily life in profound ways. Rising at 5mm per year — twice the global average — seawater doesn't just claim beaches. It infiltrates underground freshwater reserves, damaging crops. With 56% of Pacific Islanders living within five metres of current sea level, this slow-motion crisis touches most households directly. Vulnerability score depicts a combination of the proportion of populating living close to water, and of the sea level rise rate.
+        Across the Pacific, the ocean's advance transforms daily life in profound ways. Rising at more than 5mm per year, seawater doesn't just claim beaches. It infiltrates underground freshwater reserves, damaging crops. With 56% of Pacific Islanders living within five metres of current sea level, this slow-motion crisis touches most households directly. Vulnerability score depicts a combination of the proportion of populating living close to water, and of the sea level rise rate.
         </p>
         
         <div style={{
@@ -501,8 +501,7 @@ export default function App() {
       <Section chapter="Chapter 2">
         <h2>Livelihoods on the Line</h2>
         <p>
-        The climate crisis strikes at the heart of Pacific livelihoods. For the 20% of families who farm and 24% who fish, environmental changes mean rethinking way of living. Farmers find that salt contamination ruins soil, and crops that once thrived now wilt in heat or rot in unexpected deluges.
-Meanwhile, fishing families face empty nets since the fish move to cooler waters. With agriculture and fishing contributing significantly to national incomes, these shifts ripple through entire economies. Such changes might make societies depend on expensive imports. ALEVI and AEVI ratios are calculated to demonstrate importance of agricultural contribution to economy and employment relative to the agricultural land. Shrinkage of the land would mean dire consequences for the countries more dependent on the agriculture. The existing food insecurity would thus increase. 
+        The climate crisis strikes at the heart of Pacific livelihoods. For the 20% of families who farm and 24% who fish, environmental changes mean rethinking way of living. With agriculture and fishing contributing significantly to national incomes, these shifts ripple through entire economies. Such changes might make societies depend on expensive imports. ALEVI and AEVI ratios were calculated to demonstrate importance of agricultural contribution to economy and employment relative to the agricultural land. Shrinkage of the land would mean dire consequences for the countries more dependent on the agriculture. The existing food insecurity would thus increase. 
         </p>
 
         <div style={{
@@ -668,7 +667,7 @@ Ocean conservation tells a similar story. When New Caledonia protected 100%, and
         <h2>Building Resilient Infrastructure</h2>
         <p>
         Adaptation requires foundations. Sixteen countries have developed disaster risk reduction laws that mandate stronger building codes and protective infrastructure. 
-Yet resilience means more than concrete. It requires communication systems that warn of approaching storms, transportation networks that function after floods, and governance structures that coordinate response across scattered islands. The connectivity scores reveal this broader infrastructure story — islands with better airports, shipping, and roads recover faster and adapt more successfully. 
+Yet resilience means more than concrete. It requires communication systems that warn of approaching storms, transportation networks that function after floods, and governance structures that coordinate response across scattered islands. The connectivity scores reveal this broader infrastructure story — islands with better airports, shipping, and roads would recover faster after future disasters. 
         </p>
 
         <div className="chart-pair" style={{ 
@@ -690,7 +689,7 @@ Yet resilience means more than concrete. It requires communication systems that 
       <Section>
         <h2>Enabling Early Warning</h2>
         <p>
-        In the Pacific, information saves lives. The spread of mobile coverage has revolutionised disaster preparedness. Yet gaps remain stark: while some nations approach universal coverage, others struggle with basic connectivity. This digital divide increasingly determines who thrives and who merely survives.
+        In the Pacific, information saves lives. The spread of mobile coverage has revolutionised disaster preparedness. Yet gaps remain stark: while some nations approach universal coverage, others struggle with basic connectivity. 
         </p>
         <div style={{
           display: 'grid',
@@ -746,15 +745,10 @@ Yet resilience means more than concrete. It requires communication systems that 
 
       {/* Conclusion */}
       <Section chapter="The Call to Action">
-        <h2>The Pacific Century</h2>
+        <h2>The Pacific Story</h2>
+        
         <p>
-          The transformation underway in the Pacific Islands offers lessons for a warming world. These communities demonstrate that adaptation requires more than seawalls and solar panels—it demands reimagining relationships with land and sea while preserving cultural identity.
-        </p>
-        <p>
-          From renewable energy microgrids to community-based fisheries management, Pacific innovations show that small nations can lead global change. Their strategies blend traditional wisdom with modern technology, creating solutions scaled to local needs rather than imported wholesale.
-        </p>
-        <p>
-          As climate impacts intensify globally, the Pacific's experience shifts from cautionary tale to instruction manual. These islands aren't just surviving climate change—they're showing how communities anywhere can adapt while maintaining their essential character. The question for the world is whether it will support these frontline innovations or force Pacific nations to bear the cost of changes they didn't create.
+          As climate impacts intensify globally, the most vulnerable communities of the Pacific have to overcome and adapt. The question for the world is whether it will support these frontline innovations or force Pacific nations to bear the cost of changes they didn't create.
         </p>
         <p>
           The seven million young Pacific Islanders of 2050 will inherit either abandoned islands or resilient ocean states. That future depends on choices made today—both in Pacific capitals and global climate conferences. Time, like the tide, waits for no one.

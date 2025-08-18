@@ -1,47 +1,49 @@
 {
-  "training_date": "2025-04-09",
+  "training_date": "2025-08-12",
   "feature_count": 68,
-  "model_file": "cherry_blossom_model_20250409.pkl",
+  "model_file": "cherry_blossom_model_20250812.pkl",
+  "training_years": "2015-2025",
+  "prediction_year": 2026,
   "top_features": [
     [
-      "tavg_roll_60d",
-      0.07616232091758705
-    ],
-    [
       "tmax_roll_60d",
-      0.05257256839497362
-    ],
-    [
-      "february_tavg",
-      0.051523309731020435
-    ],
-    [
-      "tmin_roll_60d",
-      0.05090463049416283
+      0.11744296334279328
     ],
     [
       "tmax_roll_30d",
-      0.045734854335573887
+      0.11521566491370214
     ],
     [
-      "winter_tmin",
-      0.04357871367941492
+      "tmax_roll_90d",
+      0.05411950653939015
     ],
     [
-      "february_tmin",
-      0.04319354803282896
+      "march_tmax",
+      0.042766682049486034
     ],
     [
-      "winter_tmax",
-      0.04280996006142706
+      "year_total_chill_days",
+      0.038765607787791555
     ],
     [
-      "winter_tavg",
-      0.03886956130258131
+      "tavg_roll_30d",
+      0.034900572704715555
+    ],
+    [
+      "tavg_roll_60d",
+      0.03460428627540429
     ],
     [
       "march_chill_days",
-      0.035460853791525415
+      0.031740637920759936
+    ],
+    [
+      "spring_tavg",
+      0.029166332415085074
+    ],
+    [
+      "march_tavg",
+      0.024837444320132452
     ]
   ]
 }

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Interactive data story about Pacific Islands climate resilience",
   "private": true,
-  "homepage": "https://ashymanskaya.github.io/pacific-challenge-2025",
+  "homepage": "https://ashymanskaya.github.io/pacific-challenge-2025-app/",
   "dependencies": {
     "@react-spring/web": "^9.7.3",
     "chart.js": "^4.5.0",
