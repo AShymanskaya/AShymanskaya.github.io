@@ -45,7 +45,7 @@
             position: relative;
             width: 100%;
             max-width: 6xl;
-            margin: 85px auto;
+            margin: 40px auto; /* Reduced from 85px */
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 2rem;
@@ -96,6 +96,206 @@
         .card:hover .card-image {
             transform: scale(1.05);
         }
+
+        /* Horizontal Timeline Styles */
+        .timeline-container {
+            position: relative;
+            width: 1200px;
+            margin: 0 auto;
+            padding: 10px; /* Reduced padding */
+            overflow-x: auto;
+        }
+
+        .timeline {
+            position: relative;
+            display: flex;
+            align-items: center; /* Center items vertically */
+            width: 1200px;
+            padding: 70px;
+            justify-content: space-between;
+            height: 250px; /* Set fixed height for proper centering */
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%; /* Center the line vertically */
+            height: 3px;
+            background: linear-gradient(90deg, var(--green), var(--pink));
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        .timeline-item {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* Center content vertically */
+            flex: 1;
+            width: 400px;
+            height: 100%; /* Full height of timeline */
+        }
+
+        /* Timeline dots - centered on the line */
+        .timeline-dot {
+            position: absolute;
+            top: 50%; /* Center vertically */
+            left: 50%; /* Center horizontally */
+            transform: translate(-50%, -50%); /* Perfect centering */
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 4px solid var(--green);
+            border-radius: 50%;
+            z-index: 2;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item:hover .timeline-dot {
+            background: var(--green);
+            border-color: var(--pink);
+            transform: translate(-50%, -50%) scale(1.2); /* Maintain centering on hover */
+        }
+
+        /* Timeline content positioning */
+        .timeline-content {
+            background: white;
+            padding: 5px;
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            height:110px;
+            text-align: center;
+            position: absolute;
+            transition: all 0.3s ease;
+            z-index: 3;
+        }
+
+        /* Alternating above/below layout */
+        .timeline-item:nth-child(odd) .timeline-content {
+            bottom: 60%; /* Position above the center line */
+        }
+
+        .timeline-item:nth-child(even) .timeline-content {
+            top: 60%; /* Position below the center line */
+        }
+
+        /* Branch for Data Viz Specialist - keep as first item above */
+        .timeline-item:first-child .timeline-content {
+            bottom: 60%;
+        }
+
+        .timeline-item:first-child::before {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 30%;
+            z-index: 1;
+        }
+
+        .timeline-content:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .timeline-content::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border: 12px solid transparent;
+        }
+
+        .timeline-item:nth-child(odd) .timeline-content::after {
+            bottom: -12px;
+        }
+
+        .timeline-item:nth-child(even) .timeline-content::after {
+            top: -12px;
+        }
+
+        .timeline-date {
+            display: inline-block;
+            background: var(--green);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .timeline-role {
+            color: var(--green);
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            font-family: 'Cormorant Garamond', serif;
+            line-height: 1.3;
+        }
+
+        .timeline-company {
+            color: var(--pink);
+            font-weight: 600;
+            font-style: italic;
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
+            line-height: 1.3;
+        }
+
+        .timeline-description {
+            color: var(--darkColor);
+            line-height: 1.5;
+            font-size: 0.9rem;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            .timeline-container {
+                overflow-x: scroll;
+                padding-bottom: 1rem;
+            }
+            
+            .timeline {
+                min-width: 1000px;
+            }
+            
+            .timeline-content {
+                width: 160px;
+                padding: 1.2rem;
+            }
+            
+            .timeline-role {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .timeline {
+                min-width: 800px;
+            }
+            
+            .timeline-content {
+                width: 140px;
+                padding: 1rem;
+            }
+            
+            .timeline-role {
+                font-size: 0.95rem;
+            }
+            
+            .timeline-description {
+                font-size: 0.85rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -107,10 +307,6 @@
                 <div class="flex space-x-8">
                     <a href="/portfolio/visualizations/index.html" class="nav-link text-[#232323] relative">Visualizations</a>
                     <a href="https://ashymanskaya.github.io/pacific-challenge-2025-app/" class="nav-link text-[#232323] relative">Pacific DataViz Challenge 2025</a>
-                    <!-- <a href="/portfolio/neuro/index.html" class="nav-link text-[#232323] relative">Neuro Research</a> -->
-                    <!-- <a href="/portfolio/ml/index.html" class="nav-link text-[#232323] relative">ML Models</a> -->
-                    <!-- <a href="/portfolio/blog/index.html" class="nav-link text-[#232323] relative">Blog</a> -->
-                    <!-- <a href="/portfolio/mri_basics/index.html" class="nav-link text-[#232323] relative">AI for MRI</a> -->
                 </div>
             </div>
         </div>
@@ -165,8 +361,72 @@
         </div>
     </section>
 
+<!-- Calendly badge widget begin -->
+<!-- <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
+<script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
+<script type="text/javascript">window.onload = function() { Calendly.initBadgeWidget({ url: 'https://calendly.com/datawithalexandra/30min?primary_color=3d7b5b', text: 'Schedule time with me', color: '#3d7b5b', textColor: '#ffffff', branding: true }); }</script> -->
+<!-- Calendly badge widget end -->
+
+    <!-- Professional Timeline Section -->
+    <section class="py-5 bg-transparent"> 
+        <div class="max-w mx-auto px-4">
+            <div class="timeline-container">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2016</div>
+                            <div class="timeline-role">Doctoral Research</div>
+                            <div class="timeline-company">Research Centre Juelich</div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2019</div>
+                            <div class="timeline-role">MRI Physicist</div>
+                            <div class="timeline-company">University Hospital Cologne</div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2020</div>
+                            <div class="timeline-role">Data Scientist</div>
+                            <div class="timeline-company">University Hospital Aachen</div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2022 - current</div>
+                            <div class="timeline-role">Senior Data Scientist</div>
+                            <div class="timeline-company">flaschenpost SE</div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2024 - current</div>
+                            <div class="timeline-role">Data Viz Specialist</div>
+                            <div class="timeline-company">Consultant</div>
+                        </div>
+                    </div>
+
+                    
+
+                    
+
+                    
+
+                    
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Portfolio Section -->
-    <section class="py-20">
+    <section class="py-12"> <!-- Reduced from py-20 to py-12 -->
         <div class="max-w-6xl mx-auto px-4">
             <div class="text-center mb-16">
                 <div class="flex items-center justify-center gap-4 mb-8">
@@ -192,38 +452,10 @@
                     <h3 class="text-2xl font-bold text-[#3D7B5B] mb-3">Machine Learning</h3>
                     <p class="text-[#7a724c]">Machine learning projects | forecasts | reinforced learning</p>
                 </a>
-
-                <!-- <a href="/portfolio/mri_basics/index.html" class="card">
-                    <div class="card-image-wrapper">
-                        <img src="portfolio/neuro/WW_mib.jpeg" alt="AI for MRI" class="card-image">
-                    </div>
-                    <h3 class="text-2xl font-bold text-[#3D7B5B] mb-3">AI for MRI</h3>
-                    <p class="text-[#7a724c]">Magnetic resonance imaging and how it evolves in the age of AI | basics and future developments</p>
-                </a> -->
-
-                <!-- <a href="/portfolio/neuro/index.html" class="card">
-                    <div class="card-image-wrapper">
-                        <img src="portfolio/neuro/WW_mib.jpeg" alt="Neuro Research" class="card-image">
-                    </div>
-                    <h3 class="text-2xl font-bold text-[#3D7B5B] mb-3">Neuro Research</h3>
-                    <p class="text-[#7a724c]">Exploring brain structure and function</p>
-                </a> -->
-
-                <!-- <a href="/portfolio/blog/index.html" class="card">
-                    <div class="card-image-wrapper">
-                        <img src="portfolio/blog/thumbnail.png" alt="Blog" class="card-image">
-                    </div>
-                    <h3 class="text-2xl font-bold text-[#3D7B5B] mb-3">Blog</h3>
-                    <p class="text-[#7a724c]">Thoughts and insights on data science</p>
-                </a> -->
             </div>
         </div>
     </section>
-<!-- Calendly badge widget begin -->
-<link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
-<script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
-<script type="text/javascript">window.onload = function() { Calendly.initBadgeWidget({ url: 'https://calendly.com/datawithalexandra/30min?primary_color=3d7b5b', text: 'Schedule time with me', color: '#3d7b5b', textColor: '#ffffff', branding: true }); }</script>
-<!-- Calendly badge widget end -->
+
     <!-- Footer -->
     <footer class="bg-[#3D7B5B] py-12 mt-20">
         <div class="max-w-6xl mx-auto px-4">
@@ -233,8 +465,9 @@
                     <a href="https://www.linkedin.com/in/shymanskaya-data-science/" class="text-[#f3f4ef] hover:text-[#E784A9] transition-colors">
                         <i class="fab fa-linkedin text-2xl"></i>
                     </a>
-                    <!-- <a href="https://bsky.app/profile/datawithalexandra.bsky.social" class="text-[#f3f4ef] hover:text-[#E784A9] transition-colors">
-                        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor">
-                            <path d="M111.8 62.2C170.2 105.9 233 194.7 256 242.4c23-47.6 85.8-136.4 144.2-180.2c42.1-31.6 110.3-56 110.3 21.8c0 15.5-8.9 130.5-14.1 149.2C478.2 298 412 314.6 353.1 304.5c102.9 17.5 129.1 75.5 72.5 133.5c-107.4 110.2-154.3-27.6-166.3-62.9l0 0c-1.7-4.9-2.6-7.8-3.3-7.8s-1.6 3-3.3 7.8l0 0c-12 35.3-59 173.1-166.3 62.9c-56.5-58-30.4-116 72.5-133.5C100 314.6 33.8 298 15.7 233.1C10.4 214.4 1.5 99.4 1.5 83.9c0-77.8 68.2-53.4 110.3-21.8z"/>
-                        </svg>
-                    </a> -->
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
