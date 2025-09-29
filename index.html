@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aliaksandra Shymanskaya - Data Science & Visualization</title>
+    <title>Aliaksandra Shymanskaya - AI & Healthcare Data Scientist</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
@@ -20,100 +20,266 @@
             background-color: var(--bgColor);
             font-family: 'Roboto', sans-serif;
             color: var(--black);
+            line-height: 1.6;
         }
 
         h1, h2, h3 {
             font-family: 'Cormorant Garamond', serif;
         }
 
+        /* Improved Navigation */
+        .nav-link {
+            position: relative;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
         .nav-link::after {
             content: '';
             position: absolute;
             bottom: -4px;
-            left: 0;
+            left: 50%;
             width: 0;
             height: 2px;
             background: var(--pink);
-            transition: width 0.3s ease;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover {
+            background: rgba(61, 123, 91, 0.1);
         }
 
         .nav-link:hover::after {
-            width: 100%;
+            width: 80%;
         }
 
-        .cards_grid {
-            position: relative;
-            width: 100%;
-            max-width: 6xl;
-            margin: 40px auto; /* Reduced from 85px */
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            padding: 0 2rem;
+        /* Smooth scroll behavior */
+        html {
+            scroll-behavior: smooth;
         }
 
-        .cards_grid .card {
+        /* Hero section improvements */
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(61, 123, 91, 0.05), rgba(231, 132, 169, 0.05));
+            min-height: 80vh;
+        }
+
+        /* Transparent image background */
+        .hero-image {
+            background: transparent !important;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-image img {
+            background: transparent;
+            mix-blend-mode: multiply;
+        }
+
+        /* Quick Access Sidebar */
+        .quick-access-sidebar {
+            position: fixed;
+            right: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 40;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .quick-access-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+            min-width: 120px;
+            border-left: 4px solid var(--green);
+        }
+
+        .quick-access-item:hover {
+            transform: translateX(-10px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-left-color: var(--pink);
+        }
+
+        .quick-access-item i {
+            font-size: 1.5rem;
+            color: var(--green);
+            margin-bottom: 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .quick-access-item:hover i {
+            color: var(--pink);
+        }
+
+        .quick-access-title {
+            background: var(--green);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 1rem 1rem 0 0;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* Mobile responsiveness for quick access */
+        @media (max-width: 1024px) {
+            .quick-access-sidebar {
+                position: static;
+                transform: none;
+                flex-direction: row;
+                justify-content: center;
+                margin: 2rem 0;
+                right: auto;
+                top: auto;
+                flex-wrap: wrap;
+            }
+            
+            .quick-access-item {
+                min-width: auto;
+                padding: 0.75rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .quick-access-sidebar {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .achievement-card {
             background: white;
             border-radius: 1rem;
-            padding: 2rem;
+            padding: 1.5rem;
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            border-left: 4px solid var(--green);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
         }
 
-        .cards_grid .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(61, 123, 91, 0.05), rgba(231, 132, 169, 0.05));
-            clip-path: polygon(70% 0, 100% 0, 100% 100%, 30% 100%);
-            z-index: 0;
-        }
-
-        .cards_grid .card:hover {
-            transform: translateY(-4px);
+        .achievement-card:hover {
+            transform: translateY(-2px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
-        .card-image-wrapper {
-            position: relative;
-            overflow: hidden;
-            border-radius: 0.5rem;
-            margin-bottom: 1.5rem;
+        .expertise-tag {
+            background: var(--green);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: inline-block;
+            margin: 0.25rem;
+            transition: all 0.3s ease;
         }
 
-        .card-image {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-
-        .card:hover .card-image {
+        .expertise-tag:hover {
+            background: var(--pink);
             transform: scale(1.05);
         }
 
-        /* Horizontal Timeline Styles */
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .digital-card {
+            background: linear-gradient(135deg, var(--green), var(--pink));
+            border-radius: 1rem;
+            padding: 2rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .digital-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(120deg); }
+            66% { transform: translate(-20px, 20px) rotate(240deg); }
+        }
+
+        .qr-placeholder {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--green);
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .impact-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--green);
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, var(--green), var(--pink));
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 3rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            color: white;
+            text-decoration: none;
+        }
+
+        /* Improved Timeline */
         .timeline-container {
             position: relative;
-            width: 1200px;
+            width: 100%;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 10px; /* Reduced padding */
-            overflow-x: auto;
+            padding: 10px;
         }
 
         .timeline {
             position: relative;
             display: flex;
-            align-items: center; /* Center items vertically */
-            width: 1200px;
-            padding: 70px;
+            align-items: center;
+            width: 100%;
+            padding: 70px 20px;
             justify-content: space-between;
-            height: 250px; /* Set fixed height for proper centering */
+            height: 250px;
+            overflow-x: auto;
         }
 
         .timeline::before {
@@ -121,7 +287,7 @@
             position: absolute;
             left: 0;
             right: 0;
-            top: 50%; /* Center the line vertically */
+            top: 50%;
             height: 3px;
             background: linear-gradient(90deg, var(--green), var(--pink));
             transform: translateY(-50%);
@@ -133,18 +299,17 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center; /* Center content vertically */
+            justify-content: center;
             flex: 1;
-            width: 400px;
-            height: 100%; /* Full height of timeline */
+            min-width: 200px;
+            height: 100%;
         }
 
-        /* Timeline dots - centered on the line */
         .timeline-dot {
             position: absolute;
-            top: 50%; /* Center vertically */
-            left: 50%; /* Center horizontally */
-            transform: translate(-50%, -50%); /* Perfect centering */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             width: 20px;
             height: 20px;
             background: white;
@@ -157,317 +322,505 @@
         .timeline-item:hover .timeline-dot {
             background: var(--green);
             border-color: var(--pink);
-            transform: translate(-50%, -50%) scale(1.2); /* Maintain centering on hover */
+            transform: translate(-50%, -50%) scale(1.2);
         }
 
-        /* Timeline content positioning */
         .timeline-content {
             background: white;
-            padding: 5px;
+            padding: 1rem;
             border-radius: 1rem;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            width: 300px;
-            height:110px;
+            width: 180px;
+            height: 100px;
             text-align: center;
             position: absolute;
             transition: all 0.3s ease;
             z-index: 3;
         }
 
-        /* Alternating above/below layout */
         .timeline-item:nth-child(odd) .timeline-content {
-            bottom: 60%; /* Position above the center line */
-        }
-
-        .timeline-item:nth-child(even) .timeline-content {
-            top: 60%; /* Position below the center line */
-        }
-
-        /* Branch for Data Viz Specialist - keep as first item above */
-        .timeline-item:first-child .timeline-content {
             bottom: 60%;
         }
 
-        .timeline-item:first-child::before {
-            content: '';
-            position: absolute;
-            top: 20%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 3px;
-            height: 30%;
-            z-index: 1;
-        }
-
-        .timeline-content:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .timeline-content::after {
-            content: '';
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border: 12px solid transparent;
-        }
-
-        .timeline-item:nth-child(odd) .timeline-content::after {
-            bottom: -12px;
-        }
-
-        .timeline-item:nth-child(even) .timeline-content::after {
-            top: -12px;
+        .timeline-item:nth-child(even) .timeline-content {
+            top: 60%;
         }
 
         .timeline-date {
             display: inline-block;
             background: var(--green);
             color: white;
-            padding: 0.4rem 0.8rem;
+            padding: 0.3rem 0.6rem;
             border-radius: 1rem;
             font-weight: 600;
-            margin-bottom: 0.8rem;
-            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.7rem;
         }
 
         .timeline-role {
             color: var(--green);
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.3rem;
             font-family: 'Cormorant Garamond', serif;
-            line-height: 1.3;
+            line-height: 1.2;
         }
 
         .timeline-company {
             color: var(--pink);
             font-weight: 600;
             font-style: italic;
-            margin-bottom: 0.8rem;
-            font-size: 0.9rem;
-            line-height: 1.3;
+            font-size: 0.7rem;
+            line-height: 1.2;
         }
 
-        .timeline-description {
-            color: var(--darkColor);
-            line-height: 1.5;
-            font-size: 0.9rem;
+        /* Section spacing improvements */
+        section {
+            padding: 4rem 0;
         }
 
-        /* Mobile Responsive */
-        @media (max-width: 1024px) {
-            .timeline-container {
-                overflow-x: scroll;
-                padding-bottom: 1rem;
-            }
-            
-            .timeline {
-                min-width: 1000px;
-            }
-            
-            .timeline-content {
-                width: 160px;
-                padding: 1.2rem;
-            }
-            
-            .timeline-role {
-                font-size: 1rem;
-            }
-        }
-
+        /* Better mobile responsiveness */
         @media (max-width: 768px) {
             .timeline {
-                min-width: 800px;
+                flex-direction: column;
+                height: auto;
+                padding: 2rem 1rem;
+            }
+            
+            .timeline::before {
+                width: 3px;
+                height: 100%;
+                left: 50%;
+                top: 0;
+                transform: translateX(-50%);
+            }
+            
+            .timeline-item {
+                width: 100%;
+                margin: 2rem 0;
             }
             
             .timeline-content {
-                width: 140px;
-                padding: 1rem;
+                position: relative;
+                top: auto !important;
+                bottom: auto !important;
+                margin-top: 2rem;
+            }
+        }
+
+        /* Improved navigation for mobile */
+        @media (max-width: 768px) {
+            nav .flex {
+                flex-direction: column;
+                gap: 1rem;
             }
             
-            .timeline-role {
-                font-size: 0.95rem;
-            }
-            
-            .timeline-description {
-                font-size: 0.85rem;
+            nav .space-x-8 {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1rem;
             }
         }
     </style>
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="py-6 border-b border-gray-200 bg-white">
+    <nav class="py-6 border-b border-gray-200 bg-white sticky top-0 z-50 backdrop-blur-md">
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-between items-center">
-                <a href="/" class="text-[#3D7B5B] text-2xl font-cormorant">AS</a>
-                <div class="flex space-x-8">
-                    <a href="/portfolio/visualizations/index.html" class="nav-link text-[#232323] relative">Visualizations</a>
-                    <a href="https://ashymanskaya.github.io/pacific-challenge-2025-app/" class="nav-link text-[#232323] relative">Pacific DataViz Challenge 2025</a>
+                <a href="/" class="text-[#3D7B5B] text-xl font-cormorant "> <strong> Aliaksandra Shymanskaya </strong> Data Re-viewed</a>
+                <div class="flex space-x-4">
+                    <a href="#portfolio" class="nav-link text-[#232323]">Portfolio</a>
+                    <a href="portfolio/assets/cv.html" class="nav-link text-[#232323]">About</a>
+                    <a href="#services" class="nav-link text-[#232323]">Services</a> 
+
                 </div>
             </div>
         </div>
     </nav>
 
+    <!-- Quick Access Sidebar -->
+    <div class="quick-access-sidebar hidden lg:flex">
+        <div class="quick-access-title">Quick Access</div>
+        <a href="portfolio/visualizations/index.html" class="quick-access-item">
+            <i class="fas fa-chart-line"></i>
+            <div class="font-semibold text-xs">Visualizations</div>
+        </a>
+        <a href="https://ashymanskaya.github.io/pacific-challenge-2025-app/" class="quick-access-item">
+            <i class="fas fa-trophy"></i>
+            <div class="font-semibold text-xs">DataViz Challenge</div>
+        </a>
+        <a href="portfolio/ml/cherry_blossom/index.html" class="quick-access-item">
+            <i class="fas fa-brain"></i>
+            <div class="font-semibold text-xs">Machine Learning</div>
+        </a>
+        <a href="https://github.com/AShymanskaya" class="quick-access-item">
+            <i class="fab fa-github"></i>
+            <div class="font-semibold text-xs">Code Portfolio</div>
+        </a>
+    </div>
+
     <!-- Hero Section -->
-    <section class="py-20">
+    <section class="py-20 hero-gradient">
         <div class="max-w-6xl mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                <div class="relative">
-                    <div class="absolute inset-0 bg-[#E784A9] transform translate-x-4 translate-y-4 rotate-2 rounded-xl"></div>
-                    <div class="absolute inset-0 bg-[#3D7B5B] transform -translate-x-4 -translate-y-4 -rotate-2 rounded-xl"></div>
-                    <img src="portfolio/assets/images/profile_pic.jpg" alt="Aliaksandra Shymanskaya" class="rounded-xl shadow-2xl relative z-10">
-                </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+               
                 <div>
                     <h1 class="text-5xl font-bold mb-6 font-cormorant">
-                        Hey there, I'm<br>
-                        <span class="text-[#3D7B5B]">Aliaksandra</span>
+                        <span class="text-[#3D7B5B]">ALIAKSANDRA</span><br>
+                        SHYMANSKAYA
                     </h1>
+                    <h2 class="text-3xl mb-6 font-cormorant">
+                        <span class="text-[#3D7B5B]">Data Consultant</span><br>
+                        
+                    </h2>
+                    <h3 class="text-xl mb-6 font-cormorant">
+                        <span class="text-[#3D7B5B]">I take your data and make them useful through</span><br>
+                        analysis, models, and visualisations
+                    </h3> 
                     <div class="space-y-6 text-lg">
-                        <p class="text-[#7a724c]">
-                            I love turning complex data into actionable insights. With a PhD in Physics, I've found my sweet spot at the intersection of machine learning, healthcare tech, and data analytics.
-                        </p>
-                        <p class="text-[#7a724c]">
-                            Want to collaborate or chat about data science? I'm always up for a good conversation about turning data into impact!
-                        </p>
+                        
+                       
                     </div>
-                    <div class="mt-8 space-y-4">
-                        <div class="flex gap-6">
-                        <a href="mailto:aliaksandrashymanskaya@gmail.com" 
-                           class="inline-flex items-center text-[#3D7B5B] hover:text-[#E784A9]">
-                            <i class="far fa-envelope mr-2"></i>
-                        </a>
-                            <a href="https://www.linkedin.com/in/shymanskaya-data-science/" class="text-[#3D7B5B] hover:text-[#E784A9] transition-all">
-                                <i class="fab fa-linkedin text-2xl"></i>
-                            </a>
-                            <a href="https://bsky.app/profile/datawithalexandra.bsky.social" class="text-[#3D7B5B] hover:text-[#E784A9] transition-all">
-                                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor">
-                                    <path d="M111.8 62.2C170.2 105.9 233 194.7 256 242.4c23-47.6 85.8-136.4 144.2-180.2c42.1-31.6 110.3-56 110.3 21.8c0 15.5-8.9 130.5-14.1 149.2C478.2 298 412 314.6 353.1 304.5c102.9 17.5 129.1 75.5 72.5 133.5c-107.4 110.2-154.3-27.6-166.3-62.9l0 0c-1.7-4.9-2.6-7.8-3.3-7.8s-1.6 3-3.3 7.8l0 0c-12 35.3-59 173.1-166.3 62.9c-56.5-58-30.4-116 72.5-133.5C100 314.6 33.8 298 15.7 233.1C10.4 214.4 1.5 99.4 1.5 83.9c0-77.8 68.2-53.4 110.3-21.8z"/>
-                                </svg>
-                            </a>
-                            <a href="https://github.com/AShymanskaya" class="text-[#3D7B5B] hover:text-[#E784A9] transition-all">
-                                <i class="fab fa-github text-2xl"></i>
-                            </a>
-                            <a href="https://medium.com/@alexandrafiona" class="text-[#3D7B5B] hover:text-[#E784A9] transition-all">
-                                <i class="fab fa-medium text-2xl"></i>
-                            </a>
-                        </div>
-                    </div>
+
                 </div>
-            </div>
-        </div>
-    </section>
-
-<!-- Calendly badge widget begin -->
-<!-- <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
-<script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
-<script type="text/javascript">window.onload = function() { Calendly.initBadgeWidget({ url: 'https://calendly.com/datawithalexandra/30min?primary_color=3d7b5b', text: 'Schedule time with me', color: '#3d7b5b', textColor: '#ffffff', branding: true }); }</script> -->
-<!-- Calendly badge widget end -->
-
-    <!-- Professional Timeline Section -->
-    <section class="py-5 bg-transparent"> 
-        <div class="max-w mx-auto px-4">
-            <div class="timeline-container">
-                <div class="timeline">
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <div class="timeline-date">2016</div>
-                            <div class="timeline-role">Doctoral Research</div>
-                            <div class="timeline-company">Research Centre Juelich</div>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <div class="timeline-date">2019</div>
-                            <div class="timeline-role">MRI Physicist</div>
-                            <div class="timeline-company">University Hospital Cologne</div>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <div class="timeline-date">2020</div>
-                            <div class="timeline-role">Data Scientist</div>
-                            <div class="timeline-company">University Hospital Aachen</div>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <div class="timeline-date">2022 - current</div>
-                            <div class="timeline-role">Senior Data Scientist</div>
-                            <div class="timeline-company">flaschenpost SE</div>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <div class="timeline-date">2024 - current</div>
-                            <div class="timeline-role">Data Viz Specialist</div>
-                            <div class="timeline-company">Consultant</div>
-                        </div>
-                    </div>
-
-                    
-
-                    
-
-                    
-
-                    
+                <div class="relative hero-image">
+                    <div class="absolute inset-0 bg-[#E784A9] transform translate-x-4 translate-y-4 rotate-2 rounded-xl opacity-30"></div>
+                    <div class="absolute inset-0 bg-[#3D7B5B] transform -translate-x-4 -translate-y-4 -rotate-2 rounded-xl opacity-30"></div>
+                    <img src="portfolio/assets/images/Adobe Express - file.png" alt="Dr. Aliaksandra Shymanskaya" class="rounded-xl relative z-100 gradient-mask" style="background: transparent;">
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Portfolio Section -->
-    <section class="py-12"> <!-- Reduced from py-20 to py-12 -->
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="text-center mb-16">
-                <div class="flex items-center justify-center gap-4 mb-8">
-                    <div class="h-0.5 w-24 bg-[#7a724c]"></div>
-                    <h2 class="text-4xl font-bold font-cormorant text-[#3D7B5B]">Portfolio</h2>
-                    <div class="h-0.5 w-24 bg-[#7a724c]"></div>
-                </div>
+                
+                <style>
+                .gradient-mask {
+    mask: linear-gradient(to bottom, black 85%, transparent 100%);
+    -webkit-mask: linear-gradient(to bottom, black 85%, transparent 100%);
+}
+                </style>
             </div>
             
-            <div class="cards_grid">
-                <a href="/portfolio/visualizations/index.html" class="card">
-                    <div class="card-image-wrapper">
-                        <img src="/portfolio/visualizations/thumbnail.png" alt="Data Visualizations" class="card-image">
-                    </div>
-                    <h3 class="text-2xl font-bold text-[#3D7B5B] mb-3">Data Visualizations</h3>
-                    <p class="text-[#7a724c]">Interactive data stories and visual analytics | history, society, and all inbetween</p>
-                </a>
-
-                <a href="portfolio/ml/cherry_blossom/index.html" class="card">
-                    <div class="card-image-wrapper">
-                        <img src="/portfolio/blog/thumbnail.png" alt="Machine Learning" class="card-image">
-                    </div>
-                    <h3 class="text-2xl font-bold text-[#3D7B5B] mb-3">Machine Learning</h3>
-                    <p class="text-[#7a724c]">Machine learning projects | forecasts | reinforced learning</p>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-[#3D7B5B] py-12 mt-20">
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="text-center">
-                <p class="text-[#f3f4ef] mb-4 font-cormorant">© 2024 Aliaksandra Shymanskaya. All rights reserved.</p>
-                <div class="flex justify-center space-x-6">
-                    <a href="https://www.linkedin.com/in/shymanskaya-data-science/" class="text-[#f3f4ef] hover:text-[#E784A9] transition-colors">
-                        <i class="fab fa-linkedin text-2xl"></i>
+            <!-- Mobile Quick Access -->
+            <div class="lg:hidden mt-12">
+                <div class="quick-access-sidebar">
+                    <div class="quick-access-title">Quick Access</div>
+                    <a href="portfolio/visualizations/index.html" class="quick-access-item">
+                        <i class="fas fa-chart-line"></i>
+                        <div class="font-semibold text-xs">Visualizations</div>
+                    </a>
+                    <a href="https://ashymanskaya.github.io/pacific-challenge-2025-app/" class="quick-access-item">
+                        <i class="fas fa-trophy"></i>
+                        <div class="font-semibold text-xs">DataViz Challenge</div>
+                    </a>
+                    <a href="portfolio/ml/cherry_blossom/index.html" class="quick-access-item">
+                        <i class="fas fa-brain"></i>
+                        <div class="font-semibold text-xs">Machine Learning</div>
+                    </a>
+                    <a href="https://github.com/AShymanskaya" class="quick-access-item">
+                        <i class="fab fa-github"></i>
+                        <div class="font-semibold text-xs">Code Portfolio</div>
                     </a>
                 </div>
             </div>
         </div>
+    </section>
+
+    <!-- Services & Consulting -->
+    <section class="py-16 bg-white">
+        <div class="max-w-6xl mx-auto px-4" id="services">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold font-cormorant text-[#3D7B5B] mb-4">How I Can Help</h2>
+                <p class="text-[#7a724c] text-lg">Specialised consulting services for AI and ML implementations</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                
+                <div class="achievement-card">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-brain text-[#3D7B5B] text-2xl mr-3"></i>
+                        <h3 class="font-bold text-lg">Healthcare AI</h3>
+                    </div>                    
+                    <ul class="text-sm text-left text-[#7a724c] space-y-1">
+                        <li>• AI implementation strategy</li>
+                        <li>• Medical imaging analysis (MRI)</li>
+                        <li>• Patient prediction models</li>
+                        <li>• Clinical decision support</li>
+                        <li>• GDPR compliance frameworks</li>
+                        <li>• Regulatory documentation</li>
+                    </ul>
+                </div>
+                <div class="achievement-card">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-chart-line text-[#3D7B5B] text-2xl mr-3"></i>
+                        <h3 class="font-bold text-lg">ML Systems at Scale</h3>
+                    </div>
+                    <ul class="text-sm text-left text-[#7a724c] space-y-1">
+                        <li>• End-to-end machine learning systems </li>
+                        <li>• Customer analytics </li>               
+                        <li>• Recommendation systems</li>
+                        <li>• A/B testing frameworks</li>
+                        <li>• MLOps pipelines</li>
+                        <li>• Performance optimisation</li>    
+
+                     </div>
+                <div class="achievement-card">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-palette text-[#3D7B5B] text-2xl mr-3"></i>
+                        <h3 class="font-bold text-lg">Data Visualisation</h3>
+                    </div>
+                    <ul class="text-sm text-left text-[#7a724c] space-y-1">
+                        <li>• Scientific visualisations</li>
+                        <li>• Artictic data presentation</li>
+                        <li>• Interactive charts</li>
+                        <li>• Dashboard development</li>
+                        <li>• Executive reporting</li>
+                        <li>• Data storytelling</li>
+                        <li>• "Peer Re-viewed" newsletter</li>
+                </div>
+                <div class="achievement-card">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-graduation-cap text-[#3D7B5B] text-2xl mr-3"></i>
+                        <h3 class="font-bold text-lg">Research Excellence</h3>
+                    </div>
+                    <ul class="text-sm text-left text-[#7a724c] space-y-1">
+                        <li>• Published researcher</li>
+                        <li>• International conference speaker</li>
+                            <li>• PhD in Physics</li></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+
+    
+
+    
+
+    <!-- Expertise Section
+    <section class="py-16" id="expertise">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold font-cormorant text-[#3D7B5B] mb-4">Technical Expertise</h2>
+                <p class="text-[#7a724c] text-lg">Specialized skills across healthcare AI, machine learning, and data science</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="text-center">
+                    <div class="bg-[#3D7B5B] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-brain text-white text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Healthcare AI</h3>
+                    <div class="text-sm">
+                        <div class="expertise-tag">Medical Imaging</div>
+                        <div class="expertise-tag">Neuroimaging</div>
+                        <div class="expertise-tag">GDPR Compliance</div>
+                        <div class="expertise-tag">Clinical Prediction</div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="bg-[#3D7B5B] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-robot text-white text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Machine Learning</h3>
+                    <div class="text-sm">
+                        <div class="expertise-tag">TensorFlow</div>
+                        <div class="expertise-tag">PyTorch</div>
+                        <div class="expertise-tag">RNNs</div>
+                        <div class="expertise-tag">Deep Learning</div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="bg-[#3D7B5B] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-chart-bar text-white text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">Data Science</h3>
+                    <div class="text-sm">
+                        <div class="expertise-tag">Python</div>
+                        <div class="expertise-tag">R</div>
+                        <div class="expertise-tag">SQL</div>
+                        <div class="expertise-tag">Statistical Analysis</div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="bg-[#3D7B5B] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-cloud text-white text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">ML Ops</h3>
+                    <div class="text-sm">
+                        <div class="expertise-tag">Azure ML</div>
+                        <div class="expertise-tag">Databricks</div>
+                        <div class="expertise-tag">Docker</div>
+                        <div class="expertise-tag">A/B Testing</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section> -->
+
+    <!-- Portfolio Preview
+    <section class="py-16 bg-gray-50" id="portfolio">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold font-cormorant text-[#3D7B5B] mb-4">Featured Work</h2>
+                <p class="text-[#7a724c] text-lg">Highlighting key projects across healthcare AI and ML applications</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Healthcare AI Project 
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all">
+                    <div class="h-48 bg-gradient-to-br from-[#3D7B5B] to-[#E784A9] flex items-center justify-center">
+                        <i class="fas fa-brain text-white text-4xl"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2">Brain Network Analysis</h3>
+                        <p class="text-[#7a724c] mb-4">ML models for psychological diagnosis prediction using neuroimaging data and advanced statistical analysis.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-[#3D7B5B] font-semibold">Healthcare AI</span>
+                            <a href="#" class="text-[#E784A9] hover:text-[#3D7B5B]">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- E-commerce ML Project 
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all">
+                    <div class="h-48 bg-gradient-to-br from-[#E784A9] to-[#3D7B5B] flex items-center justify-center">
+                        <i class="fas fa-shopping-cart text-white text-4xl"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2">Recommendation Systems</h3>
+                        <p class="text-[#7a724c] mb-4">RNN-based customer recommendation engine driving 2% conversion increase at scale.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-[#3D7B5B] font-semibold">E-commerce ML</span>
+                            <a href="#" class="text-[#E784A9] hover:text-[#3D7B5B]">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Visualization Project 
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all">
+                    <div class="h-48 bg-gradient-to-br from-[#3D7B5B] to-[#E784A9] flex items-center justify-center">
+                        <i class="fas fa-chart-line text-white text-4xl"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2">Interactive Data Stories</h3>
+                        <p class="text-[#7a724c] mb-4">D3.js and React visualizations transforming complex datasets into actionable insights.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-[#3D7B5B] font-semibold">Data Viz</span>
+                            <a href="/portfolio/visualizations/index.html" class="text-[#E784A9] hover:text-[#3D7B5B]">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-8">
+                <a href="/portfolio/visualizations/index.html" class="cta-button">
+                    <i class="fas fa-folder-open"></i>
+                    View Full Portfolio
+                </a>
+            </div>
+        </div>
+    </section> -->
+
+    <!-- Publications & Research -->
+    <section class="py-16" id="publications">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold font-cormorant text-[#3D7B5B] mb-4">Research & Publications</h2>
+                <p class="text-[#7a724c] text-lg">Peer-reviewed research in AI, neuroscience, and medical imaging</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-[#3D7B5B] p-3 rounded-full">
+                            <i class="fas fa-file-alt text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg mb-2">Brain Network Changes in Adult Victims of Violence</h3>
+                            <p class="text-[#7a724c] text-sm mb-2">Frontiers in Psychiatry (2023)</p>
+                            <p class="text-[#7a724c] mb-3">Advanced neuroimaging analysis revealing trauma-induced brain network alterations.</p>
+                            <a href="https://doi.org/10.3389/fpsyt.2023.1040861" class="text-[#E784A9] text-sm hover:text-[#3D7B5B]">
+                                <i class="fas fa-external-link-alt mr-1"></i>View Publication
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-[#3D7B5B] p-3 rounded-full">
+                            <i class="fas fa-brain text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg mb-2">Impulsivity Classification Using EEG and ML</h3>
+                            <p class="text-[#7a724c] text-sm mb-2">International Journal of Neural Systems (2023)</p>
+                            <p class="text-[#7a724c] mb-3">Explainable machine learning for behavioral prediction from neurophysiological data.</p>
+                            <a href="https://doi.org/10.1142/s0129065723500065" class="text-[#E784A9] text-sm hover:text-[#3D7B5B]">
+                                <i class="fas fa-external-link-alt mr-1"></i>View Publication
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-8">
+                <a href="https://orcid.org/0000-0001-7251-9539" class="border-2 border-[#3D7B5B] text-[#3D7B5B] px-6 py-3 rounded-full font-semibold hover:bg-[#3D7B5B] hover:text-white transition-all">
+                    View All Publications
+                </a>
+            </div>
+        </div>
+    </section>
+
+    
+
+    <!-- Footer -->
+    <footer class="bg-[#3D7B5B] py-6 md:py-8">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center">
+                <p class="text-[#f3f4ef] mb-2 md:mb-4" style="font-family: var(--font-display)">© 2024 Dr. Aliaksandra Shymanskaya. All rights reserved.</p>
+                <p class="text-[#f3f4ef] text-xs md:text-sm opacity-80"> • Data consulting • </p>
+            </div>
+        </div>
     </footer>
+
+    <!-- Calendly Integration -->
+    <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
+    <script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
+    <script type="text/javascript">
+        window.onload = function() { 
+            Calendly.initBadgeWidget({ 
+                url: 'https://calendly.com/datawithalexandra/30min?primary_color=3d7b5b', 
+                text: 'Schedule time with me', 
+                color: '#3d7b5b', 
+                textColor: '#ffffff', 
+                branding: true 
+            }); 
+        }
+
+        
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add scroll effect to navigation
+        window.addEventListener('scroll', function() {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 100) {
+                nav.classList.add('shadow-lg');
+            } else {
+                nav.classList.remove('shadow-lg');
+            }
+        });
+    </script>
 </body>
 </html>
