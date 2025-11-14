@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aliaksandra Shymanskaya - AI & Healthcare Data Scientist</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green: #3D7B5B;
+            --pink: #E784A9;
+            --black: #232323;
+            --bgColor: #f3f4ef;
+            --darkColor: #7a724c;
+        }
+
+        body {
+            background-color: var(--bgColor);
+            font-family: 'Roboto', sans-serif;
+            color: var(--black);
+            line-height: 1.6;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        /* Improved Navigation */
+        .nav-link {
+            position: relative;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--pink);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover {
+            background: rgba(61, 123, 91, 0.1);
+        }
+
+        .nav-link:hover::after {
+            width: 80%;
+        }
+
+        /* Smooth scroll behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Hero section improvements */
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(61, 123, 91, 0.05), rgba(231, 132, 169, 0.05));
+            min-height: 80vh;
+        }
+
+        /* Transparent image background */
+        .hero-image {
+            background: transparent !important;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-image img {
+            background: transparent;
+            mix-blend-mode: multiply;
+        }
+
+        /* Quick Access Sidebar */
+        .quick-access-sidebar {
+            position: fixed;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 40;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .quick-access-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+            min-width: 120px;
+            border-left: 4px solid var(--green);
+        }
+
+        .quick-access-item:hover {
+            transform: translateX(-10px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-left-color: var(--pink);
+        }
+
+        .quick-access-item i {
+            font-size: 1.5rem;
+            color: var(--green);
+            margin-bottom: 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .quick-access-item:hover i {
+            color: var(--pink);
+        }
+
+        .quick-access-title {
+            background: var(--green);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 1rem 1rem 0 0;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* Mobile responsiveness for quick access */
+        @media (max-width: 1024px) {
+            .quick-access-sidebar {
+                position: static;
+                transform: none;
+                flex-direction: row;
+                justify-content: center;
+                margin: 2rem 0;
+                right: auto;
+                top: auto;
+                flex-wrap: wrap;
+            }
+            
+            .quick-access-item {
+                min-width: auto;
+                padding: 0.75rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .quick-access-sidebar {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .achievement-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--green);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+        }
+
+        .achievement-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .expertise-tag {
+            background: var(--green);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: inline-block;
+            margin: 0.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .expertise-tag:hover {
+            background: var(--pink);
+            transform: scale(1.05);
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .digital-card {
+            background: linear-gradient(135deg, var(--green), var(--pink));
+            border-radius: 1rem;
+            padding: 2rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .digital-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(120deg); }
+            66% { transform: translate(-20px, 20px) rotate(240deg); }
+        }
+
+        .qr-placeholder {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--green);
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .impact-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--green);
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, var(--green), var(--pink));
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 3rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            color: white;
+            text-decoration: none;
+        }
+
+        /* Improved Timeline */
+        .timeline-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        .timeline {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 70px 20px;
+            justify-content: space-between;
+            height: 250px;
+            overflow-x: auto;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--green), var(--pink));
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        .timeline-item {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            min-width: 200px;
+            height: 100%;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 4px solid var(--green);
+            border-radius: 50%;
+            z-index: 2;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item:hover .timeline-dot {
+            background: var(--green);
+            border-color: var(--pink);
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        .timeline-content {
+            background: white;
+            padding: 1rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 180px;
+            height: 100px;
+            text-align: center;
+            position: absolute;
+            transition: all 0.3s ease;
+            z-index: 3;
+        }
+
+        .timeline-item:nth-child(odd) .timeline-content {
+            bottom: 60%;
+        }
+
+        .timeline-item:nth-child(even) .timeline-content {
+            top: 60%;
+        }
+
+        .timeline-date {
+            display: inline-block;
+            background: var(--green);
+            color: white;
+            padding: 0.3rem 0.6rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.7rem;
+        }
+
+        .timeline-role {
+            color: var(--green);
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+            font-family: 'Cormorant Garamond', serif;
+            line-height: 1.2;
+        }
+
+        .timeline-company {
+            color: var(--pink);
+            font-weight: 600;
+            font-style: italic;
+            font-size: 0.7rem;
+            line-height: 1.2;
+        }
+
+        /* Section spacing improvements */
+        section {
+            padding: 4rem 0;
+        }
+
+        /* Better mobile responsiveness */
+        @media (max-width: 768px) {
+            .timeline {
+                flex-direction: column;
+                height: auto;
+                padding: 2rem 1rem;
+            }
+            
+            .timeline::before {
+                width: 3px;
+                height: 100%;
+                left: 50%;
+                top: 0;
+                transform: translateX(-50%);
+            }
+            
+            .timeline-item {
+                width: 100%;
+                margin: 2rem 0;
+            }
+            
+            .timeline-content {
+                position: relative;
+                top: auto !important;
+                bottom: auto !important;
+                margin-top: 2rem;
+            }
+        }
+
+        /* Improved navigation for mobile */
+        @media (max-width: 768px) {
+            nav .flex {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            nav .space-x-8 {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="py-6 border-b border-gray-200 bg-white sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <a href="/" class="text-[#3D7B5B] text-xl font-cormorant "> <strong> Aliaksandra Shymanskaya </strong> Data Re-viewed</a>
+                <div class="flex space-x-4">
+                    <a href="portfolio/visualizations/index.html" class="nav-link text-[#232323]">Portfolio</a>
+                    <a href="portfolio/assets/cv.html" class="nav-link text-[#232323]">About</a>
+                    <a href="#services" class="nav-link text-[#232323]">Services</a> 
+
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    
+
+    <!-- Professional Timeline -->
+    <section class="py-16 bg-gray-50" id="about">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold font-cormorant text-[#3D7B5B] mb-4">Professional Journey</h2>
+                <p class="text-[#7a724c] text-lg">From PhD research to industry leadership in AI and healthcare</p>
+            </div>
+            <div class="timeline-container">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2016-2019</div>
+                            <div class="timeline-role">PhD Research</div>
+                            <div class="timeline-company">Research Centre Juelich</div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2019-2020</div>
+                            <div class="timeline-role">MRI Physicist</div>
+                            <div class="timeline-company">University Hospital Cologne</div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2020-2022</div>
+                            <div class="timeline-role">Data Scientist</div>
+                            <div class="timeline-company">University Hospital Aachen</div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2022-Present</div>
+                            <div class="timeline-role">Senior Data Scientist</div>
+                            <div class="timeline-company">flaschenpost SE</div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2024-Present</div>
+                            <div class="timeline-role">AI Consultant</div>
+                            <div class="timeline-company">Independent</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Footer -->
+    <footer class="bg-[#3D7B5B] py-6 md:py-8">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center">
+                <p class="text-[#f3f4ef] mb-2 md:mb-4" style="font-family: var(--font-display)">© 2024 Dr. Aliaksandra Shymanskaya. All rights reserved.</p>
+                <p class="text-[#f3f4ef] text-xs md:text-sm opacity-80">• Data consulting •</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Calendly Integration -->
+    <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
+    <script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
+    <script type="text/javascript">
+        window.onload = function() { 
+            Calendly.initBadgeWidget({ 
+                url: 'https://calendly.com/datawithalexandra/30min?primary_color=3d7b5b', 
+                text: 'Schedule time with me', 
+                color: '#3d7b5b', 
+                textColor: '#ffffff', 
+                branding: true 
+            }); 
+        }
+
+        // Digital Business Card vCard Download
+        function downloadVCard() {
+            const vCardData = `BEGIN:VCARD
+VERSION:3.0
+FN:Dr. Aliaksandra Shymanskaya
+N:Shymanskaya;Aliaksandra;;;Dr.
+ORG:AI & Healthcare Data Scientist
+TITLE:Senior Data Scientist & AI Consultant
+EMAIL:aliaksandrashymanskaya@gmail.com
+URL:https://ashymanskaya.github.io
+ADR:;;Cologne;;Germany
+NOTE:PhD Physics • AI Specialist • Healthcare Tech Expert • Machine Learning • Data Visualization
+END:VCARD`;
+
+            const blob = new Blob([vCardData], { type: 'text/vcard' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'Aliaksandra_Shymanskaya_Contact.vcf';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add scroll effect to navigation
+        window.addEventListener('scroll', function() {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 100) {
+                nav.classList.add('shadow-lg');
+            } else {
+                nav.classList.remove('shadow-lg');
+            }
+        });
+    </script>
+</body>
+</html>
