@@ -1,11 +1,11 @@
 [
   {
-    "prediction_date": "2025-11-26",
+    "prediction_date": "2025-11-27",
     "year": 2026,
-    "predicted_bloom_doy": 94.975830078125,
-    "predicted_bloom_start": "2026-04-04",
-    "estimated_bloom_end": "2026-04-17",
-    "days_until_bloom": 128,
+    "predicted_bloom_doy": 98.03582000732422,
+    "predicted_bloom_start": "2026-04-08",
+    "estimated_bloom_end": "2026-04-21",
+    "days_until_bloom": 131,
     "confidence": "medium",
     "features_available": 61
   }
