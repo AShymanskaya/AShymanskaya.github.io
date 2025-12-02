@@ -1,16 +1,16 @@
 {
-  "prediction_date": "2025-12-01",
+  "prediction_date": "2025-12-02",
   "year": 2026,
-  "predicted_bloom_doy": 97.96795654296875,
-  "predicted_bloom_start": "2026-04-07",
-  "estimated_bloom_end": "2026-04-20",
+  "predicted_bloom_doy": 98.0970687866211,
+  "predicted_bloom_start": "2026-04-08",
+  "estimated_bloom_end": "2026-04-21",
   "days_until_bloom": 126,
   "confidence": "medium",
   "features_available": 68,
   "confidence_percent": 50,
-  "predicted_peak": "2026-04-13",
-  "model_mae": 4.21,
+  "predicted_peak": "2026-04-14",
+  "model_mae": 4.29,
   "data_points": "11 years",
   "estimated_duration": 14,
-  "last_updated": "2025-12-01 06:36:05"
+  "last_updated": "2025-12-02 06:35:04"
 }
