@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery – Aliaksandra Shymanskaya</title>
+
+    <!-- Tailwind + Fonts -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Gallery Styles (unchanged) -->
+    <style>
+        :root {
+            --green: #3D7B5B;
+            --pink: #E784A9;
+            --bg: #F3F4EF;
+            --text: #232323;
+            --muted: #7A724C;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        h1, h2, h3 {
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 2rem;
+        }
+
+        .image-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,.1);
+            transition: transform .3s ease, box-shadow .3s ease;
+            cursor: pointer;
+        }
+
+        .image-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 20px rgba(0,0,0,.15);
+        }
+
+        .image-wrapper {
+            height: 300px;
+            overflow: hidden;
+        }
+
+        .image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-info {
+            padding: 1.5rem;
+        }
+
+        .image-title {
+            font-size: 1.5rem;
+            margin-bottom: .5rem;
+            color: var(--green);
+        }
+
+        .image-description {
+            font-size: .875rem;
+            color: var(--muted);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal img {
+            max-width: 90%;
+            max-height: 90vh;
+            border-radius: 8px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: white;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Navigation -->
+<nav class="py-6 border-b border-gray-200 bg-white sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 flex justify-between items-center">
+        <a href="/" class="text-[#3D7B5B] text-xl">
+            <strong>Aliaksandra Shymanskaya</strong> Data Re-viewed
+        </a>
+        <div class="flex space-x-4">
+            <a href="/portfolio/visualizations/index.html">Portfolio</a>
+            <a href="/portfolio/assets/cv.html">About</a>
+            <a href="#services">Services</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Header -->
+<header class="py-20 bg-white">
+    <div class="max-w-6xl mx-auto px-4">
+        <h1 class="text-5xl font-bold text-[#3D7B5B] mb-4">Visual Gallery</h1>
+        <p class="text-xl text-[#7A724C]">
+            A curated collection of standalone visual explorations and editorial charts.
+        </p>
+    </div>
+</header>
+
+<!-- Gallery -->
+<main class="max-w-6xl mx-auto px-4 py-12">
+    <div class="image-grid">
+
+        <div class="image-card" onclick="openModal(this)">
+            <div class="image-wrapper">
+                <img src="black_friday.png" alt="Black Friday Intentions in France">
+            </div>
+            <div class="image-info">
+                <div class="image-title">Black Friday Intentions in France</div>
+                <div class="image-description">Survey-based visualization from France.</div>
+            </div>
+        </div>
+
+        <div class="image-card" onclick="openModal(this)">
+            <div class="image-wrapper">
+                <img src="quiz.png" alt="Witches in Europe">
+            </div>
+            <div class="image-info">
+                <div class="image-title">The Witches of Europe</div>
+                <div class="image-description">Scale of witch persecution (1500–1700).</div>
+            </div>
+        </div>
+
+        <div class="image-card fade-in" onclick="openModal(this)" style="animation-delay: 0.2s;">
+            <div class="image-wrapper">
+                <div class="placeholder">Snow Days in Germany</div>
+                <img src="snow_days_germany.png" alt="Image 3">
+            </div>
+            <div class="image-info">
+                <div class="image-title">Snow Days in Germany</div>
+                <div class="image-description">Snow levels in Germany</div>
+            </div>
+        </div>
+        
+        <div class="image-card fade-in" onclick="openModal(this)" style="animation-delay: 0.3s;">
+            <div class="image-wrapper">
+                <div class="placeholder">Tuberculosis in Canada</div>
+                <img src="canada_tb.png" alt="Tuberculosis in Canada">
+            </div>
+            <div class="image-info">
+                <div class="image-title">Tuberculosis in Canada</div>
+                <div class="image-description">Tuberculosis is overly represented among the indigenous peoples of Canada, even though it is treatable and preventable. Partly, it is due to the historical mistreatment of the indigenous people, and partly due to the current inequality in healthcare delivery. The time to take action is now, as AI can be used to assist healthcare professionals with mundane tasks and liberate resources, enabling unbiased and timely treatment and preventive measures. </div>
+            </div>
+        </div>
+        
+        <div class="image-card fade-in" onclick="openModal(this)" style="animation-delay: 0.4s;">
+            <div class="image-wrapper">
+                <div class="placeholder">How Much Time You Spend Sick?</div>
+                <img src="sick_kids.png" alt="Image 5"> 
+            </div>
+            <div class="image-info">
+                <div class="image-title">How Much Time You Spend Sick?</div>
+                <div class="image-description">December is a festive month in Europe; however, households with kids are under constant attack from germs. Use this handy chart to figure out how much of the year you'll spend sick depending on the number of kids you have!</div>
+            </div>
+        </div>
+        
+        <div class="image-card fade-in" onclick="openModal(this)" style="animation-delay: 0.5s;">
+            <div class="image-wrapper">
+                <div class="placeholder">Oil Rich Countries</div>
+                <img src="oil_rich_countries.png" alt="Image 6">
+            </div>
+            <div class="image-info">
+                <div class="image-title">Oil Rich Countries</div>
+                <div class="image-description">A chart of the top 9 richest countries in oil and gold according to Forbes. Venezuela is leading due to the enormous oil reserves.</div>
+            </div>
+        </div>
+    </div>
+
+    </div>
+</main>
+
+<!-- Modal -->
+<div class="modal" id="imageModal" onclick="closeModal()">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <img id="modalImage">
+</div>
+
+<!-- Footer -->
+<footer class="bg-[#3D7B5B] py-8 mt-20">
+    <div class="max-w-6xl mx-auto text-center text-[#F3F4EF]">
+        © 2024 Dr. Aliaksandra Shymanskaya • Data consulting
+    </div>
+</footer>
+
+<!-- Calendly -->
+<link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
+<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
+<script>
+    window.onload = function() {
+        Calendly.initBadgeWidget({
+            url: 'https://calendly.com/datawithalexandra/30min?primary_color=3d7b5b',
+            text: 'Schedule time with me',
+            color: '#3d7b5b',
+            textColor: '#ffffff'
+        });
+    }
+</script>
+
+<!-- Modal JS -->
+<script>
+    function openModal(card) {
+        document.getElementById('modalImage').src = card.querySelector('img').src;
+        document.getElementById('imageModal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('imageModal').classList.remove('active');
+    }
+</script>
+
+</body>
+</html>
