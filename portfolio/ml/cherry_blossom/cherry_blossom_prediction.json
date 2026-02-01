@@ -1,16 +1,16 @@
 {
-  "prediction_date": "2026-01-31",
+  "prediction_date": "2026-02-01",
   "year": 2026,
-  "predicted_bloom_doy": 103.45372772216797,
+  "predicted_bloom_doy": 103.38784790039062,
   "predicted_bloom_start": "2026-04-13",
   "estimated_bloom_end": "2026-04-26",
-  "days_until_bloom": 71,
-  "confidence": "low",
-  "features_available": 34,
-  "confidence_percent": 30,
+  "days_until_bloom": 70,
+  "confidence": "medium",
+  "features_available": 41,
+  "confidence_percent": 50,
   "predicted_peak": "2026-04-19",
   "model_mae": 3.97,
   "data_points": "11 years",
   "estimated_duration": 14,
-  "last_updated": "2026-01-31 06:41:53"
+  "last_updated": "2026-02-01 06:52:39"
 }
