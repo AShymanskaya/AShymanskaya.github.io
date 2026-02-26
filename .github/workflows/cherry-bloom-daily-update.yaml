@@ -38,9 +38,8 @@ jobs:
             portfolio/ml/cherry_blossom/cherry_blossom_prediction.json \
             portfolio/ml/cherry_blossom/all_predictions_2026.json \
             portfolio/ml/cherry_blossom/data/daily/weather_2024_2025.csv \
-            portfolio/ml/cherry_blossom/data/output/ \
-            portfolio/ml/cherry_blossom/cherry_blossom_workflow.log
-
+            portfolio/ml/cherry_blossom/data/output/ 
+            
           # Only commit if something actually changed
           git diff --cached --quiet || git commit -m "chore: daily prediction update $(date +'%Y-%m-%d')"
           git push
