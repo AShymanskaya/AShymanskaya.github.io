@@ -1,11 +1,31 @@
 [
   {
+    "prediction_date": "2025-08-13",
+    "year": 2026,
+    "predicted_bloom_doy": 94.65,
+    "predicted_bloom_start": "2026-04-04",
+    "estimated_bloom_end": "2026-04-17",
+    "days_until_bloom": 233,
+    "confidence": "medium",
+    "features_available": 59
+  },
+  {
+    "prediction_date": "2025-08-20",
+    "year": 2026,
+    "predicted_bloom_doy": 94.69,
+    "predicted_bloom_start": "2026-04-04",
+    "estimated_bloom_end": "2026-04-17",
+    "days_until_bloom": 226,
+    "confidence": "medium",
+    "features_available": 59
+  },
+  {
     "prediction_date": "2026-02-26",
     "year": 2026,
-    "predicted_bloom_doy": 102.01366424560548,
-    "predicted_bloom_start": "2026-04-12",
-    "estimated_bloom_end": "2026-04-25",
-    "days_until_bloom": 44,
+    "predicted_bloom_doy": 101.0485610961914,
+    "predicted_bloom_start": "2026-04-11",
+    "estimated_bloom_end": "2026-04-24",
+    "days_until_bloom": 43,
     "confidence": "medium",
     "features_available": 41
   }
