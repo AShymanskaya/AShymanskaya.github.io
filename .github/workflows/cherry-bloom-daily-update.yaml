@@ -22,12 +22,12 @@ jobs:
 
 
       - name: Install dependencies
-        run: pip install -r scripts/requirements.txt
+        run: pip install -r portfolio/ml/cherry_blossom/scripts/requirements.txt
 
       - name: Run daily update
         env:
           RAPID_API_KEY: ${{ secrets.RAPID_API_KEY }}
-        run: python scripts/cherry_blossom_workflow.py --update
+        run: python portfolio/ml/cherry_blossom/scripts/cherry_blossom_workflow.py --update
 
       - name: Commit updated predictions
         run: |
