@@ -12,7 +12,8 @@ Usage:
 - For initial setup: python cherry_blossom_workflow.py --setup
 - For daily updates: python cherry_blossom_workflow.py --update
 - To force retraining: python cherry_blossom_workflow.py --retrain
-- To confirm bloom: python cherry_blossom_workflow.py --confirm-bloom YYYY-MM-DD
+- To confirm bloom:   python cherry_blossom_workflow.py --confirm-bloom YYYY-MM-DD
+- To predict now:     python cherry_blossom_workflow.py --predict [--date YYYY-MM-DD]
 """
 
 import pandas as pd
@@ -33,845 +34,705 @@ from sklearn.model_selection import cross_val_score, KFold
 # Try to import python-dotenv for local development
 try:
     from dotenv import load_dotenv
-    load_dotenv()  # This loads .env file automatically
+    load_dotenv()
 except ImportError:
-    pass  # python-dotenv not installed, will use environment variables only
+    pass
 
-# Configure logging
+# ── Base directory ────────────────────────────────────────────────────────────
+# Script lives in  <repo>/scripts/cherry_blossom_workflow.py
+# Repository root is one level up.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+# Use an absolute path so the log always lands in the repo root, regardless of
+# the working directory from which the script is invoked (e.g. GitHub Actions).
+LOG_FILE = str(BASE_DIR / "cherry_blossom_workflow.log")
+
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler("cherry_blossom_workflow.log"),
-        logging.StreamHandler()
-    ]
+        logging.FileHandler(LOG_FILE),
+        logging.StreamHandler(),
+    ],
 )
 logger = logging.getLogger("cherry_blossom")
 
-# Dictionary for month names
-month_names = {
-    1: 'january', 2: 'february', 3: 'march', 4: 'april', 
-    5: 'may', 6: 'june', 7: 'july', 8: 'august',
-    9: 'september', 10: 'october', 11: 'november', 12: 'december'
+# ── Month name lookup ─────────────────────────────────────────────────────────
+MONTH_NAMES = {
+    1: "january",  2: "february", 3: "march",    4: "april",
+    5: "may",      6: "june",     7: "july",      8: "august",
+    9: "september",10: "october", 11: "november", 12: "december",
 }
 
-# Get base directory (repository root)
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Configuration and paths - Using relative paths that work everywhere
+# ── Configuration ─────────────────────────────────────────────────────────────
 CONFIG = {
-    'data_dir': str(BASE_DIR / 'data' / 'daily'),
-    'output_dir': str(BASE_DIR / 'data' / 'output'),
-    'model_dir': str(BASE_DIR / 'data' / 'model'),
-    'docs_dir': str(BASE_DIR),  
-    'station_id': '10517',  # Bonn Friesdorf
-    'historical_file': 'weather_2015_2023.csv',
-    'recent_file': 'weather_2024_2025.csv',
-    'daily_predictions_file': 'daily_predictions_2026.csv',
-    'history_file': 'history.csv',
-    'confirmations_file': 'bloom_confirmations.json',
-    'min_year': 2015,
-    'max_historical_year': 2025,  # Last year with confirmed bloom data
-    'prediction_year': 2026       # Current year to predict
+    "data_dir":              str(BASE_DIR / "data" / "daily"),
+    "output_dir":            str(BASE_DIR / "data" / "output"),
+    "model_dir":             str(BASE_DIR / "data" / "model"),
+    "docs_dir":              str(BASE_DIR),
+    "station_id":            "10517",          # Bonn Friesdorf
+    # NOTE: this file is named for its origin (2024-2025 seed data) but the
+    # daily update job appends 2026 records to it too.  Rename when convenient.
+    "historical_file":       "weather_2015_2023.csv",
+    "recent_file":           "weather_2024_2025.csv",
+    "daily_predictions_file":"daily_predictions_2026.csv",
+    "confirmations_file":    "bloom_confirmations.json",
+    "min_year":              2015,
+    "max_historical_year":   2025,
+    "prediction_year":       2026,
 }
 
-def get_api_key():
-    """
-    Get API key from environment variable or .env file
-    Supports both local development and GitHub Actions
-    """
-    # First try environment variable
-    api_key = os.environ.get('RAPID_API_KEY')
-    
-    # For local development, also check .env file
+# ── Ground-truth bloom dates (start only; end is used only for the web label) ─
+# Keep these in sync with add_cherry_blossom_data().
+BLOOM_DATES = {
+    2015: {"start": "2015-04-16", "end": "2015-04-27"},
+    2016: {"start": "2016-04-14", "end": "2016-04-26"},
+    2017: {"start": "2017-03-31", "end": "2017-04-15"},
+    2018: {"start": "2018-04-15", "end": "2018-04-28"},
+    2019: {"start": "2019-04-07", "end": "2019-04-22"},
+    2020: {"start": "2020-04-04", "end": "2020-04-14"},
+    2021: {"start": "2021-04-13", "end": "2021-04-29"},
+    2022: {"start": "2022-04-07", "end": "2022-04-22"},
+    2023: {"start": "2023-04-11", "end": "2023-04-26"},
+    2024: {"start": "2024-03-30", "end": "2024-04-10"},
+    2025: {"start": "2025-04-05", "end": "2025-04-15"},   # verified observation
+}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  UTILITY
+# ══════════════════════════════════════════════════════════════════════════════
+
+def get_api_key() -> str:
+    """Return the Meteostat RapidAPI key from env or .env file."""
+    api_key = os.environ.get("RAPID_API_KEY")
+
     if not api_key:
-        env_file = BASE_DIR / '.env'
+        env_file = BASE_DIR / ".env"
         if env_file.exists():
             try:
-                with open(env_file, 'r') as f:
-                    for line in f:
-                        line = line.strip()
-                        if line.startswith('RAPID_API_KEY='):
-                            api_key = line.split('=', 1)[1].strip().strip('"\'')
-                            break
-            except Exception as e:
-                logger.warning(f"Error reading .env file: {e}")
-    
+                for line in env_file.read_text().splitlines():
+                    line = line.strip()
+                    if line.startswith("RAPID_API_KEY="):
+                        api_key = line.split("=", 1)[1].strip().strip("\"'")
+                        break
+            except Exception as exc:
+                logger.warning(f"Error reading .env file: {exc}")
+
     if api_key:
-        # Log success without exposing the key
-        logger.info(f"API key loaded successfully (length: {len(api_key)}, starts with: {api_key[:4]}...)")
+        logger.info(
+            f"API key loaded (length: {len(api_key)}, starts with: {api_key[:4]}...)"
+        )
     else:
         logger.error("RAPID_API_KEY not found!")
-        logger.error("For local development: Create a .env file with RAPID_API_KEY=your_key")
-        logger.error("For GitHub Actions: Add RAPID_API_KEY as a repository secret")
-        logger.error("Or export it as environment variable: export RAPID_API_KEY=your_key")
+        logger.error("Local dev: create a .env file with RAPID_API_KEY=your_key")
+        logger.error("GitHub Actions: add RAPID_API_KEY as a repository secret")
         sys.exit(1)
-    
+
     return api_key
 
-def setup_directories():
-    """Setup required directories"""
-    directories = [
-        CONFIG['data_dir'],
-        CONFIG['output_dir'],
-        CONFIG['model_dir'],
-        CONFIG['docs_dir']
-    ]
-    
-    for directory in directories:
+
+def setup_directories() -> None:
+    """Create all required directories."""
+    for directory in [
+        CONFIG["data_dir"],
+        CONFIG["output_dir"],
+        CONFIG["model_dir"],
+        CONFIG["docs_dir"],
+    ]:
         os.makedirs(directory, exist_ok=True)
         logger.info(f"Directory ready: {directory}")
-    
     logger.info("All directories created/verified")
 
-def harmonize_historical_data():
+
+def _load_confirmations() -> dict:
     """
-    Harmonize data from the historical and recent CSV files
-    
-    Returns:
-    - DataFrame with harmonized data
+    Return bloom_data with any saved confirmations applied on top.
+    Confirmation years override the hardcoded BLOOM_DATES.
+    """
+    bloom_data = {y: dict(v) for y, v in BLOOM_DATES.items()}
+
+    confirmations_file = os.path.join(
+        CONFIG["output_dir"], CONFIG["confirmations_file"]
+    )
+    if not os.path.exists(confirmations_file):
+        return bloom_data
+
+    try:
+        with open(confirmations_file) as f:
+            confirmations = json.load(f)
+        for conf in confirmations:
+            year  = conf.get("year")
+            start = conf.get("actual_bloom_start")
+            end   = conf.get("actual_bloom_end")
+            if not (year and start):
+                continue
+            if not end and "estimated_duration" in conf:
+                end = (
+                    pd.to_datetime(start)
+                    + pd.Timedelta(days=int(conf["estimated_duration"]) - 1)
+                ).strftime("%Y-%m-%d")
+            entry = {"start": start}
+            if end:
+                entry["end"] = end
+            bloom_data[year] = entry
+            logger.info(f"Confirmation applied for {year}: {start}")
+    except Exception as exc:
+        logger.warning(f"Could not load bloom confirmations: {exc}")
+
+    return bloom_data
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  DATA INGESTION
+# ══════════════════════════════════════════════════════════════════════════════
+
+def harmonize_historical_data() -> pd.DataFrame:
+    """
+    Read and merge the static historical CSV with the rolling recent CSV.
+    Returns a clean, sorted DataFrame with no duplicate dates.
     """
     logger.info("Harmonizing historical weather data...")
-    
-    # Define file paths
-    historical_file = os.path.join(CONFIG['data_dir'], CONFIG['historical_file'])
-    recent_file = os.path.join(CONFIG['data_dir'], CONFIG['recent_file'])
-    
-    # Check if files exist
-    if not os.path.exists(historical_file):
-        logger.error(f"Historical data file not found: {historical_file}")
-        logger.error("Please ensure weather_2015_2023.csv is in the data/daily directory")
-        raise FileNotFoundError(f"Historical data file not found: {historical_file}")
-    
-    if not os.path.exists(recent_file):
-        logger.warning(f"Recent data file not found: {recent_file}. Creating empty file.")
-        # Create empty dataframe with correct columns
-        empty_df = pd.DataFrame(columns=['date', 'tavg', 'tmin', 'tmax', 'prcp', 'snow', 'wdir', 'wspd', 'wpgt', 'pres', 'year', 'month', 'day'])
-        empty_df.to_csv(recent_file, index=False)
-    
-    # Read the CSV files
-    historical_data = pd.read_csv(historical_file)
-    recent_data = pd.read_csv(recent_file)
-    
-    logger.info(f"Read {len(historical_data)} rows from historical data")
-    logger.info(f"Read {len(recent_data)} rows from recent data")
-    
-    # Combine the data
-    combined_data = pd.concat([historical_data, recent_data], ignore_index=True)
-    logger.info(f"Combined data has {len(combined_data)} rows")
-    
-    # Convert date column to datetime
-    combined_data['date'] = pd.to_datetime(combined_data['date'])
-    
-    # Ensure year, month, day columns exist
-    if 'year' not in combined_data.columns:
-        combined_data['year'] = combined_data['date'].dt.year
-    if 'month' not in combined_data.columns:
-        combined_data['month'] = combined_data['date'].dt.month
-    if 'day' not in combined_data.columns:
-        combined_data['day'] = combined_data['date'].dt.day
-    
-    # Sort by date
-    combined_data = combined_data.sort_values('date')
-    
-    # Check for duplicates
-    duplicates = combined_data.duplicated(subset=['date'], keep='first')
-    if duplicates.any():
-        duplicate_count = duplicates.sum()
-        logger.warning(f"Found {duplicate_count} duplicate dates - keeping first occurrence")
-        combined_data = combined_data.drop_duplicates(subset=['date'], keep='first')
-    
-    # Save the harmonized data
-    output_file = os.path.join(CONFIG['output_dir'], 'harmonized_historical_data.csv')
-    combined_data.to_csv(output_file, index=False)
-    logger.info(f"Harmonized data saved to {output_file}")
-    
-    return combined_data
 
-def fetch_meteostat_data(api_key, start_date=None, end_date=None):
-    """
-    Fetch weather data from Meteostat API for a specific date range
-    
-    Parameters:
-    - api_key: Meteostat API key
-    - start_date: Start date in "YYYY-MM-DD" format (defaults to yesterday)
-    - end_date: End date in "YYYY-MM-DD" format (defaults to today)
-    
-    Returns:
-    - DataFrame with daily weather data
-    """
-    logger.info(f"Fetching data from Meteostat API...")
-    
-    # Set default dates if not provided
+    historical_file = os.path.join(CONFIG["data_dir"], CONFIG["historical_file"])
+    recent_file     = os.path.join(CONFIG["data_dir"], CONFIG["recent_file"])
+
+    if not os.path.exists(historical_file):
+        raise FileNotFoundError(
+            f"Historical data file not found: {historical_file}\n"
+            "Ensure weather_2015_2023.csv is in data/daily/"
+        )
+
+    if not os.path.exists(recent_file):
+        logger.warning(f"Recent file not found: {recent_file} – creating empty placeholder.")
+        pd.DataFrame(
+            columns=["date","tavg","tmin","tmax","prcp","snow",
+                     "wdir","wspd","wpgt","pres","year","month","day"]
+        ).to_csv(recent_file, index=False)
+
+    historical = pd.read_csv(historical_file)
+    recent     = pd.read_csv(recent_file)
+    logger.info(f"Historical rows: {len(historical)}, recent rows: {len(recent)}")
+
+    combined = pd.concat([historical, recent], ignore_index=True)
+    combined["date"] = pd.to_datetime(combined["date"])
+
+    for col, fn in [("year", "dt.year"), ("month", "dt.month"), ("day", "dt.day")]:
+        if col not in combined.columns:
+            combined[col] = getattr(combined["date"], fn)
+
+    combined = combined.sort_values("date")
+
+    dupes = combined.duplicated(subset=["date"], keep="first")
+    if dupes.any():
+        logger.warning(f"Dropping {dupes.sum()} duplicate date(s) (keeping first)")
+        combined = combined[~dupes]
+
+    combined.to_csv(
+        os.path.join(CONFIG["output_dir"], "harmonized_historical_data.csv"),
+        index=False,
+    )
+    logger.info(f"Harmonized data: {len(combined)} rows")
+    return combined.reset_index(drop=True)
+
+
+def fetch_meteostat_data(
+    api_key: str, start_date: str = None, end_date: str = None
+) -> pd.DataFrame | None:
+    """Fetch daily weather records from the Meteostat RapidAPI."""
     if not end_date:
-        end_date = datetime.now().strftime("%Y-%m-%d")
+        end_date   = datetime.now().strftime("%Y-%m-%d")
     if not start_date:
         start_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-    
-    logger.info(f"Date range: {start_date} to {end_date}")
-    
-    # API endpoint and headers
-    url = "https://meteostat.p.rapidapi.com/stations/daily"
+
+    logger.info(f"Fetching Meteostat data: {start_date} → {end_date}")
+
+    url     = "https://meteostat.p.rapidapi.com/stations/daily"
     headers = {
         "X-RapidAPI-Host": "meteostat.p.rapidapi.com",
-        "X-RapidAPI-Key": api_key
+        "X-RapidAPI-Key":  api_key,
     }
-    
-    # Query parameters
-    params = {
-        "station": CONFIG['station_id'],
-        "start": start_date,
-        "end": end_date
-    }
-    
+    params  = {"station": CONFIG["station_id"], "start": start_date, "end": end_date}
+
     try:
-        # Make the API request
-        response = requests.get(url, headers=headers, params=params)
-        response.raise_for_status()  # Raise an exception for 4XX/5XX responses
-        
-        # Parse the JSON response
+        response = requests.get(url, headers=headers, params=params, timeout=30)
+        response.raise_for_status()
         data = response.json()
-        
-        if 'data' not in data or not data['data']:
-            logger.warning("No data returned from API")
+
+        if "data" not in data or not data["data"]:
+            logger.warning("API returned no data for the requested range.")
             return None
-        
-        # Convert to DataFrame
-        df = pd.DataFrame(data['data'])
-        
-        # Process the data
-        df['date'] = pd.to_datetime(df['date'])
-        df['year'] = df['date'].dt.year
-        df['month'] = df['date'].dt.month
-        df['day'] = df['date'].dt.day
-        
-        logger.info(f"Successfully fetched {len(df)} records")
+
+        df = pd.DataFrame(data["data"])
+        df["date"]  = pd.to_datetime(df["date"])
+        df["year"]  = df["date"].dt.year
+        df["month"] = df["date"].dt.month
+        df["day"]   = df["date"].dt.day
+
+        logger.info(f"Fetched {len(df)} record(s) from Meteostat.")
         return df
-        
-    except requests.exceptions.HTTPError as e:
-        if response.status_code == 403:
-            logger.error("API key authentication failed. Please check your API key.")
+
+    except requests.exceptions.HTTPError as exc:
+        if exc.response.status_code == 403:
+            logger.error("API authentication failed – check RAPID_API_KEY.")
         else:
-            logger.error(f"HTTP error occurred: {e}")
+            logger.error(f"HTTP error: {exc}")
         return None
-    except Exception as e:
-        logger.error(f"Error fetching data from Meteostat API: {str(e)}")
+    except Exception as exc:
+        logger.error(f"Unexpected error fetching weather data: {exc}")
         return None
 
-def update_weather_data(current_data, api_key):
+
+def update_weather_data(
+    current_data: pd.DataFrame, api_key: str
+) -> tuple[pd.DataFrame, bool]:
     """
-    Update the weather data with the latest from Meteostat API
-    
-    Parameters:
-    - current_data: DataFrame with current data
-    - api_key: Meteostat API key
-    
-    Returns:
-    - Updated DataFrame, boolean indicating if data was updated
+    Fetch any missing days since the last record and append them to the
+    recent CSV.  Returns (updated_df, was_data_added).
     """
-    # Determine the date range to fetch
-    most_recent_date = current_data['date'].max()
-    start_date = (most_recent_date + pd.Timedelta(days=1)).strftime('%Y-%m-%d')
-    
-    # Current date
-    end_date = datetime.now().strftime('%Y-%m-%d')
-    
-    # Check if we need to fetch new data
+    most_recent = current_data["date"].max()
+    start_date  = (most_recent + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+    end_date    = datetime.now().strftime("%Y-%m-%d")
+
     if start_date > end_date:
-        logger.info("Data is already up to date")
+        logger.info("Weather data is already up to date.")
         return current_data, False
-    
-    # Fetch new data
-    new_data = fetch_meteostat_data(api_key, start_date=start_date, end_date=end_date)
-    
-    if new_data is None or len(new_data) == 0:
-        logger.info("No new data to add")
-        return current_data, False
-    
-    # Combine with existing data
-    updated_data = pd.concat([current_data, new_data], ignore_index=True)
-    
-    # Sort by date and remove duplicates
-    updated_data = updated_data.sort_values('date')
-    updated_data = updated_data.drop_duplicates(subset=['date'], keep='last')
-    
-    logger.info(f"Added {len(new_data)} new records")
-    
-    # Extract recent data for 2024-2026
-    recent_data = updated_data[(updated_data['year'] >= 2024)]
-    
-    # Save recent data to the recent file
-    recent_file = os.path.join(CONFIG['data_dir'], CONFIG['recent_file'])
-    recent_data.to_csv(recent_file, index=False)
-    logger.info(f"Updated recent data saved to {recent_file}")
-    
-    return updated_data, True
 
-def generate_daily_features(df, target_date):
+    new_data = fetch_meteostat_data(api_key, start_date=start_date, end_date=end_date)
+    if new_data is None or len(new_data) == 0:
+        logger.info("No new records returned by the API.")
+        return current_data, False
+
+    updated = (
+        pd.concat([current_data, new_data], ignore_index=True)
+        .sort_values("date")
+        .drop_duplicates(subset=["date"], keep="last")
+        .reset_index(drop=True)
+    )
+    logger.info(f"Added {len(new_data)} new record(s).")
+
+    # Persist the recent slice (2024 onward) back to disk
+    recent_file = os.path.join(CONFIG["data_dir"], CONFIG["recent_file"])
+    updated[updated["year"] >= 2024].to_csv(recent_file, index=False)
+    logger.info(f"Recent data saved to {recent_file}")
+
+    return updated, True
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  FEATURE ENGINEERING
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _add_derived_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Generate features for a specific date, using all data up to that date.
-    This function creates features that update daily as new data becomes available.
-    
-    Parameters:
-    - df: DataFrame with harmonized weather data
-    - target_date: The date to generate features for
-    
-    Returns:
-    - Dictionary of features for the target date
+    Add gdd_10 and chill_day columns in-place (if tmin/tmax are present).
+    These are shared building blocks for both generate_daily_features() and
+    generate_features().
     """
-    logger.info(f"Generating daily features for {target_date}...")
-    
-    # Filter data up to target date
-    features_df = df[df['date'] <= pd.to_datetime(target_date)].copy()
-    
-    if len(features_df) == 0:
-        logger.warning(f"No data available up to {target_date}")
+    df = df.copy()
+    if {"tmax", "tmin"}.issubset(df.columns):
+        df["temp_range"] = df["tmax"] - df["tmin"]
+        df["gdd_10"] = df.apply(
+            lambda r: max(0.0, (r["tmax"] + r["tmin"]) / 2 - 10), axis=1
+        )
+        df["chill_day"] = df.apply(
+            lambda r: 1.0 if r["tmax"] < 7.2 else (0.0 if r["tmin"] > 7.2 else 0.5),
+            axis=1,
+        )
+        df["cum_gdd_10"]    = df.groupby("year")["gdd_10"].cumsum()
+        df["cum_chill_days"]= df.groupby("year")["chill_day"].cumsum()
+    df["day_of_year"] = df["date"].dt.dayofyear
+    return df
+
+
+def generate_daily_features(
+    df: pd.DataFrame, target_date
+) -> dict | None:
+    """
+    Generate the full feature dictionary for a given cutoff date, using only
+    data available up to (and including) that date.
+
+    This is the single source of truth for features — used at both training
+    time (one call per historical year) and inference time (one call per day).
+    Keeping a single implementation guarantees train/inference parity.
+
+    Parameters
+    ----------
+    df          : Full harmonized weather DataFrame (all years).
+    target_date : Date up to which data is allowed (pd.Timestamp or str).
+
+    Returns
+    -------
+    dict of feature_name → float, or None if no data is available.
+    """
+    target_date = pd.to_datetime(target_date)
+    target_year = target_date.year
+
+    logger.info(f"Generating features for cutoff {target_date.date()} (year={target_year})")
+
+    # ── 1. Restrict to data available up to cutoff ────────────────────────────
+    snap = df[df["date"] <= target_date].copy()
+    if snap.empty:
+        logger.warning(f"No data available up to {target_date.date()}")
         return None
-    
-    # Get the target year
-    target_year = pd.to_datetime(target_date).year
-    
-    # Initialize feature dictionary
-    features = {'year': target_year}
-    
-    # Calculate temperature range
-    if all(col in features_df.columns for col in ['tmax', 'tmin']):
-        features_df['temp_range'] = features_df['tmax'] - features_df['tmin']
-    
-    # Calculate growing degree days (base 10°C)
-    if all(col in features_df.columns for col in ['tmax', 'tmin']):
-        features_df['gdd_10'] = features_df.apply(
-            lambda x: max(0, (x['tmax'] + x['tmin']) / 2 - 10), axis=1
-        )
-        features_df['cum_gdd_10'] = features_df.groupby('year')['gdd_10'].cumsum()
-    
-    # Calculate chilling hours (hours below 7.2°C, approximated)
-    if all(col in features_df.columns for col in ['tmax', 'tmin']):
-        features_df['chill_day'] = features_df.apply(
-            lambda x: 1 if x['tmax'] < 7.2 else (0 if x['tmin'] > 7.2 else 0.5), axis=1
-        )
-        features_df['cum_chill_days'] = features_df.groupby('year')['chill_day'].cumsum()
-    
-    # Calculate day of year
-    features_df['day_of_year'] = features_df['date'].dt.dayofyear
-    
-    # Get year-to-date data for target year
-    ytd_data = features_df[features_df['year'] == target_year]
-    
-    # Calculate monthly statistics up to current date
+
+    snap = _add_derived_columns(snap)
+
+    features: dict = {"year": target_year}
+
+    # ── 2. Monthly statistics (current year only, partial months included) ────
     for month in range(1, 13):
-        month_data = features_df[(features_df['year'] == target_year) & (features_df['month'] == month)]
-        
-        if len(month_data) > 0:
-            # Temperature averages
-            for col in ['tavg', 'tmin', 'tmax']:
-                if col in month_data.columns:
-                    features[f"{month_names[month]}_{col}"] = month_data[col].mean()
-            
-            # Precipitation sum
-            if 'prcp' in month_data.columns:
-                features[f"{month_names[month]}_prcp_sum"] = month_data['prcp'].sum()
-            
-            # Snow sum
-            if 'snow' in month_data.columns:
-                features[f"{month_names[month]}_snow_sum"] = month_data['snow'].fillna(0).sum()
-            
-            # Chill days sum
-            if 'chill_day' in month_data.columns:
-                features[f"{month_names[month]}_chill_days"] = month_data['chill_day'].sum()
-            
-            # GDD sum
-            if 'gdd_10' in month_data.columns:
-                features[f"{month_names[month]}_gdd_sum"] = month_data['gdd_10'].sum()
-    
-    # Calculate cumulative features up to target date
-    if len(ytd_data) > 0:
-        features['ytd_avg_temp'] = ytd_data['tavg'].mean()
-        features['ytd_total_prcp'] = ytd_data['prcp'].sum()
-        features['ytd_total_gdd'] = ytd_data['gdd_10'].sum() if 'gdd_10' in ytd_data.columns else 0
-        features['ytd_total_chill_days'] = ytd_data['chill_day'].sum() if 'chill_day' in ytd_data.columns else 0
-    
-    # Calculate recent rolling averages (last 7, 14, 30 days)
-    for window in [7, 14, 30, 60, 90]:
-        recent_data = features_df[
-            (features_df['date'] > pd.to_datetime(target_date) - pd.Timedelta(days=window)) &
-            (features_df['date'] <= pd.to_datetime(target_date))
+        m_data = snap[
+            (snap["year"] == target_year) & (snap["month"] == month)
         ]
-        
-        if len(recent_data) > 0:
-            features[f'tavg_roll_{window}d'] = recent_data['tavg'].mean()
-            features[f'tmin_roll_{window}d'] = recent_data['tmin'].mean()
-            features[f'tmax_roll_{window}d'] = recent_data['tmax'].mean()
-            if window <= 30:  # Only do precipitation sum for shorter windows
-                features[f'prcp_roll_{window}d'] = recent_data['prcp'].sum()
-    
-    # Winter features (Dec previous year, Jan, Feb current year)
-    dec_data = features_df[(features_df['year'] == target_year-1) & (features_df['month'] == 12)]
-    jan_data = features_df[(features_df['year'] == target_year) & (features_df['month'] == 1)]
-    feb_data = features_df[(features_df['year'] == target_year) & (features_df['month'] == 2)]
-    
-    winter_data = pd.concat([dec_data, jan_data, feb_data])
-    
-    if len(winter_data) > 0:
-        features['winter_tavg'] = winter_data['tavg'].mean()
-        features['winter_tmin'] = winter_data['tmin'].mean()
-        features['winter_tmax'] = winter_data['tmax'].mean()
-        features['winter_prcp_sum'] = winter_data['prcp'].sum()
-        features['winter_snow_sum'] = winter_data['snow'].fillna(0).sum() if 'snow' in winter_data.columns else 0
-        features['winter_chill_days'] = winter_data['chill_day'].sum() if 'chill_day' in winter_data.columns else 0
-        features['winter_full_tavg'] = features['winter_tavg']
-        features['winter_full_chill_days'] = features['winter_chill_days']
-    
-    # Spring features (Mar, Apr, May) - partial if not all months available
-    spring_data = features_df[(features_df['year'] == target_year) & (features_df['month'].isin([3, 4, 5]))]
-    
-    if len(spring_data) > 0:
-        features['spring_tavg'] = spring_data['tavg'].mean()
-        features['spring_gdd_sum'] = spring_data['gdd_10'].sum() if 'gdd_10' in spring_data.columns else 0
-    
-    # Fall features (Sep, Oct, Nov)
-    fall_data = features_df[(features_df['year'] == target_year) & (features_df['month'].isin([9, 10, 11]))]
-    
-    if len(fall_data) > 0:
-        features['fall_tavg'] = fall_data['tavg'].mean()
-        features['fall_chill_days'] = fall_data['chill_day'].sum() if 'chill_day' in fall_data.columns else 0
-    
-    # Summer features (Jun, Jul, Aug)
-    summer_data = features_df[(features_df['year'] == target_year) & (features_df['month'].isin([6, 7, 8]))]
-    
-    if len(summer_data) > 0:
-        features['summer_tavg'] = summer_data['tavg'].mean()
-        features['summer_gdd_sum'] = summer_data['gdd_10'].sum() if 'gdd_10' in summer_data.columns else 0
-    
-    # Year statistics
-    year_data = features_df[features_df['year'] == target_year]
-    if len(year_data) > 0:
-        features['year_avg_temp'] = year_data['tavg'].mean()
-        features['year_total_prcp'] = year_data['prcp'].sum()
-        features['year_total_chill_days'] = year_data['chill_day'].sum() if 'chill_day' in year_data.columns else 0
-        features['year_total_gdd'] = year_data['gdd_10'].sum() if 'gdd_10' in year_data.columns else 0
-    
-    # Previous year statistics
-    prev_year_data = features_df[features_df['year'] == target_year - 1]
-    
-    if len(prev_year_data) > 0:
-        features['prev_year_avg_temp'] = prev_year_data['tavg'].mean()
-        features['prev_year_total_prcp'] = prev_year_data['prcp'].sum()
-        
-        if 'chill_day' in prev_year_data.columns:
-            features['prev_year_total_chill_days'] = prev_year_data['chill_day'].sum()
-        
-        # Previous fall statistics
-        prev_fall_data = prev_year_data[prev_year_data['month'].isin([9, 10, 11])]
-        if len(prev_fall_data) > 0:
-            features['prev_fall_tavg'] = prev_fall_data['tavg'].mean()
-            if 'chill_day' in prev_fall_data.columns:
-                features['prev_fall_chill_days'] = prev_fall_data['chill_day'].sum()
-    
-    # Calculate photoperiod (day length) approximation
-    lat_rad = np.radians(50.7)  # Bonn latitude
-    day_of_year = pd.to_datetime(target_date).dayofyear
-    features['photoperiod'] = 12 + (24/np.pi) * np.arcsin(
-        0.39795 * np.cos(0.2163108 + 2 * np.arctan(0.9671396 * np.tan(0.00860 * (day_of_year - 186))))
+        if m_data.empty:
+            continue
+        name = MONTH_NAMES[month]
+        for col in ["tavg", "tmin", "tmax"]:
+            if col in m_data.columns:
+                features[f"{name}_{col}"] = m_data[col].mean()
+        if "prcp"      in m_data.columns:
+            features[f"{name}_prcp_sum"]   = m_data["prcp"].sum()
+        if "snow"      in m_data.columns:
+            features[f"{name}_snow_sum"]   = m_data["snow"].fillna(0).sum()
+        if "chill_day" in m_data.columns:
+            features[f"{name}_chill_days"] = m_data["chill_day"].sum()
+        if "gdd_10"    in m_data.columns:
+            features[f"{name}_gdd_sum"]    = m_data["gdd_10"].sum()
+
+    # ── 3. Rolling-window temperature averages ────────────────────────────────
+    # Rolling windows use only actual available rows within each window, so
+    # they never cross the year boundary implicitly.
+    for window in [30, 60, 90]:
+        window_start = target_date - pd.Timedelta(days=window)
+        w_data = snap[
+            (snap["date"] > window_start) & (snap["date"] <= target_date)
+        ]
+        if w_data.empty:
+            continue
+        for col in ["tavg", "tmin", "tmax"]:
+            features[f"{col}_roll_{window}d"] = w_data[col].mean()
+
+    # ── 4. Winter aggregate (Dec of prev year + Jan + Feb of current year) ────
+    dec  = snap[(snap["year"] == target_year - 1) & (snap["month"] == 12)]
+    jan  = snap[(snap["year"] == target_year)     & (snap["month"] == 1)]
+    feb  = snap[(snap["year"] == target_year)     & (snap["month"] == 2)]
+    winter = pd.concat([dec, jan, feb])
+    if not winter.empty:
+        features["winter_tavg"]         = winter["tavg"].mean()
+        features["winter_tmin"]         = winter["tmin"].mean()
+        features["winter_tmax"]         = winter["tmax"].mean()
+        features["winter_prcp_sum"]     = winter["prcp"].sum()
+        features["winter_snow_sum"]     = winter["snow"].fillna(0).sum() if "snow" in winter.columns else 0.0
+        features["winter_chill_days"]   = winter["chill_day"].sum() if "chill_day" in winter.columns else 0.0
+        features["winter_full_tavg"]    = features["winter_tavg"]
+        features["winter_full_chill_days"] = features["winter_chill_days"]
+
+    # ── 5. Seasonal aggregates (partial if season not yet complete) ───────────
+    spring = snap[(snap["year"] == target_year) & snap["month"].isin([3, 4, 5])]
+    if not spring.empty:
+        features["spring_tavg"]    = spring["tavg"].mean()
+        features["spring_gdd_sum"] = spring["gdd_10"].sum() if "gdd_10" in spring.columns else 0.0
+
+    summer = snap[(snap["year"] == target_year) & snap["month"].isin([6, 7, 8])]
+    if not summer.empty:
+        features["summer_tavg"]    = summer["tavg"].mean()
+        features["summer_gdd_sum"] = summer["gdd_10"].sum() if "gdd_10" in summer.columns else 0.0
+
+    fall = snap[(snap["year"] == target_year) & snap["month"].isin([9, 10, 11])]
+    if not fall.empty:
+        features["fall_tavg"]       = fall["tavg"].mean()
+        features["fall_chill_days"] = fall["chill_day"].sum() if "chill_day" in fall.columns else 0.0
+
+    # ── 6. Year-to-date totals (current year up to cutoff) ───────────────────
+    ytd = snap[snap["year"] == target_year]
+    if not ytd.empty:
+        features["year_avg_temp"]         = ytd["tavg"].mean()
+        features["year_total_prcp"]       = ytd["prcp"].sum()
+        features["year_total_chill_days"] = ytd["chill_day"].sum() if "chill_day" in ytd.columns else 0.0
+        features["year_total_gdd"]        = ytd["gdd_10"].sum()  if "gdd_10"    in ytd.columns else 0.0
+
+    # ── 7. Previous full calendar year ────────────────────────────────────────
+    prev_year = snap[snap["year"] == target_year - 1]
+    if not prev_year.empty:
+        features["prev_year_avg_temp"]        = prev_year["tavg"].mean()
+        features["prev_year_total_prcp"]      = prev_year["prcp"].sum()
+        features["prev_year_total_chill_days"]= (
+            prev_year["chill_day"].sum() if "chill_day" in prev_year.columns else 0.0
+        )
+        prev_fall = prev_year[prev_year["month"].isin([9, 10, 11])]
+        if not prev_fall.empty:
+            features["prev_fall_tavg"]       = prev_fall["tavg"].mean()
+            features["prev_fall_chill_days"] = (
+                prev_fall["chill_day"].sum() if "chill_day" in prev_fall.columns else 0.0
+            )
+
+    # ── 8. Phenological calendar features ────────────────────────────────────
+    doy = target_date.dayofyear
+    lat_rad = np.radians(50.7)  # Bonn
+    features["photoperiod"] = 12 + (24 / np.pi) * np.arcsin(
+        0.39795
+        * np.cos(0.2163108 + 2 * np.arctan(0.9671396 * np.tan(0.00860 * (doy - 186))))
     ) * np.sin(lat_rad)
-    
-    # Days since winter solstice
-    if pd.to_datetime(target_date).month < 6:
-        winter_solstice = pd.Timestamp(year=target_year-1, month=12, day=21)
+
+    if target_date.month < 6:
+        solstice = pd.Timestamp(year=target_year - 1, month=12, day=21)
     else:
-        winter_solstice = pd.Timestamp(year=target_year, month=12, day=21)
-    
-    features['days_since_winter_solstice'] = (pd.to_datetime(target_date) - winter_solstice).days
-    
+        solstice = pd.Timestamp(year=target_year, month=12, day=21)
+    features["days_since_winter_solstice"] = (target_date - solstice).days
+
     return features
 
-def generate_features(df):
+
+def generate_features(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Generate additional features needed for cherry blossom prediction
-    
-    Parameters:
-    - df: DataFrame with harmonized weather data
-    
-    Returns:
-    - DataFrame with additional features
+    Broadcast full-year aggregate features onto every row in `df`.
+    Used only to produce the processed_blossom_data.csv debug file in --setup.
+    Training now calls generate_daily_features() directly.
     """
-    logger.info("Generating features for cherry blossom prediction...")
-    
-    # Create a copy to avoid modifying the original
-    features_df = df.copy()
-    
-    # Calculate temperature range
-    if all(col in features_df.columns for col in ['tmax', 'tmin']):
-        features_df['temp_range'] = features_df['tmax'] - features_df['tmin']
-    
-    # Calculate growing degree days (base 10°C)
-    if all(col in features_df.columns for col in ['tmax', 'tmin']):
-        features_df['gdd_10'] = features_df.apply(
-            lambda x: max(0, (x['tmax'] + x['tmin']) / 2 - 10), axis=1
-        )
-        features_df['cum_gdd_10'] = features_df.groupby('year')['gdd_10'].cumsum()
-    
-    # Calculate chilling hours (hours below 7.2°C, approximated)
-    if all(col in features_df.columns for col in ['tmax', 'tmin']):
-        features_df['chill_day'] = features_df.apply(
-            lambda x: 1 if x['tmax'] < 7.2 else (0 if x['tmin'] > 7.2 else 0.5), axis=1
-        )
-        features_df['cum_chill_days'] = features_df.groupby('year')['chill_day'].cumsum()
-    
-    # Calculate day of year
-    features_df['day_of_year'] = features_df['date'].dt.dayofyear
-    
-    # Calculate monthly statistics for each year for ALL months
-    for month in range(1, 13):  # All 12 months
-        month_data = features_df[features_df['month'] == month]
-        
-        for year in features_df['year'].unique():
-            year_month_data = month_data[month_data['year'] == year]
-            
-            if len(year_month_data) > 0:
-                # Temperature averages
-                for col in ['tavg', 'tmin', 'tmax']:
-                    if col in features_df.columns:
-                        col_name = f"{month_names[month]}_{col}"
-                        features_df.loc[features_df['year'] == year, col_name] = year_month_data[col].mean()
-                
-                # Precipitation sum
-                if 'prcp' in features_df.columns:
-                    col_name = f"{month_names[month]}_prcp_sum"
-                    features_df.loc[features_df['year'] == year, col_name] = year_month_data['prcp'].sum()
-                
-                # Snow sum
-                if 'snow' in features_df.columns:
-                    col_name = f"{month_names[month]}_snow_sum"
-                    features_df.loc[features_df['year'] == year, col_name] = year_month_data['snow'].fillna(0).sum()
-                
-                # Chill days sum
-                if 'chill_day' in features_df.columns:
-                    col_name = f"{month_names[month]}_chill_days"
-                    features_df.loc[features_df['year'] == year, col_name] = year_month_data['chill_day'].sum()
-                
-                # GDD sum
-                if 'gdd_10' in features_df.columns:
-                    col_name = f"{month_names[month]}_gdd_sum"
-                    features_df.loc[features_df['year'] == year, col_name] = year_month_data['gdd_10'].sum()
-    
-    # For winter features, we'll use February as the representative month
-    if 'february_tavg' in features_df.columns:
-        features_df['winter_tavg'] = features_df['february_tavg']
-        features_df['winter_tmin'] = features_df['february_tmin'] 
-        features_df['winter_tmax'] = features_df['february_tmax']
-        features_df['winter_prcp_sum'] = features_df['february_prcp_sum']
-        features_df['winter_snow_sum'] = features_df['february_snow_sum']
-        features_df['winter_chill_days'] = features_df['february_chill_days']
-    
-    # Calculate seasonal features
-    for year in features_df['year'].unique():
-        # Winter (Dec, Jan, Feb)
-        dec_data = features_df[(features_df['year'] == year-1) & (features_df['month'] == 12)]
-        jan_data = features_df[(features_df['year'] == year) & (features_df['month'] == 1)]
-        feb_data = features_df[(features_df['year'] == year) & (features_df['month'] == 2)]
-        
-        winter_data = pd.concat([dec_data, jan_data, feb_data])
-        
-        if len(winter_data) > 0:
-            features_df.loc[features_df['year'] == year, 'winter_full_tavg'] = winter_data['tavg'].mean()
-            if 'chill_day' in winter_data.columns:
-                features_df.loc[features_df['year'] == year, 'winter_full_chill_days'] = winter_data['chill_day'].sum()
-        
-        # Spring (Mar, Apr, May)
-        spring_data = features_df[(features_df['year'] == year) & (features_df['month'].isin([3, 4, 5]))]
-        
-        if len(spring_data) > 0:
-            features_df.loc[features_df['year'] == year, 'spring_tavg'] = spring_data['tavg'].mean()
-            if 'gdd_10' in spring_data.columns:
-                features_df.loc[features_df['year'] == year, 'spring_gdd_sum'] = spring_data['gdd_10'].sum()
-        
-        # Summer (Jun, Jul, Aug)
-        summer_data = features_df[(features_df['year'] == year) & (features_df['month'].isin([6, 7, 8]))]
-        
-        if len(summer_data) > 0:
-            features_df.loc[features_df['year'] == year, 'summer_tavg'] = summer_data['tavg'].mean()
-            if 'gdd_10' in summer_data.columns:
-                features_df.loc[features_df['year'] == year, 'summer_gdd_sum'] = summer_data['gdd_10'].sum()
-        
-        # Fall (Sep, Oct, Nov)
-        fall_data = features_df[(features_df['year'] == year) & (features_df['month'].isin([9, 10, 11]))]
-        
-        if len(fall_data) > 0:
-            features_df.loc[features_df['year'] == year, 'fall_tavg'] = fall_data['tavg'].mean()
-            if 'chill_day' in fall_data.columns:
-                features_df.loc[features_df['year'] == year, 'fall_chill_days'] = fall_data['chill_day'].sum()
-    
-    # Calculate calendar year statistics
-    for year in features_df['year'].unique():
-        year_data = features_df[features_df['year'] == year]
-        if len(year_data) > 0:
-            features_df.loc[features_df['year'] == year, 'year_avg_temp'] = year_data['tavg'].mean()
-            features_df.loc[features_df['year'] == year, 'year_total_prcp'] = year_data['prcp'].sum()
-            if 'chill_day' in year_data.columns:
-                features_df.loc[features_df['year'] == year, 'year_total_chill_days'] = year_data['chill_day'].sum()
-            if 'gdd_10' in year_data.columns:
-                features_df.loc[features_df['year'] == year, 'year_total_gdd'] = year_data['gdd_10'].sum()
-    
-    # Calculate previous year's statistics
-    for year in features_df['year'].unique():
-        if year-1 in features_df['year'].unique():
-            prev_year_data = features_df[features_df['year'] == year-1]
-            
-            if len(prev_year_data) > 0:
-                features_df.loc[features_df['year'] == year, 'prev_year_avg_temp'] = prev_year_data['tavg'].mean()
-                features_df.loc[features_df['year'] == year, 'prev_year_total_prcp'] = prev_year_data['prcp'].sum()
-                if 'chill_day' in prev_year_data.columns:
-                    features_df.loc[features_df['year'] == year, 'prev_year_total_chill_days'] = prev_year_data['chill_day'].sum()
-                
-                # Previous fall statistics (important for winter dormancy)
-                prev_fall_data = prev_year_data[prev_year_data['month'].isin([9, 10, 11])]
-                if len(prev_fall_data) > 0:
-                    features_df.loc[features_df['year'] == year, 'prev_fall_tavg'] = prev_fall_data['tavg'].mean()
-                    if 'chill_day' in prev_fall_data.columns:
-                        features_df.loc[features_df['year'] == year, 'prev_fall_chill_days'] = prev_fall_data['chill_day'].sum()
-    
-    # Calculate moving windows of temperature
+    logger.info("Generating broadcast features (for processed data file)...")
+    features_df = _add_derived_columns(df)
+
+    # Monthly stats per year (all 12 months)
+    for month in range(1, 13):
+        name = MONTH_NAMES[month]
+        m_all = features_df[features_df["month"] == month]
+        for year in features_df["year"].unique():
+            m_yr = m_all[m_all["year"] == year]
+            if m_yr.empty:
+                continue
+            mask = features_df["year"] == year
+            for col in ["tavg", "tmin", "tmax"]:
+                if col in features_df.columns:
+                    features_df.loc[mask, f"{name}_{col}"] = m_yr[col].mean()
+            if "prcp"      in features_df.columns:
+                features_df.loc[mask, f"{name}_prcp_sum"]   = m_yr["prcp"].sum()
+            if "snow"      in features_df.columns:
+                features_df.loc[mask, f"{name}_snow_sum"]   = m_yr["snow"].fillna(0).sum()
+            if "chill_day" in features_df.columns:
+                features_df.loc[mask, f"{name}_chill_days"] = m_yr["chill_day"].sum()
+            if "gdd_10"    in features_df.columns:
+                features_df.loc[mask, f"{name}_gdd_sum"]    = m_yr["gdd_10"].sum()
+
+    # Seasonal and annual aggregates
+    for year in features_df["year"].unique():
+        mask = features_df["year"] == year
+
+        dec  = features_df[(features_df["year"] == year - 1) & (features_df["month"] == 12)]
+        jan  = features_df[(features_df["year"] == year)     & (features_df["month"] == 1)]
+        feb  = features_df[(features_df["year"] == year)     & (features_df["month"] == 2)]
+        winter = pd.concat([dec, jan, feb])
+        if not winter.empty:
+            features_df.loc[mask, "winter_full_tavg"]        = winter["tavg"].mean()
+            features_df.loc[mask, "winter_full_chill_days"]  = winter["chill_day"].sum()
+
+        for season, months, tav_col, extra_col, extra_src in [
+            ("spring", [3,4,5],   "spring_tavg", "spring_gdd_sum", "gdd_10"),
+            ("summer", [6,7,8],   "summer_tavg", "summer_gdd_sum", "gdd_10"),
+            ("fall",   [9,10,11], "fall_tavg",   "fall_chill_days","chill_day"),
+        ]:
+            s = features_df[(features_df["year"] == year) & features_df["month"].isin(months)]
+            if not s.empty:
+                features_df.loc[mask, tav_col]   = s["tavg"].mean()
+                if extra_src in s.columns:
+                    features_df.loc[mask, extra_col] = s[extra_src].sum()
+
+        yr = features_df[features_df["year"] == year]
+        if not yr.empty:
+            features_df.loc[mask, "year_avg_temp"]         = yr["tavg"].mean()
+            features_df.loc[mask, "year_total_prcp"]       = yr["prcp"].sum()
+            features_df.loc[mask, "year_total_chill_days"] = yr["chill_day"].sum()
+            features_df.loc[mask, "year_total_gdd"]        = yr["gdd_10"].sum()
+
+        prev = features_df[features_df["year"] == year - 1]
+        if not prev.empty:
+            features_df.loc[mask, "prev_year_avg_temp"]         = prev["tavg"].mean()
+            features_df.loc[mask, "prev_year_total_prcp"]       = prev["prcp"].sum()
+            features_df.loc[mask, "prev_year_total_chill_days"] = prev["chill_day"].sum()
+            pf = prev[prev["month"].isin([9,10,11])]
+            if not pf.empty:
+                features_df.loc[mask, "prev_fall_tavg"]       = pf["tavg"].mean()
+                features_df.loc[mask, "prev_fall_chill_days"] = pf["chill_day"].sum()
+
+    # Rolling windows — grouped by year to avoid cross-year bleed
     for window in [30, 60, 90]:
-        features_df[f'tavg_roll_{window}d'] = features_df['tavg'].rolling(window=window, min_periods=1).mean()
-        features_df[f'tmin_roll_{window}d'] = features_df['tmin'].rolling(window=window, min_periods=1).mean()
-        features_df[f'tmax_roll_{window}d'] = features_df['tmax'].rolling(window=window, min_periods=1).mean()
-    
-    # Calculate photoperiod (day length) approximation
-    # Using 50.7° for Bonn latitude
+        for col in ["tavg", "tmin", "tmax"]:
+            features_df[f"{col}_roll_{window}d"] = (
+                features_df.groupby("year")[col]
+                .transform(lambda x: x.rolling(window=window, min_periods=1).mean())
+            )
+
+    # Photoperiod & days-since-solstice
     lat_rad = np.radians(50.7)
-    features_df['photoperiod'] = features_df.apply(
-        lambda x: 12 + (24/np.pi) * np.arcsin(
-            0.39795 * np.cos(0.2163108 + 2 * np.arctan(0.9671396 * np.tan(0.00860 * (x['day_of_year'] - 186))))
-        ) * np.sin(lat_rad),
-        axis=1
+    features_df["photoperiod"] = features_df["day_of_year"].apply(
+        lambda doy: 12 + (24 / np.pi) * np.arcsin(
+            0.39795 * np.cos(0.2163108 + 2 * np.arctan(0.9671396 * np.tan(0.00860 * (doy - 186))))
+        ) * np.sin(lat_rad)
     )
-    
-    # Calculate days since winter solstice (a useful feature for bloom timing)
-    features_df['days_since_winter_solstice'] = features_df.apply(
-        lambda x: (x['date'] - pd.Timestamp(year=x['year']-1, month=12, day=21)).days
-        if x['month'] < 6 else 
-        (x['date'] - pd.Timestamp(year=x['year'], month=12, day=21)).days, 
-        axis=1
+    features_df["days_since_winter_solstice"] = features_df.apply(
+        lambda r: (
+            r["date"] - pd.Timestamp(year=int(r["year"]) - 1, month=12, day=21)
+        ).days if r["month"] < 6 else (
+            r["date"] - pd.Timestamp(year=int(r["year"]), month=12, day=21)
+        ).days,
+        axis=1,
     )
-    
-    logger.info("Feature generation complete")
+
+    logger.info("Broadcast feature generation complete.")
     return features_df
 
-def add_cherry_blossom_data(df):
+
+def add_cherry_blossom_data(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Add cherry blossom blooming start and end dates.
-    
-    Parameters:
-    - df: DataFrame with weather data
-    
-    Returns:
-    - DataFrame with added cherry blossom columns
+    Annotate every row with bloom_start, bloom_end, is_blooming, bloom_duration,
+    and days_to_bloom columns.  Bloom dates come from _load_confirmations().
     """
     logger.info("Adding cherry blossom historical data...")
-    
-    # Create a copy to avoid modifying the original
-    blossom_df = df.copy()
-    
-    # Create empty columns for cherry blossom data
-    blossom_df['bloom_start'] = pd.NaT
-    blossom_df['bloom_end'] = pd.NaT
-    blossom_df['is_blooming'] = False
-    blossom_df['bloom_duration'] = np.nan
-    
-    # Cherry blossom data (including 2025 - you'll need to add actual data when available)
-    bloom_data = {
-        2015: {'start': '2015-04-16', 'end': '2015-04-27'},
-        2016: {'start': '2016-04-14', 'end': '2016-04-26'},
-        2017: {'start': '2017-03-31', 'end': '2017-04-15'},
-        2018: {'start': '2018-04-15', 'end': '2018-04-28'},
-        2019: {'start': '2019-04-07', 'end': '2019-04-22'},
-        2020: {'start': '2020-04-04', 'end': '2020-04-14'},
-        2021: {'start': '2021-04-13', 'end': '2021-04-29'},
-        2022: {'start': '2022-04-07', 'end': '2022-04-22'},  
-        2023: {'start': '2023-04-11', 'end': '2023-04-26'},
-        2024: {'start': '2024-03-30', 'end': '2024-04-10'},
-        2025: {'start': '2025-04-05', 'end': '2025-04-15'},  
-    }
-    
-    # Check for bloom confirmations and update bloom_data
-    confirmations_file = os.path.join(CONFIG['output_dir'], CONFIG['confirmations_file'])
-    if os.path.exists(confirmations_file):
-        try:
-            with open(confirmations_file, 'r') as f:
-                confirmations = json.load(f)
-            
-            for confirmation in confirmations:
-                year = confirmation['year']
-                
-                # Create or update the entry in bloom_data
-                if 'actual_bloom_start' in confirmation and confirmation['actual_bloom_start']:
-                    start_date = confirmation['actual_bloom_start']
-                    end_date = confirmation.get('actual_bloom_end', None)
-                    
-                    if not end_date and 'estimated_duration' in confirmation:
-                        # Calculate end date based on start date and estimated duration
-                        start = pd.to_datetime(start_date)
-                        end_date = (start + pd.Timedelta(days=int(confirmation['estimated_duration'])-1)).strftime('%Y-%m-%d')
-                    
-                    if end_date:
-                        bloom_data[year] = {'start': start_date, 'end': end_date}
-                        logger.info(f"Updated bloom data for {year} from confirmations: {start_date} to {end_date}")
-        except Exception as e:
-            logger.error(f"Error loading bloom confirmations: {str(e)}")
-    
-    # Add bloom data to the DataFrame
-    for year, bloom_info in bloom_data.items():
-        start_date = pd.to_datetime(bloom_info['start'])
-        end_date = pd.to_datetime(bloom_info['end'])
-        
-        # Skip if this year isn't in the data
-        if year not in blossom_df['year'].unique():
-            continue
-        
-        # Mark the start and end dates
-        blossom_df.loc[blossom_df['date'] == start_date, 'bloom_start'] = start_date
-        blossom_df.loc[blossom_df['date'] == end_date, 'bloom_end'] = end_date
-        
-        # Mark the blooming period
-        blooming_mask = (blossom_df['date'] >= start_date) & (blossom_df['date'] <= end_date)
-        blossom_df.loc[blooming_mask, 'is_blooming'] = True
-        
-        # Calculate bloom duration for the year
-        duration = (end_date - start_date).days + 1
-        blossom_df.loc[blossom_df['year'] == year, 'bloom_duration'] = duration
-    
-    # For years with bloom data, calculate days to bloom
-    for year in bloom_data.keys():
-        # Skip if this year isn't in the data
-        if year not in blossom_df['year'].unique():
-            continue
-            
-        year_data = blossom_df[blossom_df['year'] == year]
-        bloom_start_date = pd.to_datetime(bloom_data[year]['start'])
-        bloom_start_doy = bloom_start_date.dayofyear
-        
-        # Calculate days until bloom (negative before bloom, positive after)
-        blossom_df.loc[blossom_df['year'] == year, 'days_to_bloom'] = (
-            blossom_df.loc[blossom_df['year'] == year, 'day_of_year'] - bloom_start_doy
-        )
-    
-    return blossom_df
+    out = df.copy()
+    out["bloom_start"]   = pd.NaT
+    out["bloom_end"]     = pd.NaT
+    out["is_blooming"]   = False
+    out["bloom_duration"]= np.nan
+    out["days_to_bloom"] = np.nan
 
-def train_prediction_model(training_data):
+    bloom_data = _load_confirmations()
+
+    for year, info in bloom_data.items():
+        if year not in out["year"].unique():
+            continue
+        if "end" not in info:
+            continue
+
+        start = pd.to_datetime(info["start"])
+        end   = pd.to_datetime(info["end"])
+
+        out.loc[out["date"] == start, "bloom_start"] = start
+        out.loc[out["date"] == end,   "bloom_end"]   = end
+        out.loc[(out["date"] >= start) & (out["date"] <= end), "is_blooming"] = True
+        out.loc[out["year"] == year, "bloom_duration"] = (end - start).days + 1
+
+        doy = start.dayofyear
+        yr_mask = out["year"] == year
+        out.loc[yr_mask, "days_to_bloom"] = out.loc[yr_mask, "day_of_year"] - doy
+
+    return out
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  MODEL TRAINING
+# ══════════════════════════════════════════════════════════════════════════════
+
+def train_prediction_model(df: pd.DataFrame) -> tuple:
     """
-    Train a prediction model for cherry blossom start date using XGBoost.
-    Updated to include 2025 data in training.
+    Train an XGBoost regressor to predict cherry blossom start DOY.
+
+    Key design decisions
+    --------------------
+    * Calls generate_daily_features(df, cutoff) per training year — the exact
+      same function used at inference time.  This eliminates the data-leakage
+      bug where full-year stats (summer_tavg, fall_tavg, etc.) were included
+      in training rows even though those values are unavailable in February.
+    * Cutoff is end-of-March for each training year, adjusted earlier for
+      years where bloom happened before March 31.
+    * Saves cross-validation MAE (not in-sample MAE) to model_metadata.json so
+      the web UI shows an honest accuracy estimate.
+    * Loads feature_cols.json from disk on retrains so the feature set stays
+      stable across runs.
+
+    Parameters
+    ----------
+    df : Full harmonized weather DataFrame (all years, no bloom columns needed).
+
+    Returns
+    -------
+    (model, feature_cols)
     """
-    logger.info("Training cherry blossom prediction model with XGBoost (2015-2025 data)...")
-    
-    # Prepare features for each year
+    logger.info("Training XGBoost cherry blossom model on 2015-2025 data...")
+
+    bloom_data = _load_confirmations()  # respects any saved confirmations
     yearly_features = []
-    
-    for year in training_data['year'].unique():
-        # Skip 2026 as it's the prediction year
-        if year > 2025:
+
+    for year, info in sorted(bloom_data.items()):
+        if year > CONFIG["max_historical_year"]:
             continue
-            
-        year_data = training_data[training_data['year'] == year]
-        
-        # Skip if there's no bloom data for this year
-        bloom_start_rows = year_data[~year_data['bloom_start'].isna()]
-        if len(bloom_start_rows) == 0:
-            logger.info(f"Skipping year {year} - no bloom start date found")
+
+        bloom_start = pd.to_datetime(info["start"])
+        bloom_doy   = bloom_start.dayofyear
+
+        # Training cutoff: end of March, but pulled back for early-bloom years
+        # so the model never "sees" the bloom date itself as a feature.
+        cutoff = pd.Timestamp(year=year, month=3, day=31)
+        if bloom_start <= cutoff:
+            cutoff = bloom_start - pd.Timedelta(days=1)
+            logger.info(
+                f"  {year}: early bloom (DOY {bloom_doy}), "
+                f"cutoff adjusted to {cutoff.date()}"
+            )
+
+        # Need at least 60 days of current-year data to produce useful features
+        available_for_year = df[(df["date"] <= cutoff) & (df["year"] == year)]
+        if len(available_for_year) < 60:
+            logger.warning(
+                f"  Skipping {year}: only {len(available_for_year)} days "
+                f"available up to {cutoff.date()} (need ≥60)"
+            )
             continue
-            
-        # Get the bloom start date for this year
-        bloom_start = bloom_start_rows['date'].iloc[0]
-        bloom_doy = bloom_start.dayofyear  # day of year
-        
-        # Get data from all necessary months
-        # Previous year December
-        prev_dec_data = training_data[(training_data['year'] == year-1) & (training_data['month'] == 12)]
-        
-        # Current year January through April
-        current_winter_spring_data = year_data[year_data['month'].isin([1, 2, 3, 4])]
-        
-        # Ensure we have enough data from the crucial months
-        if len(prev_dec_data) < 20:
-            logger.warning(f"Limited December data for previous year ({len(prev_dec_data)} days)")
-            
-        if len(current_winter_spring_data) < 90:  # Approximately 90 days in Jan-Mar
-            logger.warning(f"Incomplete winter/spring data for {year} ({len(current_winter_spring_data)} days)")
-        
-        # Get a sample row with comprehensive features (from late March)
-        march_data = year_data[year_data['month'] == 3]
-        if len(march_data) < 25:  # Allow some missing days in March
-            logger.warning(f"Skipping year {year} - insufficient March data ({len(march_data)} days)")
+
+        features = generate_daily_features(df, cutoff)
+        if features is None:
+            logger.warning(f"  Skipping {year}: generate_daily_features returned None")
             continue
-            
-        late_march_data = march_data.sort_values('date').tail(1)
-        if len(late_march_data) == 0:
-            logger.warning(f"Skipping year {year} - can't find late March data")
-            continue
-            
-        sample_row = late_march_data.iloc[0]
-        
-        # Create feature dictionary for this year
-        features = {
-            'year': year,
-            'bloom_start_doy': bloom_doy
-        }
-        
-        # Add all available monthly features
-        crucial_months = ['december', 'january', 'february', 'march', 'april']
-        
-        # Get all columns in the sample row
-        all_columns = sample_row.index.tolist()
-        
-        # Find all monthly feature columns
-        month_cols = []
-        for col in all_columns:
-            for month in crucial_months:
-                if col.startswith(f"{month}_") and not pd.isna(sample_row[col]):
-                    month_cols.append(col)
-        
-        # Add seasonal and calendar features
-        seasonal_cols = [col for col in all_columns if any(x in col for x in ['winter', 'spring', 'fall', 'summer', 'year_'])]
-        
-        # Also add rolling window features
-        rolling_cols = [col for col in all_columns if 'roll_' in col]
-        
-        # All features to include
-        feature_cols = month_cols + seasonal_cols + rolling_cols
-        
-        # Add all valid features to our feature dictionary
-        for col in feature_cols:
-            if not pd.isna(sample_row[col]):
-                features[col] = sample_row[col]
-        
+
+        features["year"]           = year
+        features["bloom_start_doy"]= bloom_doy
         yearly_features.append(features)
-    
-    # Create DataFrame with yearly features
+        logger.info(
+            f"  {year}: cutoff={cutoff.date()}, "
+            f"bloom DOY={bloom_doy}, features={len(features)}"
+        )
+
     if not yearly_features:
-        raise ValueError("No valid training data years found")
-        
+        raise ValueError("No valid training years found – cannot train model.")
+
     yearly_df = pd.DataFrame(yearly_features)
-    
-    # Get all feature columns (excluding 'year' and 'bloom_start_doy')
-    feature_cols = [col for col in yearly_df.columns if col not in ['year', 'bloom_start_doy']]
-    
-    # Check for missing values in feature columns
-    missing_values = yearly_df[feature_cols].isna().sum()
-    if missing_values.sum() > 0:
-        logger.warning("Missing values in feature columns:")
-        for col, count in missing_values[missing_values > 0].items():
-            logger.warning(f"  {col}: {count} missing values")
-        
-        # Fill missing values with the mean of each column
-        yearly_df[feature_cols] = yearly_df[feature_cols].fillna(yearly_df[feature_cols].mean())
-        logger.info("Missing values filled with column means")
-    
-    # Prepare data for model training
+    logger.info(f"Training matrix: {len(yearly_df)} years")
+
+    # ── Determine canonical feature list ─────────────────────────────────────
+    feature_cols_path = os.path.join(CONFIG["model_dir"], "feature_cols.json")
+    if os.path.exists(feature_cols_path):
+        with open(feature_cols_path) as f:
+            canonical_cols = json.load(f)
+        logger.info(f"Loaded {len(canonical_cols)} canonical features from disk.")
+    else:
+        exclude = {"year", "bloom_start_doy", "photoperiod"}
+        canonical_cols = [c for c in yearly_df.columns if c not in exclude]
+        logger.info(f"First-run: derived {len(canonical_cols)} features.")
+
+    feature_cols = [c for c in canonical_cols if c in yearly_df.columns]
+    missing = set(canonical_cols) - set(feature_cols)
+    if missing:
+        logger.warning(
+            f"{len(missing)} canonical feature(s) absent from training data: "
+            f"{sorted(missing)}"
+        )
+
+    # ── Fill missing values ───────────────────────────────────────────────────
+    na_counts = yearly_df[feature_cols].isna().sum()
+    na_cols   = na_counts[na_counts > 0]
+    if not na_cols.empty:
+        logger.warning(f"Filling {len(na_cols)} column(s) with column mean:")
+        for col, cnt in na_cols.items():
+            logger.warning(f"    {col}: {cnt} missing value(s)")
+        yearly_df[feature_cols] = yearly_df[feature_cols].fillna(
+            yearly_df[feature_cols].mean()
+        )
+
     X = yearly_df[feature_cols]
-    y = yearly_df['bloom_start_doy']
-    
-    # Train XGBoost model with optimized hyperparameters
+    y = yearly_df["bloom_start_doy"]
+
+    # ── Train ─────────────────────────────────────────────────────────────────
+    logger.info(f"Fitting XGBoost: {len(X)} samples × {len(feature_cols)} features")
     model = xgb.XGBRegressor(
         n_estimators=300,
         max_depth=6,
@@ -883,720 +744,557 @@ def train_prediction_model(training_data):
         reg_alpha=0.05,
         reg_lambda=1,
         random_state=42,
-        objective='reg:squarederror'
+        objective="reg:squarederror",
     )
-    
-    model.fit(X, y, 
-              eval_set=[(X, y)],
-              verbose=False)
-    
-    # Get feature importance
-    feature_importance = pd.DataFrame({
-        'Feature': feature_cols,
-        'Importance': model.feature_importances_
-    }).sort_values('Importance', ascending=False)
-    
-    logger.info("Top 10 Feature Importance (XGBoost):")
-    for i, (feature, importance) in enumerate(zip(feature_importance['Feature'].head(10), 
-                                              feature_importance['Importance'].head(10))):
-        logger.info(f"  {i+1}. {feature}: {importance:.4f}")
-    
-    # Make predictions for training data
-    y_pred = model.predict(X)
-    
-    # Calculate errors
-    mae = mean_absolute_error(y, y_pred)
-    rmse = np.sqrt(mean_squared_error(y, y_pred))
-    
-    # Perform cross-validation for better error estimate
-    kfold = KFold(n_splits=min(5, len(X)), shuffle=True, random_state=42)
-    cv_scores = cross_val_score(model, X, y, cv=kfold, scoring='neg_mean_absolute_error')
-    cv_mae = -cv_scores.mean()
-    
-    logger.info(f"XGBoost Model Performance:")
-    logger.info(f"  Mean Absolute Error: {mae:.2f} days")
-    logger.info(f"  Cross-Validation MAE: {cv_mae:.2f} days")
-    logger.info(f"  Root Mean Squared Error: {rmse:.2f} days")
-    
-    # Save actual vs predicted for training years
-    results_df = pd.DataFrame({
-        'year': yearly_df['year'],
-        'actual_bloom_doy': y,
-        'predicted_bloom_doy': y_pred,
-        'error_days': y_pred - y
+    model.fit(X, y, eval_set=[(X, y)], verbose=False)
+
+    # ── Evaluate ──────────────────────────────────────────────────────────────
+    y_pred      = model.predict(X)
+    insample_mae= float(mean_absolute_error(y, y_pred))
+    insample_rmse=float(np.sqrt(mean_squared_error(y, y_pred)))
+
+    n_splits = min(5, len(X))
+    kfold    = KFold(n_splits=n_splits, shuffle=True, random_state=42)
+    cv_scores= cross_val_score(model, X, y, cv=kfold, scoring="neg_mean_absolute_error")
+    cv_mae   = float(-cv_scores.mean())
+    cv_std   = float(cv_scores.std())
+
+    logger.info("Model performance:")
+    logger.info(f"  In-sample MAE : {insample_mae:.2f} days  ← internal only")
+    logger.info(f"  CV MAE        : {cv_mae:.2f} ± {cv_std:.2f} days  ← reported to users")
+    logger.info(f"  In-sample RMSE: {insample_rmse:.2f} days")
+
+    # ── Per-year results ──────────────────────────────────────────────────────
+    results = pd.DataFrame({
+        "year":                yearly_df["year"].values,
+        "actual_bloom_doy":    y.values,
+        "predicted_bloom_doy": y_pred,
+        "error_days":          y_pred - y.values,
     })
-    
-    # Convert day of year to date
-    results_df['actual_bloom_date'] = results_df.apply(
-        lambda x: pd.Timestamp(year=int(x['year']), month=1, day=1) + 
-                 pd.Timedelta(days=int(x['actual_bloom_doy'])-1),
-        axis=1
+    for prefix, col in [("actual", "actual_bloom_doy"), ("predicted", "predicted_bloom_doy")]:
+        results[f"{prefix}_bloom_date"] = results.apply(
+            lambda r, c=col: (
+                pd.Timestamp(year=int(r["year"]), month=1, day=1)
+                + pd.Timedelta(days=int(r[c]) - 1)
+            ),
+            axis=1,
+        )
+    logger.info("Per-year results:")
+    for _, row in results.iterrows():
+        logger.info(
+            f"  {int(row['year'])}: "
+            f"actual {row['actual_bloom_date'].strftime('%Y-%m-%d')}, "
+            f"predicted {row['predicted_bloom_date'].strftime('%Y-%m-%d')}, "
+            f"error {row['error_days']:+.1f}d"
+        )
+
+    results.to_csv(
+        os.path.join(CONFIG["output_dir"], "model_training_results.csv"), index=False
     )
-    
-    results_df['predicted_bloom_date'] = results_df.apply(
-        lambda x: pd.Timestamp(year=int(x['year']), month=1, day=1) + 
-                 pd.Timedelta(days=int(x['predicted_bloom_doy'])-1),
-        axis=1
+
+    # ── Feature importance ────────────────────────────────────────────────────
+    imp_df = (
+        pd.DataFrame({"feature": feature_cols, "importance": model.feature_importances_})
+        .sort_values("importance", ascending=False)
     )
-    
-    logger.info("Training Results (XGBoost):")
-    for _, row in results_df.iterrows():
-        logger.info(f"  {int(row['year'])}: Actual {row['actual_bloom_date'].strftime('%Y-%m-%d')}, "
-                   f"Predicted {row['predicted_bloom_date'].strftime('%Y-%m-%d')}, "
-                   f"Error: {row['error_days']:.1f} days")
-    
-    # Save training results
-    results_file = os.path.join(CONFIG['output_dir'], 'model_training_results.csv')
-    results_df.to_csv(results_file, index=False)
-    logger.info(f"Training results saved to {results_file}")
-    
-    # Save the model and feature columns
-    # Use cross-validation MAE for reporting as it's more robust
-    save_model(model, feature_cols, cv_mae)
-    
+    logger.info("Top-10 features:")
+    for _, row in imp_df.head(10).iterrows():
+        logger.info(f"  {row['feature']}: {row['importance']:.4f}")
+
+    # ── Persist ───────────────────────────────────────────────────────────────
+    save_model(model, feature_cols, mae=cv_mae)
+
     return model, feature_cols
 
-def save_model(model, feature_cols, mae=None):
-    """
-    Save the trained XGBoost model and associated metadata to files
-    """
-    # Create model directory if it doesn't exist
-    os.makedirs(CONFIG['model_dir'], exist_ok=True)
-    
-    # Save model with timestamp to keep version history
-    timestamp = datetime.now().strftime('%Y%m%d')
-    model_path = os.path.join(CONFIG['model_dir'], f'cherry_blossom_xgboost_{timestamp}.pkl')
-    
-    # Also save as latest model for easy reference
-    latest_model_path = os.path.join(CONFIG['model_dir'], 'cherry_blossom_model_latest.pkl')
-    
-    # Save the model files
-    with open(model_path, 'wb') as f:
-        pickle.dump(model, f)
-    
-    with open(latest_model_path, 'wb') as f:
-        pickle.dump(model, f)
-        
-    # Save feature columns
-    feature_cols_path = os.path.join(CONFIG['model_dir'], 'feature_cols.json')
-    with open(feature_cols_path, 'w') as f:
-        json.dump(feature_cols, f)
-    
-    # Save metadata including training date
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  MODEL PERSISTENCE
+# ══════════════════════════════════════════════════════════════════════════════
+
+def save_model(model, feature_cols: list, mae: float = None) -> str:
+    """Persist model, feature list, and metadata to the model directory."""
+    os.makedirs(CONFIG["model_dir"], exist_ok=True)
+
+    ts             = datetime.now().strftime("%Y%m%d")
+    model_path     = os.path.join(CONFIG["model_dir"], f"cherry_blossom_xgboost_{ts}.pkl")
+    latest_path    = os.path.join(CONFIG["model_dir"], "cherry_blossom_model_latest.pkl")
+    feat_path      = os.path.join(CONFIG["model_dir"], "feature_cols.json")
+    metadata_path  = os.path.join(CONFIG["model_dir"], "model_metadata.json")
+
+    with open(model_path,  "wb") as f: pickle.dump(model, f)
+    with open(latest_path, "wb") as f: pickle.dump(model, f)
+    with open(feat_path,   "w")  as f: json.dump(feature_cols, f)
+
+    top10 = sorted(
+        zip(feature_cols, model.feature_importances_),
+        key=lambda x: x[1], reverse=True,
+    )[:10]
     metadata = {
-        'model_type': 'XGBoost',
-        'training_date': datetime.now().strftime('%Y-%m-%d'),
-        'feature_count': len(feature_cols),
-        'model_file': os.path.basename(model_path),
-        'training_years': '2015-2025',
-        'prediction_year': 2026,
-        'model_mae': round(float(mae), 2) if mae else None,  # Round to 2 decimal places
-        'top_features': list(zip(
-            [c for c, _ in sorted(zip(feature_cols, model.feature_importances_), 
-                                  key=lambda x: x[1], reverse=True)[:10]], 
-            [float(i) for i in sorted(model.feature_importances_, reverse=True)[:10]]
-        ))
+        "model_type":    "XGBoost",
+        "training_date": datetime.now().strftime("%Y-%m-%d"),
+        "feature_count": len(feature_cols),
+        "model_file":    os.path.basename(model_path),   # timestamped file
+        "latest_file":   os.path.basename(latest_path),  # always-current alias
+        "training_years":"2015-2025",
+        "prediction_year": CONFIG["prediction_year"],
+        "model_mae":     round(float(mae), 2) if mae is not None else None,
+        "top_features":  [[c, float(i)] for c, i in top10],
     }
-    
-    metadata_path = os.path.join(CONFIG['model_dir'], 'model_metadata.json')
-    with open(metadata_path, 'w') as f:
+    with open(metadata_path, "w") as f:
         json.dump(metadata, f, indent=2)
-    
-    logger.info(f"XGBoost model saved to {model_path} and {latest_model_path}")
+
+    logger.info(f"Model saved → {model_path}")
+    logger.info(f"Latest alias → {latest_path}")
     return model_path
 
-def load_model():
-    """
-    Load the trained model and feature columns
-    """
-    model_path = os.path.join(CONFIG['model_dir'], 'cherry_blossom_model_latest.pkl')
-    feature_cols_path = os.path.join(CONFIG['model_dir'], 'feature_cols.json')
-    
-    try:
-        # Check if files exist
-        if not os.path.exists(model_path) or not os.path.exists(feature_cols_path):
-            logger.error(f"Model files not found at {model_path}")
-            return None, None
-        
-        # Load model
-        with open(model_path, 'rb') as f:
-            model = pickle.load(f)
-        
-        # Load feature columns
-        with open(feature_cols_path, 'r') as f:
-            feature_cols = json.load(f)
-        
-        logger.info(f"Model loaded with {len(feature_cols)} features")
-        return model, feature_cols
-        
-    except Exception as e:
-        logger.error(f"Error loading model: {str(e)}")
+
+def load_model() -> tuple:
+    """Load the latest model and its feature list from disk."""
+    latest_path = os.path.join(CONFIG["model_dir"], "cherry_blossom_model_latest.pkl")
+    feat_path   = os.path.join(CONFIG["model_dir"], "feature_cols.json")
+
+    if not os.path.exists(latest_path) or not os.path.exists(feat_path):
+        logger.error(f"Model files not found in {CONFIG['model_dir']}")
         return None, None
 
-def make_daily_prediction(model, feature_cols, data, target_date, year=None):
+    try:
+        with open(latest_path, "rb") as f: model        = pickle.load(f)
+        with open(feat_path,   "r")  as f: feature_cols = json.load(f)
+        logger.info(f"Model loaded ({len(feature_cols)} features)")
+        return model, feature_cols
+    except Exception as exc:
+        logger.error(f"Error loading model: {exc}")
+        return None, None
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  PREDICTION
+# ══════════════════════════════════════════════════════════════════════════════
+
+def make_daily_prediction(
+    model, feature_cols: list, data: pd.DataFrame,
+    target_date, year: int = None,
+) -> dict | None:
     """
-    Make a prediction for a specific date using daily-updated features
-    
-    Parameters:
-    - model: Trained XGBoost model
-    - feature_cols: List of feature columns used by the model
-    - data: Complete DataFrame with all available data
-    - target_date: Date to make prediction for
-    - year: Year to predict (defaults to CONFIG['prediction_year'])
-    
-    Returns:
-    - Dictionary with prediction results for that date
+    Run inference for a single date.
+
+    Parameters
+    ----------
+    model        : Trained XGBoost model.
+    feature_cols : Ordered list of feature names (from load_model / train).
+    data         : Full harmonized weather DataFrame.
+    target_date  : Date for which to predict (pd.Timestamp or str).
+    year         : Prediction year (default: CONFIG['prediction_year']).
     """
     if year is None:
-        year = CONFIG['prediction_year']
-    
-    # Generate features for the target date
-    daily_features = generate_daily_features(data, target_date)
-    
-    if daily_features is None:
-        logger.warning(f"Could not generate features for {target_date}")
+        year = CONFIG["prediction_year"]
+
+    target_date = pd.to_datetime(target_date)
+    daily_feats = generate_daily_features(data, target_date)
+    if daily_feats is None:
+        logger.warning(f"Could not generate features for {target_date.date()}")
         return None
-    
-    # Create DataFrame for prediction
-    pred_features = {}
-    
-    # Add available features
-    for col in feature_cols:
-        if col in daily_features:
-            pred_features[col] = daily_features[col]
-        else:
-            # Use default value for missing features
-            pred_features[col] = 0.0
-    
-    # Create DataFrame
-    pred_df = pd.DataFrame([pred_features])
-    
-    # Make prediction
-    predicted_doy = model.predict(pred_df[feature_cols])[0]
-    
-    # Convert to date
-    predicted_date = pd.Timestamp(year=year, month=1, day=1) + pd.Timedelta(days=int(predicted_doy)-1)
-    
-    # Calculate days until bloom
-    days_until_bloom = (predicted_date - pd.to_datetime(target_date)).days
-    
-    # Average bloom duration from historical data
-    avg_bloom_duration = 14  # Average from historical data
-    predicted_end_date = predicted_date + pd.Timedelta(days=avg_bloom_duration-1)
-    
-    # Create prediction result
-    prediction = {
-        'prediction_date': target_date.strftime('%Y-%m-%d'),
-        'year': year,
-        'predicted_bloom_doy': float(predicted_doy),
-        'predicted_bloom_start': predicted_date.strftime('%Y-%m-%d'),
-        'estimated_bloom_end': predicted_end_date.strftime('%Y-%m-%d'),
-        'days_until_bloom': days_until_bloom,
-        'confidence': determine_confidence(pd.to_datetime(target_date), days_until_bloom),
-        'features_available': len([k for k in daily_features.keys() if k in feature_cols])
+
+    # Align to canonical feature vector; zero-fill anything not yet available
+    pred_row = {col: daily_feats.get(col, 0.0) for col in feature_cols}
+    pred_df  = pd.DataFrame([pred_row])[feature_cols]
+
+    predicted_doy  = float(model.predict(pred_df)[0])
+    predicted_date = (
+        pd.Timestamp(year=year, month=1, day=1)
+        + pd.Timedelta(days=int(predicted_doy) - 1)
+    )
+    days_until   = (predicted_date - target_date).days
+    end_date     = predicted_date + pd.Timedelta(days=13)   # 14-day average duration
+
+    n_matched = sum(1 for k in daily_feats if k in feature_cols)
+
+    return {
+        "prediction_date":       target_date.strftime("%Y-%m-%d"),
+        "year":                  year,
+        "predicted_bloom_doy":   predicted_doy,
+        "predicted_bloom_start": predicted_date.strftime("%Y-%m-%d"),
+        "estimated_bloom_end":   end_date.strftime("%Y-%m-%d"),
+        "days_until_bloom":      days_until,
+        "confidence":            _confidence_level(target_date, days_until),
+        "features_available":    n_matched,
     }
-    
-    return prediction
 
-def determine_confidence(current_date, days_until_bloom):
-    """
-    Determine confidence level based on date and days until bloom
-    """
-    current_month = current_date.month
-    
-    if days_until_bloom < 7:
-        return 'very_high'
-    elif days_until_bloom < 14:
-        return 'high'
-    elif current_month >= 3 and days_until_bloom < 30:
-        return 'medium-high'
-    elif current_month >= 2:
-        return 'medium'
-    else:
-        return 'low'
 
-def save_daily_predictions(predictions):
-    """
-    Save daily predictions to CSV file and JSON for web interface
-    """
-    if not predictions:
-        return False
-    
-    try:
-        # Create DataFrame
-        pred_df = pd.DataFrame(predictions)
-        
-        # Save to CSV file
-        csv_file = os.path.join(CONFIG['output_dir'], CONFIG['daily_predictions_file'])
-        
-        if os.path.exists(csv_file):
-            # Append to existing file
-            existing_df = pd.read_csv(csv_file)
-            combined_df = pd.concat([existing_df, pred_df], ignore_index=True)
-            
-            # Remove duplicates (keep latest prediction for each date)
-            combined_df = combined_df.drop_duplicates(subset=['prediction_date'], keep='last')
-            combined_df.to_csv(csv_file, index=False)
-        else:
-            # Create new file
-            pred_df.to_csv(csv_file, index=False)
-        
-        logger.info(f"Saved {len(predictions)} daily predictions to {csv_file}")
-        
-        # Also save latest prediction as JSON for web interface
-        save_prediction_json(predictions[-1] if predictions else None)
-        
-        return True
-        
-    except Exception as e:
-        logger.error(f"Error saving daily predictions: {str(e)}")
-        return False
+def _confidence_level(current_date: pd.Timestamp, days_until_bloom: int) -> str:
+    """Map (current date, days until bloom) → confidence label."""
+    month = current_date.month
+    if   days_until_bloom  < 7:                          return "very_high"
+    elif days_until_bloom  < 14:                         return "high"
+    elif month >= 3 and days_until_bloom < 30:           return "medium-high"
+    elif month >= 2:                                     return "medium"
+    else:                                                return "low"
 
-def save_prediction_json(prediction):
-    """
-    Save the latest prediction in JSON format for the web interface
-    """
-    if not prediction:
-        return False
-    
-    try:
-        # Load model metadata for MAE
-        metadata_path = os.path.join(CONFIG['model_dir'], 'model_metadata.json')
-        model_mae = 1.40  # Default value
-        if os.path.exists(metadata_path):
-            with open(metadata_path, 'r') as f:
-                metadata = json.load(f)
-                model_mae = metadata.get('model_mae', 1.40)
-        
-        # Ensure MAE is rounded to 2 decimal places
-        model_mae = round(float(model_mae), 2)
-        
-        # Enhance prediction data for web display
-        enhanced_prediction = prediction.copy()
-        
-        # Add confidence percentage based on confidence level
-        confidence_map = {
-            'very_high': 95,
-            'high': 85,
-            'medium-high': 70,
-            'medium': 50,
-            'low': 30
-        }
-        enhanced_prediction['confidence_percent'] = confidence_map.get(
-            prediction.get('confidence', 'low'), 50
-        )
-        
-        # Calculate predicted peak (middle of bloom period)
-        if 'predicted_bloom_start' in prediction and 'estimated_bloom_end' in prediction:
-            start = pd.to_datetime(prediction['predicted_bloom_start'])
-            end = pd.to_datetime(prediction['estimated_bloom_end'])
-            peak = start + (end - start) / 2
-            enhanced_prediction['predicted_peak'] = peak.strftime('%Y-%m-%d')
-        
-        # Add model performance metrics
-        enhanced_prediction['model_mae'] = model_mae
-        enhanced_prediction['data_points'] = '11 years'
-        enhanced_prediction['estimated_duration'] = 14  # Average bloom duration
-        
-        # Add timestamp
-        enhanced_prediction['last_updated'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        
-        # Save to output directory
-        output_file = os.path.join(CONFIG['output_dir'], 'cherry_blossom_prediction.json')
-        os.makedirs(CONFIG['output_dir'], exist_ok=True)
-        with open(output_file, 'w') as f:
-            json.dump(enhanced_prediction, f, indent=2)
-        
-        logger.info(f"Saved prediction to {output_file}")
-        
-        # Also save to docs directory for GitHub Pages
-        web_file = BASE_DIR / 'cherry_blossom_prediction.json'
-        with open(web_file, 'w') as f:
-            json.dump(enhanced_prediction, f, indent=2)
-        
-        logger.info(f"Saved prediction to {web_file}")
-        
-        # Also save all predictions history
-        save_all_predictions_json()
-        
-        return True
-        
-    except Exception as e:
-        logger.error(f"Error saving prediction JSON: {str(e)}")
-        return False
 
-def save_all_predictions_json():
+def should_retrain_model(force: bool = False) -> bool:
     """
-    Save all daily predictions as a JSON array for historical tracking
-    """
-    try:
-        csv_file = os.path.join(CONFIG['output_dir'], CONFIG['daily_predictions_file'])
-        
-        if os.path.exists(csv_file):
-            df = pd.read_csv(csv_file)
-            df = df.sort_values('prediction_date')
-            predictions_list = df.to_dict('records')
-            
-            # Save to output directory
-            output_file = os.path.join(CONFIG['output_dir'], 'all_predictions_2026.json')
-            with open(output_file, 'w') as f:
-                json.dump(predictions_list, f, indent=2)
-            
-            # Save to cherry_blossom root for web access
-            web_file = BASE_DIR / 'all_predictions_2026.json'
-            with open(web_file, 'w') as f:
-                json.dump(predictions_list, f, indent=2)
-            
-            logger.info(f"Saved {len(predictions_list)} predictions to JSON files")
-            
-        return True
-        
-    except Exception as e:
-        logger.error(f"Error saving all predictions JSON: {str(e)}")
-        return False
+    Return True when a model retrain is warranted.
 
-def record_bloom_confirmation(year, bloom_date, source="user", notes=""):
-    """
-    Record a confirmed bloom date
-    """
-    confirmations_file = os.path.join(CONFIG['output_dir'], CONFIG['confirmations_file'])
-    
-    try:
-        # Create or load existing confirmations
-        if os.path.exists(confirmations_file):
-            with open(confirmations_file, 'r') as f:
-                confirmations = json.load(f)
-        else:
-            confirmations = []
-        
-        # Check if this year is already confirmed
-        for conf in confirmations:
-            if conf['year'] == year:
-                # Update existing confirmation
-                conf['actual_bloom_start'] = bloom_date
-                conf['confirmation_date'] = datetime.now().strftime('%Y-%m-%d')
-                conf['confirmation_source'] = source
-                conf['notes'] = notes
-                break
-        else:
-            # Add new confirmation
-            confirmations.append({
-                'year': year,
-                'actual_bloom_start': bloom_date,
-                'confirmation_date': datetime.now().strftime('%Y-%m-%d'),
-                'confirmation_source': source,
-                'notes': notes
-            })
-        
-        # Create directory if it doesn't exist
-        os.makedirs(CONFIG['output_dir'], exist_ok=True)
-        
-        # Save confirmations
-        with open(confirmations_file, 'w') as f:
-            json.dump(confirmations, f, indent=2)
-        
-        logger.info(f"Recorded bloom confirmation for {year}: {bloom_date}")
-        return True
-        
-    except Exception as e:
-        logger.error(f"Error recording bloom confirmation: {str(e)}")
-        return False
-
-def should_retrain_model(force=False):
-    """
-    Determine if model retraining is needed
+    Rules (in priority order):
+    1. force=True           → always retrain.
+    2. No model on disk     → must retrain.
+    3. New bloom confirmation saved after last training date → retrain.
+    4. First run of the new prediction year (i.e. model was trained in a
+       prior year before September) → retrain once to incorporate the
+       latest confirmed data.  Does NOT trigger on every subsequent daily run.
     """
     if force:
-        logger.info("Forcing model retraining")
+        logger.info("Forced retrain requested.")
         return True
-    
-    # Check for existing model
-    latest_model_path = os.path.join(CONFIG['model_dir'], 'cherry_blossom_model_latest.pkl')
-    metadata_path = os.path.join(CONFIG['model_dir'], 'model_metadata.json')
-    
-    if not os.path.exists(latest_model_path) or not os.path.exists(metadata_path):
-        logger.info("No existing model found. Training required.")
+
+    latest_path   = os.path.join(CONFIG["model_dir"], "cherry_blossom_model_latest.pkl")
+    metadata_path = os.path.join(CONFIG["model_dir"], "model_metadata.json")
+
+    if not os.path.exists(latest_path) or not os.path.exists(metadata_path):
+        logger.info("No existing model found – training required.")
         return True
-    
-    # Load metadata to check last training date
-    with open(metadata_path, 'r') as f:
+
+    with open(metadata_path) as f:
         metadata = json.load(f)
-    
-    # Get days since last training
-    last_training = datetime.strptime(metadata['training_date'], '%Y-%m-%d')
-    days_since_training = (datetime.now() - last_training).days
-    
-    # Check if a bloom confirmation was received since last training
-    confirmation_path = os.path.join(CONFIG['output_dir'], CONFIG['confirmations_file'])
-    if os.path.exists(confirmation_path):
-        with open(confirmation_path, 'r') as f:
-            confirmations = json.load(f)
-        
-        # Check if there's a new confirmation since last training
-        for conf in confirmations:
-            if 'confirmation_date' in conf:
-                conf_date = datetime.strptime(conf['confirmation_date'], '%Y-%m-%d')
-                if conf_date > last_training:
-                    logger.info(f"New bloom confirmation found. Retraining required.")
-                    return True
-    
-    # Retrain if it's been more than 30 days or it's a new year
-    current_year = datetime.now().year
-    if days_since_training > 30 or current_year > last_training.year:
-        logger.info(f"Model is {days_since_training} days old. Retraining recommended.")
+
+    last_training_str = metadata.get("training_date")
+    if not last_training_str:
+        logger.warning("model_metadata.json missing 'training_date' – retraining.")
         return True
-    
-    logger.info(f"Using existing model (trained {days_since_training} days ago)")
+
+    last_training  = datetime.strptime(last_training_str, "%Y-%m-%d")
+    days_since     = (datetime.now() - last_training).days
+    current_year   = datetime.now().year
+
+    # Rule 3: new bloom confirmation
+    conf_path = os.path.join(CONFIG["output_dir"], CONFIG["confirmations_file"])
+    if os.path.exists(conf_path):
+        try:
+            with open(conf_path) as f:
+                confirmations = json.load(f)
+            for conf in confirmations:
+                conf_date_str = conf.get("confirmation_date")
+                if conf_date_str:
+                    conf_date = datetime.strptime(conf_date_str, "%Y-%m-%d")
+                    if conf_date > last_training:
+                        logger.info(
+                            f"New bloom confirmation ({conf_date.date()}) "
+                            f"since last training ({last_training.date()}) – retraining."
+                        )
+                        return True
+        except Exception as exc:
+            logger.warning(f"Could not read confirmations file: {exc}")
+
+    # Rule 4: first run of a new prediction year, model was trained mid-year
+    if current_year > last_training.year and last_training.month < 9:
+        logger.info(
+            f"Model trained {last_training.date()} is from last year – "
+            "retraining once for the new season."
+        )
+        return True
+
+    logger.info(f"Using existing model (trained {days_since} day(s) ago).")
     return False
 
-def make_and_display_prediction(model, feature_cols, data, prediction_date=None, year=2026):
-    """
-    Make a prediction and display it in a user-friendly format
-    
-    Parameters:
-    - model: Trained model
-    - feature_cols: Feature columns
-    - data: Weather data
-    - prediction_date: Date to predict for (defaults to today)
-    - year: Year to predict
-    
-    Returns:
-    - Prediction dictionary
-    """
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  OUTPUT / WEB FILES
+# ══════════════════════════════════════════════════════════════════════════════
+
+def save_daily_predictions(predictions: list) -> bool:
+    """Append predictions to the CSV log and refresh the JSON web files."""
+    if not predictions:
+        return False
+    try:
+        pred_df  = pd.DataFrame(predictions)
+        csv_file = os.path.join(CONFIG["output_dir"], CONFIG["daily_predictions_file"])
+
+        if os.path.exists(csv_file):
+            existing = pd.read_csv(csv_file)
+            combined = (
+                pd.concat([existing, pred_df], ignore_index=True)
+                .drop_duplicates(subset=["prediction_date"], keep="last")
+            )
+        else:
+            combined = pred_df
+
+        combined.to_csv(csv_file, index=False)
+        logger.info(f"Saved {len(predictions)} prediction(s) to {csv_file}")
+
+        save_prediction_json(predictions[-1])
+        return True
+
+    except Exception as exc:
+        logger.error(f"Error saving daily predictions: {exc}")
+        return False
+
+
+def save_prediction_json(prediction: dict) -> bool:
+    """Write the latest prediction as JSON for the web interface."""
+    if not prediction:
+        return False
+    try:
+        metadata_path = os.path.join(CONFIG["model_dir"], "model_metadata.json")
+        model_mae = None
+        if os.path.exists(metadata_path):
+            with open(metadata_path) as f:
+                model_mae = json.load(f).get("model_mae")
+        if model_mae is None:
+            logger.warning(
+                "model_mae not found in metadata – web UI will show None. "
+                "Run --setup or --retrain to fix."
+            )
+        model_mae = round(float(model_mae), 2) if model_mae is not None else None
+
+        confidence_pct = {
+            "very_high": 95, "high": 85,
+            "medium-high": 70, "medium": 50, "low": 30,
+        }
+
+        enhanced = dict(prediction)
+        enhanced["confidence_percent"] = confidence_pct.get(
+            prediction.get("confidence", "low"), 50
+        )
+
+        start = pd.to_datetime(prediction.get("predicted_bloom_start"))
+        end   = pd.to_datetime(prediction.get("estimated_bloom_end"))
+        if start and end:
+            enhanced["predicted_peak"] = (start + (end - start) / 2).strftime("%Y-%m-%d")
+
+        enhanced["model_mae"]        = model_mae
+        enhanced["data_points"]      = "11 years"
+        enhanced["estimated_duration"] = 14
+        enhanced["last_updated"]     = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        for path in [
+            os.path.join(CONFIG["output_dir"], "cherry_blossom_prediction.json"),
+            str(BASE_DIR / "cherry_blossom_prediction.json"),
+        ]:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w") as f:
+                json.dump(enhanced, f, indent=2)
+            logger.info(f"Prediction JSON → {path}")
+
+        save_all_predictions_json()
+        return True
+
+    except Exception as exc:
+        logger.error(f"Error saving prediction JSON: {exc}")
+        return False
+
+
+def save_all_predictions_json() -> bool:
+    """Write the full prediction history as a JSON array."""
+    try:
+        csv_file = os.path.join(CONFIG["output_dir"], CONFIG["daily_predictions_file"])
+        if not os.path.exists(csv_file):
+            return True
+
+        df   = pd.read_csv(csv_file).sort_values("prediction_date")
+        data = df.to_dict("records")
+
+        for path in [
+            os.path.join(CONFIG["output_dir"], "all_predictions_2026.json"),
+            str(BASE_DIR / "all_predictions_2026.json"),
+        ]:
+            with open(path, "w") as f:
+                json.dump(data, f, indent=2)
+
+        logger.info(f"Saved {len(data)} total predictions to JSON files.")
+        return True
+
+    except Exception as exc:
+        logger.error(f"Error saving all-predictions JSON: {exc}")
+        return False
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  BLOOM CONFIRMATIONS
+# ══════════════════════════════════════════════════════════════════════════════
+
+def record_bloom_confirmation(
+    year: int, bloom_date: str, source: str = "user", notes: str = ""
+) -> bool:
+    """Persist a confirmed bloom observation.  Triggers retrain on next --update."""
+    conf_file = os.path.join(CONFIG["output_dir"], CONFIG["confirmations_file"])
+    os.makedirs(CONFIG["output_dir"], exist_ok=True)
+
+    try:
+        confirmations = []
+        if os.path.exists(conf_file):
+            with open(conf_file) as f:
+                confirmations = json.load(f)
+
+        for conf in confirmations:
+            if conf["year"] == year:
+                conf.update({
+                    "actual_bloom_start":    bloom_date,
+                    "confirmation_date":     datetime.now().strftime("%Y-%m-%d"),
+                    "confirmation_source":   source,
+                    "notes":                 notes,
+                })
+                break
+        else:
+            confirmations.append({
+                "year":                year,
+                "actual_bloom_start":  bloom_date,
+                "confirmation_date":   datetime.now().strftime("%Y-%m-%d"),
+                "confirmation_source": source,
+                "notes":               notes,
+            })
+
+        with open(conf_file, "w") as f:
+            json.dump(confirmations, f, indent=2)
+        logger.info(f"Bloom confirmation recorded: {year} → {bloom_date}")
+        return True
+
+    except Exception as exc:
+        logger.error(f"Error recording bloom confirmation: {exc}")
+        return False
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  DISPLAY
+# ══════════════════════════════════════════════════════════════════════════════
+
+def make_and_display_prediction(
+    model, feature_cols: list, data: pd.DataFrame,
+    prediction_date=None, year: int = 2026,
+) -> dict | None:
+    """Make a prediction and print a human-readable summary."""
     if prediction_date is None:
         prediction_date = pd.Timestamp.now()
-    
-    # Make prediction
+    prediction_date = pd.to_datetime(prediction_date)
+
     pred = make_daily_prediction(model, feature_cols, data, prediction_date, year)
-    
-    if pred:
-        # Display results
-        print("\n" + "="*70)
-        print(f"🌸 CHERRY BLOSSOM PREDICTION for {prediction_date.strftime('%B %d, %Y')} 🌸")
-        print("="*70)
-        print(f"\n📅 Predicted Bloom Start: {pd.to_datetime(pred['predicted_bloom_start']).strftime('%B %d, %Y')}")
-        print(f"📅 Predicted Bloom End: {pd.to_datetime(pred['estimated_bloom_end']).strftime('%B %d, %Y')}")
-        print(f"\n⏰ Days Until Bloom: {pred['days_until_bloom']} days")
-        print(f"📊 Confidence Level: {pred['confidence'].replace('_', ' ').upper()}")
-        print(f"📈 Day of Year: {pred['predicted_bloom_doy']:.0f}")
-        print(f"🤖 Model: XGBoost")
-        
-        # Add interpretation
-        print("\n💡 Interpretation:")
-        if pred['days_until_bloom'] < 0:
-            print(f"   Bloom has likely already started {abs(pred['days_until_bloom'])} days ago!")
-        elif pred['days_until_bloom'] == 0:
-            print("   Bloom is predicted to start TODAY!")
-        elif pred['days_until_bloom'] <= 7:
-            print("   Bloom is imminent! Get ready within a week!")
-        elif pred['days_until_bloom'] <= 14:
-            print("   Bloom is approaching - about two weeks away.")
-        elif pred['days_until_bloom'] <= 30:
-            print("   Bloom is expected within a month.")
-        else:
-            print(f"   Bloom is still {pred['days_until_bloom']} days away.")
-        
-        # Confidence explanation
-        print(f"\n🎯 Confidence Explanation:")
-        if pred['confidence'] == 'very_high':
-            print("   Very high confidence - bloom is very close and prediction is reliable.")
-        elif pred['confidence'] == 'high':
-            print("   High confidence - good data available and bloom is near.")
-        elif pred['confidence'] == 'medium-high':
-            print("   Medium-high confidence - reasonable prediction with good spring data.")
-        elif pred['confidence'] == 'medium':
-            print("   Medium confidence - prediction based on winter/early spring data.")
-        else:
-            print("   Low confidence - early prediction, will improve with more data.")
-        
-        print("="*70 + "\n")
-        
-        # Log to file as well
-        logger.info(f"Prediction displayed for {prediction_date.strftime('%Y-%m-%d')}")
-        
+    if not pred:
+        return None
+
+    bar = "=" * 70
+    print(f"\n{bar}")
+    print(f"🌸  CHERRY BLOSSOM PREDICTION  –  {prediction_date.strftime('%B %d, %Y')}  🌸")
+    print(bar)
+    bloom_start = pd.to_datetime(pred["predicted_bloom_start"])
+    bloom_end   = pd.to_datetime(pred["estimated_bloom_end"])
+    print(f"\n  📅 Bloom start : {bloom_start.strftime('%B %d, %Y')}")
+    print(f"  📅 Bloom end   : {bloom_end.strftime('%B %d, %Y')}")
+    print(f"\n  ⏰ Days until bloom : {pred['days_until_bloom']}")
+    print(f"  📊 Confidence       : {pred['confidence'].replace('_', ' ').upper()}")
+    print(f"  📈 Predicted DOY    : {pred['predicted_bloom_doy']:.0f}")
+    print(f"  🤖 Model            : XGBoost")
+
+    days = pred["days_until_bloom"]
+    if   days < 0:   note = f"Bloom likely started {abs(days)} day(s) ago!"
+    elif days == 0:  note = "Bloom predicted to start TODAY!"
+    elif days <= 7:  note = "Bloom is imminent – within a week!"
+    elif days <= 14: note = "Bloom approaching – about two weeks away."
+    elif days <= 30: note = "Bloom expected within a month."
+    else:            note = f"Bloom is {days} day(s) away."
+    print(f"\n  💡 {note}")
+    print(f"{bar}\n")
+
+    logger.info(f"Prediction displayed for {prediction_date.date()}")
     return pred
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  MAIN
+# ══════════════════════════════════════════════════════════════════════════════
+
 def main():
-    """
-    Main function to run the cherry blossom prediction workflow
-    """
-    # Parse command line arguments
-    parser = argparse.ArgumentParser(description='Cherry Blossom Prediction Workflow with XGBoost')
-    parser.add_argument('--setup', action='store_true', help='Run initial setup')
-    parser.add_argument('--update', action='store_true', help='Update prediction with latest data')
-    parser.add_argument('--retrain', action='store_true', help='Force model retraining')
-    parser.add_argument('--confirm-bloom', metavar='DATE', help='Confirm bloom start date (YYYY-MM-DD)')
-    parser.add_argument('--daily', action='store_true', help='Generate daily predictions for 2026')
-    parser.add_argument('--predict', action='store_true', help='Force immediate prediction with current data')
-    parser.add_argument('--date', metavar='DATE', help='Specific date to predict for (YYYY-MM-DD, default: today)')
-    
+    parser = argparse.ArgumentParser(
+        description="Cherry Blossom Prediction Workflow (XGBoost)"
+    )
+    parser.add_argument("--setup",         action="store_true", help="Initial setup + train model")
+    parser.add_argument("--update",        action="store_true", help="Fetch latest weather + predict (default)")
+    parser.add_argument("--retrain",       action="store_true", help="Force model retraining")
+    parser.add_argument("--predict",       action="store_true", help="Predict without fetching new data")
+    parser.add_argument("--confirm-bloom", metavar="DATE",      help="Record confirmed bloom date (YYYY-MM-DD)")
+    parser.add_argument("--date",          metavar="DATE",      help="Prediction date override (YYYY-MM-DD)")
     args = parser.parse_args()
-    
+
     try:
-        # Setup directories
         setup_directories()
-        
-        # Handle bloom confirmation if provided
+
+        # ── Bloom confirmation ─────────────────────────────────────────────────
         if args.confirm_bloom:
-            bloom_date = args.confirm_bloom
             try:
-                # Validate date format
-                datetime.strptime(bloom_date, '%Y-%m-%d')
-                year = int(bloom_date.split('-')[0])
-                record_bloom_confirmation(year, bloom_date)
-                logger.info(f"Bloom confirmation recorded for {year}: {bloom_date}")
-                # Force retraining on next run after confirmation
-                args.retrain = True
+                datetime.strptime(args.confirm_bloom, "%Y-%m-%d")
             except ValueError:
-                logger.error(f"Invalid date format: {bloom_date}. Use YYYY-MM-DD")
+                logger.error(f"Invalid date: {args.confirm_bloom} – use YYYY-MM-DD")
                 return
-        
-        # Initial setup or force retrain
+            year = int(args.confirm_bloom[:4])
+            record_bloom_confirmation(year, args.confirm_bloom)
+            args.retrain = True   # retrain on this same run
+
+        # ── Setup / force retrain ──────────────────────────────────────────────
         if args.setup or args.retrain:
-            # Get and harmonize all historical data
             harmonized_data = harmonize_historical_data()
-            
-            # Generate features
-            features_df = generate_features(harmonized_data)
-            
-            # Add bloom data
+
+            # Optionally save an annotated debug CSV (not used by training)
+            features_df  = generate_features(harmonized_data)
             blossom_data = add_cherry_blossom_data(features_df)
-            
-            # Save processed data
-            processed_file = os.path.join(CONFIG['output_dir'], 'processed_blossom_data.csv')
-            blossom_data.to_csv(processed_file, index=False)
-            logger.info(f"Processed data saved to {processed_file}")
-            
-            # Train model with data up to 2025
-            historical_data = blossom_data[blossom_data['year'] <= CONFIG['max_historical_year']]
-            model, feature_cols = train_prediction_model(historical_data)
-            
-            logger.info("Initial setup completed with XGBoost model")
-            
-        # Force immediate prediction
+            blossom_data.to_csv(
+                os.path.join(CONFIG["output_dir"], "processed_blossom_data.csv"),
+                index=False,
+            )
+
+            # train_prediction_model only needs the raw harmonized df
+            model, feature_cols = train_prediction_model(harmonized_data)
+            logger.info("Setup / retrain complete.")
+
+        # ── Predict without fetching new data ──────────────────────────────────
         if args.predict:
-            logger.info("Forcing immediate prediction...")
-            
-            # Load model
             model, feature_cols = load_model()
             if model is None:
-                logger.error("No model found. Run with --setup first to train a model.")
+                logger.error("No model found – run --setup first.")
                 return
-            
-            # Load data
+
             harmonized_data = harmonize_historical_data()
-            
-            # Determine prediction date
-            if args.date:
-                try:
-                    prediction_date = pd.to_datetime(args.date)
-                except:
-                    logger.error(f"Invalid date format: {args.date}. Use YYYY-MM-DD")
-                    return
-            else:
-                prediction_date = pd.Timestamp.now()
-            
-            # Make and display prediction
-            pred = make_and_display_prediction(model, feature_cols, harmonized_data, prediction_date, year=2026)
-            
+            pred_date = pd.to_datetime(args.date) if args.date else pd.Timestamp.now()
+
+            pred = make_and_display_prediction(
+                model, feature_cols, harmonized_data, pred_date, year=2026
+            )
             if pred:
-                # Save the prediction
                 save_daily_predictions([pred])
-                logger.info("Prediction saved to daily predictions file")
-            else:
-                logger.error("Could not generate prediction")
-            
             return
-        
-        # Generate daily predictions for 2026
-        if args.daily:
-            logger.info("Generating daily predictions for 2026...")
-            
-            # Load or train model
-            model, feature_cols = load_model()
-            if model is None:
-                logger.info("Model not found, training new XGBoost model...")
-                harmonized_data = harmonize_historical_data()
-                features_df = generate_features(harmonized_data)
-                blossom_data = add_cherry_blossom_data(features_df)
-                historical_data = blossom_data[blossom_data['year'] <= CONFIG['max_historical_year']]
-                model, feature_cols = train_prediction_model(historical_data)
-            
-            # Load data
-            harmonized_data = harmonize_historical_data()
-            
-            # Generate predictions for each day from Jan 1 to Apr 30, 2026
-            predictions = []
-            start_date = pd.Timestamp(year=2026, month=1, day=1)
-            end_date = pd.Timestamp(year=2026, month=4, day=30)
-            
-            current_date = start_date
-            while current_date <= end_date:
-                # Make prediction for this date
-                pred = make_daily_prediction(model, feature_cols, harmonized_data, current_date, year=2026)
-                
-                if pred:
-                    predictions.append(pred)
-                    logger.info(f"  {current_date.strftime('%Y-%m-%d')}: Bloom predicted on {pred['predicted_bloom_start']} "
-                               f"({pred['days_until_bloom']} days, confidence: {pred['confidence']})")
-                
-                current_date += pd.Timedelta(days=1)
-            
-            # Save all predictions
-            if predictions:
-                save_daily_predictions(predictions)
-                logger.info(f"Generated {len(predictions)} daily predictions for 2026")
-            
-        # Update prediction with latest data
-        elif args.update or (not args.setup and not args.daily and not args.predict):  # Default behavior is to update
-            # Get API key
+
+        # ── Daily update (default behaviour) ──────────────────────────────────
+        if args.update or not (args.setup or args.retrain or args.predict):
             api_key = get_api_key()
-            
-            # Load existing data
             harmonized_data = harmonize_historical_data()
-            
-            # Update with latest weather data
             updated_data, data_changed = update_weather_data(harmonized_data, api_key)
-            
+
             if data_changed:
-                logger.info("Data updated. Generating new daily prediction.")
+                logger.info("New weather data added.")
             else:
-                logger.info("No new weather data available. Making prediction with existing data.")
-            
-            # Always proceed with prediction (whether data changed or not)
-            
-            # Check if we need to retrain
+                logger.info("Weather data already current.")
+
+            # Retrain if warranted (checks confirmations + year boundary)
             if should_retrain_model():
-                # Generate features
-                features_df = generate_features(updated_data)
-                # Add bloom data
-                blossom_data = add_cherry_blossom_data(features_df)
-                
-                # Train model
-                historical_data = blossom_data[blossom_data['year'] <= CONFIG['max_historical_year']]
-                model, feature_cols = train_prediction_model(historical_data)
+                model, feature_cols = train_prediction_model(updated_data)
             else:
-                # Load existing model
                 model, feature_cols = load_model()
                 if model is None:
-                    logger.error("Could not load model. Run with --setup first.")
+                    logger.error("No model found – run --setup first.")
                     return
-            
-            # Make updated prediction for today
-            today = datetime.now()
-            pred = make_and_display_prediction(model, feature_cols, updated_data, today, year=2026)
-            
+
+            pred_date = pd.to_datetime(args.date) if args.date else pd.Timestamp.now()
+            pred = make_and_display_prediction(
+                model, feature_cols, updated_data, pred_date, year=2026
+            )
             if pred:
-                # Save single prediction
                 save_daily_predictions([pred])
-                logger.info(f"Prediction saved for {today.strftime('%Y-%m-%d')}")
-            
-            logger.info("Daily prediction completed successfully with XGBoost")
-        
-    except Exception as e:
-        logger.error(f"Error in workflow: {str(e)}")
+                logger.info(f"Prediction saved for {pred_date.date()}")
+
+            logger.info("Daily update complete.")
+
+    except Exception as exc:
+        logger.error(f"Workflow error: {exc}")
         import traceback
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     main()
