@@ -8,5 +8,15 @@
     "days_until_bloom": 42,
     "confidence": "medium",
     "features_available": 41
+  },
+  {
+    "prediction_date": "2026-02-27",
+    "year": 2026,
+    "predicted_bloom_doy": 101.0485610961914,
+    "predicted_bloom_start": "2026-04-11",
+    "estimated_bloom_end": "2026-04-24",
+    "days_until_bloom": 42,
+    "confidence": "medium",
+    "features_available": 41
   }
 ]
