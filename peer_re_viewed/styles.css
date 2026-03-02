@@ -75,6 +75,7 @@ a:hover {
   padding: 10px 28px;
   border-radius: 9999px;
   cursor: pointer;
+  font-family: 'Courier', sans-serif;
   font-size: 14px;
   font-weight: 600;
   transition: background 0.2s, transform 0.1s;
