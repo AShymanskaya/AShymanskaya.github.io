@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      .page-title {
+        font-size: 26px;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 8px 0 4px;
+        text-align: center;
+      }
+
+      .page-subtitle {
+        font-size: 14px;
+        color: #6b7280;
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .back-link {
+        font-size: 13px;
+        color: #1d6fa4;
+        text-decoration: none;
+        margin-bottom: 16px;
+        display: inline-block;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+
+      /* Carousel wrapper */
+      .carousel-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 700px;
+        margin: 0 auto;
+      }
+
+      .carousel {
+        display: flex;
+        overflow-x: scroll;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+        gap: 24px;
+        padding: 16px 32px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .carousel::-webkit-scrollbar {
+        display: none;
+      }
+
+      .chart-card {
+        scroll-snap-align: center;
+        flex: 0 0 100%;
+        background: #f4faff;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .chart-card img {
+        width: 100%;
+        height: 360px;
+        object-fit: contain;
+        background: #e8f2fb;
+        padding: 16px;
+        box-sizing: border-box;
+      }
+
+      .chart-placeholder {
+        width: 100%;
+        height: 360px;
+        background: linear-gradient(135deg, #d0e8f5, #b8d4ec);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        color: #6b9ec2;
+        font-size: 72px;
+      }
+
+      .chart-info {
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .chart-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+      }
+
+      .chart-desc {
+        font-size: 14px;
+        color: #6b7280;
+        line-height: 1.6;
+        margin: 0;
+      }
+
+      .chart-tag {
+        display: inline-block;
+        background: #dbeafe;
+        color: #1d6fa4;
+        font-size: 12px;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        width: fit-content;
+      }
+
+      /* Prev / Next buttons */
+      .carousel-btn {
+        position: absolute;
+        top: 45%;
+        transform: translateY(-50%);
+        background: white;
+        border: none;
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        cursor: pointer;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        transition: background 0.2s, box-shadow 0.2s;
+      }
+
+      .carousel-btn:hover {
+        background: #ec5a59;
+        color: white;
+        box-shadow: 0 6px 18px rgba(236,90,89,0.3);
+      }
+
+      .carousel-btn.prev { left: -16px; }
+      .carousel-btn.next { right: -16px; }
+
+      /* Dots */
+      .dots {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin: 12px 0 32px;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #cbd5e1;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.2s;
+        border: none;
+        padding: 0;
+      }
+
+      .dot.active {
+        background: #ec5a59;
+        transform: scale(1.3);
+      }
+
+      .counter {
+        text-align: center;
+        font-size: 13px;
+        color: #9ca3af;
+        margin-bottom: 4px;
+      }
+
+      .subscribe-section {
+        text-align: center;
+        margin: 20px 0 20px;
+        padding: 32px 24px;
+        background: #f4faff;
+        border-radius: 12px;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      }
+
+      /* Lightbox */
+      .lightbox {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.85);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        cursor: zoom-out;
+        padding: 24px;
+        box-sizing: border-box;
+      }
+
+      .lightbox.open {
+        display: flex;
+      }
+
+      .lightbox img {
+        max-width: 90vw;
+        max-height: 85vh;
+        object-fit: contain;
+        border-radius: 8px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        cursor: default;
+      }
+
+      .lightbox-close {
+        position: fixed;
+        top: 20px;
+        right: 24px;
+        background: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        transition: background 0.2s;
+        z-index: 1001;
+      }
+
+      .lightbox-close:hover {
+        background: #ec5a59;
+        color: white;
+      }
+
+      .chart-card img {
+        cursor: zoom-in;
+      }
+
+      .subscribe-section h2 {
+        font-size: 18px;
+        color: #1f2937;
+        margin: 0 0 8px;
+      }
+
+      .subscribe-section p {
+        font-size: 14px;
+        color: #6b7280;
+        margin: 0 0 20px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+
+    <header>
+      <img id="brand_icon"
+        src="Peer Re-viewed.png"
+        alt="Brand newsletter image"
+        width="300"
+        height="100"
+      />
+    </header>
+
+    <div class="carousel-wrapper">
+      <button class="carousel-btn prev" onclick="move(-1)">&#8592;</button>
+      <button class="carousel-btn next" onclick="move(1)">&#8594;</button>
+
+      <div class="carousel" id="carousel">
+
+        <div class="chart-card">
+          <img src="charts/bar_chart.png" alt="Horizontal bar chart showing patient distribution" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="chart-info">
+            <span class="chart-tag">Bar Chart</span>
+            <p class="chart-title">Distribution of Patients in Three Treatment Groups</p>
+            <p class="chart-desc">When group sizes are highly unequal, a horizontal bar chart makes the imbalance impossible to miss. </p>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <img src="charts/contour.png" alt="ISMF contour plot" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="chart-info">
+            <span class="chart-tag">Contour Plot</span>
+            <p class="chart-title">ISMF Contour Plot: T₂s,ex vs T₂f,ex Parameters</p>
+            <p class="chart-desc">Contour plots let you show how a third variable responds to two inputs simultaneously. A sequential single-hue palette (light → dark blue) works well here because the variable has no meaningful zero — readers intuitively read darker as higher without needing to learn a colour code.</p>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <img src="charts/decades.png" alt="Multi-line chart of precipitation by decade" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="chart-info">
+            <span class="chart-tag">Line Chart</span>
+            <p class="chart-title">Average Monthly Precipitation by Decade</p>
+            <p class="chart-desc">With many overlapping lines, highlighting a single focal series in a strong colour (here, the 2020s in red-orange) while fading the rest to grey-blue draws the eye exactly where you want it. The reader sees the context and the story in one glance.</p>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <img src="charts/lollipop.png" alt="Lollipop chart of statistical test frequency" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="chart-info">
+            <span class="chart-tag">Lollipop Chart</span>
+            <p class="chart-title">Frequency of Statistical Tests Across Studies</p>
+            <p class="chart-desc">A lollipop chart is a leaner alternative to a bar chart — the thin stem reduces ink without losing any information. It works especially well when one value dominates (Category A at 22, nearly double the rest), because the long stem makes the outlier visually dramatic.</p>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <img src="charts/small_multiplets_1.png" alt="Small multiples — prevalence of eye diseases" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="chart-info">
+            <span class="chart-tag">Small Multiples</span>
+            <p class="chart-title">Prevalence of Eye Diseases by Age & Sex (2000 and 2011)</p>
+            <p class="chart-desc">Arranging eight panels on a shared grid lets the reader compare diseases, sexes, and time points without re-learning the axes. Consistent y-axis scales across rows are critical here — rescaling each panel independently would make small conditions look as prominent as common ones.</p>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <img src="charts/small_multiplets_2.png" alt="Small multiples — incidence of eye diseases" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="chart-info">
+            <span class="chart-tag">Small Multiples</span>
+            <p class="chart-title">Incidence of Eye Diseases by Age & Sex (2000–2011)</p>
+            <p class="chart-desc">When the story is about relative differences between groups rather than absolute scale, small multiples arranged horizontally work better than a single crowded panel. </p>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <img src="charts/versions_of_line_chart.png" alt="Three chart types showing SUID trends" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="chart-info">
+            <span class="chart-tag">Multi-chart Layout</span>
+            <p class="chart-title">Trends in Sudden Unexpected Infant Death, 1990–2022</p>
+            <p class="chart-desc">Showing the same data in three chart types side by side — bar, line, and stacked area — lets the reader choose the frame that answers their question. Annotating a key event (the 1994 Back to Sleep campaign) directly on each panel ties the visual to the narrative without forcing the reader to cross-reference the caption.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <p class="counter" id="counter">1 / 6</p>
+
+    <div class="dots" id="dots"></div>
+
+    <div class="subscribe-section">
+      <h2>Want more chart tips?</h2>
+      <p>Subscribe to the Peer Re-viewed newsletter and get easy-to-implement fixes for your scientific publications straight to your inbox.</p>
+      <a href="https://a21d5ccb.sibforms.com/serve/MUIFAEp1_7U-FV70SwHMzXYB6QAGqzJg-Eig8ThQhlropf_vL662tuw66sn7tNOb0b9d_ZrAZKqUE3zSXCuukTDofJe-sGDRnXZfaZPbh_fnDkytvYW8JRDxeVmuHoy3pZ2xr0stEmCrOeB8yyFYHlP5W5W8VGjh0JyRmh0K9pjl7niOyUHZ5O9eU9DQvbRjAxE4X1FeyPlrBLXhWQ==" target="_blank">
+        <button class="follow-btn">SUBSCRIBE</button>
+      </a>
+    </div>
+    <a class="back-link" href="../index.html">← Back to home</a>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+      <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+      <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()">
+    </div>
+
+    <footer></footer>
+
+    <script>
+      const carousel = document.getElementById('carousel');
+      const dotsContainer = document.getElementById('dots');
+      const counter = document.getElementById('counter');
+      const cards = carousel.querySelectorAll('.chart-card');
+      const total = cards.length;
+      let current = 0;
+
+      // Build dots
+      cards.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'dot' + (i === 0 ? ' active' : '');
+        dot.onclick = () => goTo(i);
+        dotsContainer.appendChild(dot);
+      });
+
+      function updateUI() {
+        counter.textContent = `${current + 1} / ${total}`;
+        dotsContainer.querySelectorAll('.dot').forEach((d, i) => {
+          d.classList.toggle('active', i === current);
+        });
+      }
+
+      function goTo(index) {
+        current = Math.max(0, Math.min(index, total - 1));
+        const cardWidth = cards[0].offsetWidth + 24;
+        carousel.scrollTo({ left: current * cardWidth, behavior: 'smooth' });
+        updateUI();
+      }
+
+      function move(dir) {
+        goTo(current + dir);
+      }
+
+      // Sync dots when user manually swipes
+      carousel.addEventListener('scroll', () => {
+        const cardWidth = cards[0].offsetWidth + 24;
+        current = Math.round(carousel.scrollLeft / cardWidth);
+        updateUI();
+      });
+
+      updateUI();
+
+      // Lightbox
+      document.querySelectorAll('.chart-card img').forEach(img => {
+        img.addEventListener('click', () => {
+          document.getElementById('lightbox-img').src = img.src;
+          document.getElementById('lightbox-img').alt = img.alt;
+          document.getElementById('lightbox').classList.add('open');
+          document.body.style.overflow = 'hidden';
+        });
+      });
+
+      function closeLightbox() {
+        document.getElementById('lightbox').classList.remove('open');
+        document.body.style.overflow = '';
+      }
+
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeLightbox();
+      });
+    </script>
+
+  </body>
+</html>
