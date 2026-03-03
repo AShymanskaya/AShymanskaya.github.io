@@ -271,7 +271,14 @@
       <button class="carousel-btn next" onclick="move(1)">&#8594;</button>
 
       <div class="carousel" id="carousel">
-
+        <div class="chart-card">
+            <img src="charts/after.png" alt="Model Performance Chart" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="chart-info">
+              <span class="chart-tag">Dot Chart</span>
+              <p class="chart-title">Machine Learning Model Comparison: Accuracy with Uncertainty</p>
+              <p class="chart-desc">A dot plot with uncertainty bands is ideal when comparing model performance: it shows both the average result and the variance. Highlighting the best model in a contrasting colour immediately directs the reader's eye to the conclusion, so they don't have to rank the rows themselves. The take-away annotation at the bottom reinforces the message in plain language, which is especially valuable in clinical or cross-disciplinary research where not all readers will interpret a chart independently. </p>
+            </div>
+          </div>
         <div class="chart-card">
           <img src="charts/bar_chart.png" alt="Horizontal bar chart showing patient distribution" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
           <div class="chart-info">
