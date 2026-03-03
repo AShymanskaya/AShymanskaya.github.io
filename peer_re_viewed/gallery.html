@@ -258,12 +258,14 @@
   <body>
 
     <header>
-      <img id="brand_icon"
-        src="Peer Re-viewed.png"
-        alt="Brand newsletter image"
-        width="300"
-        height="100"
-      />
+      <a href="../peer_re_viewed/index.html" style="display:block">
+        <img id="brand_icon"
+          src="Peer Re-viewed.png"
+          alt="Brand newsletter image"
+          width="300"
+          height="100"
+        />
+      </a>
     </header>
 
     <div class="carousel-wrapper">
@@ -345,7 +347,7 @@
       </div>
     </div>
 
-    <p class="counter" id="counter">1 / 6</p>
+    <p class="counter" id="counter">1 / 8</p>
 
     <div class="dots" id="dots"></div>
 
@@ -370,12 +372,36 @@
       const carousel = document.getElementById('carousel');
       const dotsContainer = document.getElementById('dots');
       const counter = document.getElementById('counter');
-      const cards = carousel.querySelectorAll('.chart-card');
-      const total = cards.length;
+      const originalCards = Array.from(carousel.querySelectorAll('.chart-card'));
+      const total = originalCards.length;
       let current = 0;
+      let isJumping = false;
+
+      // Clone cards: append copies at end and prepend copies at start
+      originalCards.forEach(card => carousel.appendChild(card.cloneNode(true)));
+      originalCards.slice().reverse().forEach(card => {
+        carousel.insertBefore(card.cloneNode(true), carousel.firstChild);
+      });
+
+      const cardWidth = () => originalCards[0].offsetWidth + 24;
+
+      // Silently reposition without triggering snap or scroll events
+      function silentJump(newPos) {
+        isJumping = true;
+        carousel.style.scrollSnapType = 'none';
+        carousel.style.scrollBehavior = 'auto';
+        carousel.scrollLeft = newPos;
+        carousel.offsetHeight; // force reflow so the jump lands before snap re-engages
+        carousel.style.scrollSnapType = '';
+        carousel.style.scrollBehavior = '';
+        isJumping = false;
+      }
+
+      // Start at the first real card (past the prepended clones)
+      silentJump(cardWidth() * total);
 
       // Build dots
-      cards.forEach((_, i) => {
+      originalCards.forEach((_, i) => {
         const dot = document.createElement('button');
         dot.className = 'dot' + (i === 0 ? ' active' : '');
         dot.onclick = () => goTo(i);
@@ -390,9 +416,9 @@
       }
 
       function goTo(index) {
-        current = Math.max(0, Math.min(index, total - 1));
-        const cardWidth = cards[0].offsetWidth + 24;
-        carousel.scrollTo({ left: current * cardWidth, behavior: 'smooth' });
+        current = ((index % total) + total) % total;
+        const target = (current + total) * cardWidth();
+        carousel.scrollTo({ left: target, behavior: 'smooth' });
         updateUI();
       }
 
@@ -400,17 +426,27 @@
         goTo(current + dir);
       }
 
-      // Sync dots when user manually swipes
+      // On scroll: sync dots and silently jump if we've drifted into the clone zone
       carousel.addEventListener('scroll', () => {
-        const cardWidth = cards[0].offsetWidth + 24;
-        current = Math.round(carousel.scrollLeft / cardWidth);
+        if (isJumping) return;
+
+        const pos = carousel.scrollLeft;
+        const cw = cardWidth();
+
+        if (pos < cw * (total - 0.5)) {
+          silentJump(pos + cw * total);
+        } else if (pos >= cw * (total * 2) - cw * 0.5) {
+          silentJump(pos - cw * total);
+        }
+
+        current = ((Math.round(carousel.scrollLeft / cw) - total) % total + total) % total;
         updateUI();
       });
 
       updateUI();
 
-      // Lightbox
-      document.querySelectorAll('.chart-card img').forEach(img => {
+      // Lightbox — attach to all cards including clones
+      carousel.querySelectorAll('.chart-card img').forEach(img => {
         img.addEventListener('click', () => {
           document.getElementById('lightbox-img').src = img.src;
           document.getElementById('lightbox-img').alt = img.alt;
