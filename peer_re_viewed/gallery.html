@@ -1,6 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery – Peer Re-viewed</title>
     <link rel="stylesheet" href="styles.css?v=2">
     <style>
       .page-title {
@@ -253,8 +256,49 @@
         margin: 0 0 20px;
         line-height: 1.5;
       }
+
+      /* ── Gallery mobile ───────────────────────────────────── */
+      @media (max-width: 600px) {
+        .carousel-wrapper {
+          /* give room for the nav buttons so they don't clip */
+          margin: 0 8px;
+        }
+
+        .carousel {
+          gap: 16px;
+          padding: 12px 16px;
+        }
+
+        /* Shorter image area on phones */
+        .chart-card img,
+        .chart-placeholder {
+          height: 220px;
+        }
+
+        .chart-info {
+          padding: 16px;
+        }
+
+        .chart-title {
+          font-size: 16px;
+        }
+
+        /* Move prev/next buttons inside the card edges */
+        .carousel-btn.prev { left: 4px; }
+        .carousel-btn.next { right: 4px; }
+
+        /* Shrink nav buttons slightly */
+        .carousel-btn {
+          width: 36px;
+          height: 36px;
+          font-size: 15px;
+        }
+
+        .subscribe-section {
+          padding: 24px 16px;
+        }
+      }
     </style>
-  </head>
   <body>
 
     <header>

@@ -97,6 +97,40 @@ a:hover {
   border-radius: 8px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   cursor: default;
-  background: white;        /* ← add this */
-  padding: 16px;            /* ← optional: adds breathing room around the image */
+  background: white;
+  padding: 16px;
+}
+
+/* ── Responsive / mobile ─────────────────────────────────── */
+
+/* Make the brand logo scale down gracefully */
+#brand_icon {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 600px) {
+  body {
+    padding: 20px 16px;
+  }
+
+  /* Brand logo: never wider than the viewport */
+  #brand_icon {
+    width: min(300px, 85vw);
+  }
+
+  .profile-card {
+    padding: 20px 16px;
+  }
+
+  .btn-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .follow-btn {
+    width: 100%;
+    max-width: 240px;
+  }
 }
