@@ -1,10 +1,10 @@
 {
-  "prediction_date": "2026-03-27",
+  "prediction_date": "2026-03-28",
   "year": 2026,
   "predicted_bloom_doy": 95.11073303222656,
   "predicted_bloom_start": "2026-04-05",
   "estimated_bloom_end": "2026-04-18",
-  "days_until_bloom": 8,
+  "days_until_bloom": 7,
   "confidence": "high",
   "features_available": 50,
   "confidence_percent": 85,
@@ -12,5 +12,5 @@
   "model_mae": 3.81,
   "data_points": "11 years",
   "estimated_duration": 14,
-  "last_updated": "2026-03-27 08:00:55"
+  "last_updated": "2026-03-28 07:45:34"
 }
